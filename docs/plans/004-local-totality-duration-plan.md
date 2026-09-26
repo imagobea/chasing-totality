@@ -38,7 +38,7 @@ The repo is empty apart from package.json (pnpm).
 ## Commits
 
 **Setup**
-1. `docs: add spike #4 plan`: this file as `docs/spikes/004-local-totality-duration-plan.md`. This commit contains that one file and nothing else.
+1. `docs: add spike #4 plan`: commit this file.
 2. `chore: pin Node 24 LTS`: `.nvmrc`, plus `engines` and `"type": "module"` in package.json.
 3. `chore: add TypeScript`:
    - `typescript` and `@types/node`
@@ -94,15 +94,17 @@ The repo is empty apart from package.json (pnpm).
     - `scripts/spike-grid.ts` writes `out/2027-durations.geojson` and `out/2027-nasa-path.geojson` (the overlay).
     - Grid: 0.1° over lon −45…75, lat −10…40 (~600k points). The script logs its timing.
 
-**Findings**
-21. `docs: spike findings`: `docs/spikes/004-local-totality-duration.md` links to the plan instead of restating it. Each point appears once, briefly:
-    - accuracy vs NASA and JSEX
-    - a contour screenshot next to NASA's map
-    - limitations: no lunar limb profile (about 1–2 km and 1–2 s), fixed ΔT, sunrise/sunset ends
-    - performance
-    - go/no-go on both success criteria
-    - follow-ups
-22. `docs: update README`: a brief description plus how to run things (local and Docker).
+**Wrap-up**
+21. `docs: update README`: a brief description plus how to run things (local and Docker).
+
+The spike findings go in the PR description, not the repo:
+- accuracy vs NASA and JSEX
+- a contour screenshot next to NASA's map
+- performance
+- go/no-go on both success criteria
+- follow-ups
+
+The limitations are the only lasting part. They stay as short comments in `localCircumstances.ts`: no lunar limb profile (about 1–2 km and 1–2 s), fixed ΔT, sunrise/sunset ends.
 
 ## Commit conventions
 - Conventional prefixes: `chore:`, `feat:`, `fix:`, `test:`, `docs:`, `refactor:`.
@@ -112,7 +114,7 @@ The repo is empty apart from package.json (pnpm).
 
 ## Optional tooling that would help
 - **`gh` CLI or the GitHub MCP server**: `gh` isn't installed here. With either one I could read and update issue #4, tick its success criteria and open the PR. Otherwise you'd do that part by hand.
-- **Playwright MCP**: lets me take the contour screenshot for the findings doc myself instead of you doing it in geojson.io.
+- **Playwright MCP**: lets me take the contour screenshot for the PR myself instead of you doing it in geojson.io.
 - **Context7 MCP**: up-to-date docs for d3-contour, Vitest and TS config. Nice to have, not essential.
 - **Built-in skills:** I'd use these at the end.
   - `/simplify` on the finished branch keeps the code minimal.
@@ -123,4 +125,4 @@ The repo is empty apart from package.json (pnpm).
 - `docker compose build`, then `docker compose run --rm app pnpm test` and `pnpm typecheck` are green. They're also green locally on Node 24.
 - `pnpm spike:fixtures` regenerates identical JSON.
 - `pnpm spike:grid` writes the GeoJSON. Load both files in geojson.io and compare them with NASA's path map.
-- Spot-check 2–3 arbitrary points by hand in NASA's live JSEX and note the results in the findings doc.
+- Spot-check 2–3 arbitrary points by hand in NASA's live JSEX and note the results in the PR description.
