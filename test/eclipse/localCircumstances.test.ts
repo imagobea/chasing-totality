@@ -1,0 +1,113 @@
+import { readFileSync } from "node:fs";
+import { describe, expect, it } from "vitest";
+import { eclipse2027Aug02 } from "../../src/eclipse/elements/2027-08-02.js";
+import { localCircumstances } from "../../src/eclipse/localCircumstances.js";
+import { parseNasaPath, type LatLon } from "../nasaPath.js";
+
+const rows = parseNasaPath(
+  readFileSync(new URL("../fixtures/SE2027Aug02Tpath.txt", import.meta.url), "utf8"),
+);
+// NASA's path table was computed with ΔT = 71.7 s; use the same, so only the geometry is compared.
+const elements = { ...eclipse2027Aug02, deltaT: 71.7 };
+
+const at = ({ lat, lon }: LatLon) =>
+  localCircumstances(elements, { latitude: lat, longitude: lon, altitudeMeters: 0 });
+
+// A point on the line from the central line through a limit: 0 is the central point, 1 the limit.
+const along = (central: LatLon, limit: LatLon, fraction: number): LatLon => ({
+  lat: central.lat + fraction * (limit.lat - central.lat),
+  lon: central.lon + fraction * (limit.lon - central.lon),
+});
+const KM_PER_DEGREE = 111.2;
+const distanceKm = (p: LatLon, q: LatLon) =>
+  Math.hypot(p.lat - q.lat, (p.lon - q.lon) * Math.cos((p.lat * Math.PI) / 180)) * KM_PER_DEGREE;
+
+const timedRows = rows.filter((row) => row.time !== "Limits");
+const limits = rows.flatMap((row) =>
+  [row.north, row.south].flatMap((limit) => (limit ? [{ row, limit }] : [])),
+);
+
+describe("localCircumstances vs NASA's 2027 path table", () => {
+  // NASA rounds to 0.1 s and positions to 0.1′ (~185 m); we measured ≤ 0.25 s.
+  it.each(rows.map((row) => [row.time, row] as const))(
+    "matches the central-line duration at %s within 0.5 s",
+    (_, row) => {
+      const result = at(row.central);
+      expect(result.type).toBe("total");
+      expect(Math.abs(result.durationSeconds - row.durationSeconds)).toBeLessThan(0.5);
+    },
+  );
+
+  it("puts mid-eclipse on the central line at the table's time, within 5 s", () => {
+    for (const row of timedRows) {
+      const [hours = 0, minutes = 0] = row.time.split(":").map(Number);
+      expect(Math.abs(at(row.central).mid - (hours + minutes / 60)) * 3600).toBeLessThan(5);
+    }
+  });
+
+  // The duration rises steeply just inside a limit (0 s at the edge, ~20 s at 200 m), so the
+  // limit is checked by position instead: it must lie between 2 km inside and 2 km outside.
+  it("places every limit within 2 km of NASA's", () => {
+    for (const { row, limit } of limits) {
+      const twoKm = 2 / distanceKm(row.central, limit);
+      expect(at(along(row.central, limit, 1 - twoKm)).type).toBe("total");
+      const outside = at(along(row.central, limit, 1 + twoKm));
+      expect(outside.type).not.toBe("total");
+      expect(outside.durationSeconds).toBe(0);
+    }
+  });
+
+  it("gives a shorter, non-zero totality halfway between the central line and a limit", () => {
+    for (const { row, limit } of limits) {
+      const halfway = at(along(row.central, limit, 0.5)).durationSeconds;
+      expect(halfway).toBeGreaterThan(0);
+      expect(halfway).toBeLessThan(at(row.central).durationSeconds);
+    }
+  });
+
+  it("flags the sunrise and sunset ends of the path, where the Sun is on the horizon", () => {
+    for (const row of rows.filter((r) => r.time === "Limits")) {
+      expect(at(row.central).sunBelowHorizon).toBe(true);
+    }
+    const midPath = at(rows.find((r) => r.time === "10:00")?.central ?? { lat: 0, lon: 0 });
+    expect(midPath.sunBelowHorizon).toBe(false);
+    expect(midPath.sunAltitude).toBeGreaterThan(80);
+  });
+});
+
+describe("localCircumstances", () => {
+  it("reports no eclipse far from the shadow (Honolulu)", () => {
+    const result = at({ lat: 21.3, lon: -157.9 });
+    expect(result.type).toBe("none");
+    expect(result.durationSeconds).toBe(0);
+    expect(result.c2).toBeUndefined();
+  });
+
+  it("reports no eclipse on the night side, opposite the path (antipode of the 10:00 point)", () => {
+    const central = rows.find((r) => r.time === "10:00")?.central ?? { lat: 0, lon: 0 };
+    const result = at({ lat: -central.lat, lon: central.lon - 180 });
+    expect(result.type).toBe("none");
+    expect(result.durationSeconds).toBe(0);
+  });
+
+  it("puts C2 before mid-eclipse and C3 after, c3 − c2 apart", () => {
+    const result = at({ lat: 25.7, lon: 32.6 }); // Luxor
+    expect(result.c2).toBeLessThan(result.mid);
+    expect(result.c3).toBeGreaterThan(result.mid);
+    expect(((result.c3 ?? 0) - (result.c2 ?? 0)) * 3600).toBeCloseTo(result.durationSeconds, 6);
+  });
+
+  it("rejects an invalid position", () => {
+    expect(() =>
+      localCircumstances(elements, { latitude: 91, longitude: 0, altitudeMeters: 0 }),
+    ).toThrow(RangeError);
+  });
+
+  it("throws rather than returning a wrong time when the iteration cannot converge", () => {
+    // A shadow that does not move relative to the Earth has no closest approach to find.
+    const frozen = { ...elements, x: [0], y: [0], d: [0], mu: [0] };
+    expect(() =>
+      localCircumstances(frozen, { latitude: 0, longitude: 0, altitudeMeters: 0 }),
+    ).toThrow(/No convergence/);
+  });
+});
