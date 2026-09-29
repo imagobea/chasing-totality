@@ -2,6 +2,7 @@ import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
 import { eclipse2027Aug02 } from "../../src/eclipse/elements/2027-08-02.js";
 import { localCircumstances } from "../../src/eclipse/localCircumstances.js";
+import { along, pastLimit } from "../geo.js";
 import { parseNasaPath, type LatLon } from "../nasaPath.js";
 
 const rows = parseNasaPath(
@@ -12,15 +13,6 @@ const elements = { ...eclipse2027Aug02, deltaT: 71.7 };
 
 const at = ({ lat, lon }: LatLon) =>
   localCircumstances(elements, { latitude: lat, longitude: lon, altitudeMeters: 0 });
-
-// A point on the line from the central line through a limit: 0 is the central point, 1 the limit.
-const along = (central: LatLon, limit: LatLon, fraction: number): LatLon => ({
-  lat: central.lat + fraction * (limit.lat - central.lat),
-  lon: central.lon + fraction * (limit.lon - central.lon),
-});
-const KM_PER_DEGREE = 111.2;
-const distanceKm = (p: LatLon, q: LatLon) =>
-  Math.hypot(p.lat - q.lat, (p.lon - q.lon) * Math.cos((p.lat * Math.PI) / 180)) * KM_PER_DEGREE;
 
 const timedRows = rows.filter((row) => row.time !== "Limits");
 const limits = rows.flatMap((row) =>
@@ -49,9 +41,8 @@ describe("localCircumstances vs NASA's 2027 path table", () => {
   // limit is checked by position instead: it must lie between 2 km inside and 2 km outside.
   it("places every limit within 2 km of NASA's", () => {
     for (const { row, limit } of limits) {
-      const twoKm = 2 / distanceKm(row.central, limit);
-      expect(at(along(row.central, limit, 1 - twoKm)).type).toBe("total");
-      const outside = at(along(row.central, limit, 1 + twoKm));
+      expect(at(pastLimit(row.central, limit, -2)).type).toBe("total");
+      const outside = at(pastLimit(row.central, limit, 2));
       expect(outside.type).not.toBe("total");
       expect(outside.durationSeconds).toBe(0);
     }
