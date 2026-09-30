@@ -16,7 +16,9 @@ export type DurationGrid = {
   step: number; // spacing between points, degrees
   width: number; // points per row
   height: number; // rows
-  values: Float64Array; // totality duration in seconds, row by row from the south-west corner
+  // signedDurationSquared (see localCircumstances.ts) at each point, seconds², row by row from
+  // the south-west corner
+  values: Float64Array;
 };
 
 export function durationGrid(
@@ -36,7 +38,7 @@ export function durationGrid(
         latitude: south + row * step,
         longitude: west + column * step,
         altitudeMeters: 0,
-      }).durationSeconds;
+      }).signedDurationSquared;
     }
   }
   return { west, south, step, width, height, values };

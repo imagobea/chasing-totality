@@ -19,9 +19,9 @@ export type IsolineFeature = {
 export type IsolineCollection = { type: "FeatureCollection"; features: IsolineFeature[] };
 
 export function durationContours(grid: DurationGrid, thresholdsSeconds: number[]): IsolineCollection {
-  // d3-contour keeps values ≥ threshold, so a 0 threshold would cover the whole grid; the path
-  // of totality is where the duration is above 0.
-  const levels = thresholdsSeconds.map((seconds) => (seconds === 0 ? Number.MIN_VALUE : seconds));
+  // The grid holds squared durations; d3-contour keeps values ≥ threshold, so the path of
+  // totality is where they are above 0.
+  const levels = thresholdsSeconds.map((seconds) => (seconds === 0 ? Number.MIN_VALUE : seconds ** 2));
   const polygons = contours().size([grid.width, grid.height]).thresholds(levels)(Array.from(grid.values));
 
   // d3-contour puts value i at the centre of pixel i, i.e. at grid coordinate i + 0.5.

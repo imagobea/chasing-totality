@@ -48,6 +48,17 @@ describe("localCircumstances vs NASA's 2027 path table", () => {
     }
   });
 
+  it("gives a signed squared duration: duration² inside, more negative the further outside", () => {
+    for (const { row, limit } of limits) {
+      const inside = at(pastLimit(row.central, limit, -2));
+      expect(inside.signedDurationSquared).toBe(inside.durationSeconds ** 2);
+      const outside2km = at(pastLimit(row.central, limit, 2)).signedDurationSquared;
+      const outside4km = at(pastLimit(row.central, limit, 4)).signedDurationSquared;
+      expect(outside2km).toBeLessThan(0);
+      expect(outside4km).toBeLessThan(outside2km);
+    }
+  });
+
   it("gives a shorter, non-zero totality halfway between the central line and a limit", () => {
     for (const { row, limit } of limits) {
       const halfway = at(along(row.central, limit, 0.5)).durationSeconds;

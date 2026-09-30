@@ -31,6 +31,10 @@ export type LocalCircumstances = {
   durationSeconds: number; // c3 − c2, seconds; 0 unless total or annular
   sunAltitude: number; // at mid-eclipse, degrees
   sunBelowHorizon: boolean; // true if the Sun is below the horizon at mid, c2 or c3
+  // durationSeconds² inside the path; outside, negative and growing with the distance from its
+  // edge, seconds². Unlike the duration, it changes smoothly across the edge, so isolines drawn
+  // from it by interpolation put the edge in the right place.
+  signedDurationSquared: number;
 };
 
 const RAD = Math.PI / 180;
@@ -57,6 +61,9 @@ export function localCircumstances(
   const atMid = at(mid);
   const distance = Math.hypot(atMid.u, atMid.v);
   const umbraRadius = Math.abs(atMid.L2);
+  // A track passing `distance` from the umbra's centre at speed n spends 2√(R² − distance²)/n
+  // hours inside it; squared, that is negative when the track misses the umbra.
+  const passSquared = ((4 * (umbraRadius ** 2 - distance ** 2)) / atMid.n2) * 3600 ** 2;
   const toUT = (t: number) => elements.t0 + t - elements.deltaT / 3600;
   // ζ is the observer's height towards the Sun, so ζ / (distance from the Earth's centre) is
   // the sine of the Sun's altitude.
@@ -68,6 +75,7 @@ export function localCircumstances(
     durationSeconds: 0,
     sunAltitude: sunAltitude(atMid),
     sunBelowHorizon: sunAltitude(atMid) < 0,
+    signedDurationSquared: Math.min(0, passSquared),
   };
   // The projection goes straight through the Earth, so a point on the night side can fall
   // inside the shadow circle too. It sees nothing: the Sun is below its horizon.
@@ -99,6 +107,7 @@ export function localCircumstances(
     c2: toUT(c2),
     c3: toUT(c3),
     durationSeconds: (c3 - c2) * 3600,
+    signedDurationSquared: ((c3 - c2) * 3600) ** 2,
     sunBelowHorizon: belowHorizon.some(Boolean),
   };
 }

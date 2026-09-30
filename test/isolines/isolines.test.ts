@@ -9,8 +9,9 @@ const AREA = { west: 30, south: 24, east: 33, north: 29 };
 const STEP = 0.05;
 const grid = durationGrid(eclipse2027Aug02, AREA, STEP);
 
-const durationAt = ([longitude, latitude]: Position) =>
-  localCircumstances(eclipse2027Aug02, { latitude, longitude, altitudeMeters: 0 }).durationSeconds;
+const at = ([longitude, latitude]: Position) =>
+  localCircumstances(eclipse2027Aug02, { latitude, longitude, altitudeMeters: 0 });
+const durationAt = (position: Position) => at(position).durationSeconds;
 
 // Isoline vertices, leaving out those where d3-contour closes a polygon along the grid's edge.
 const isolineVertices = (coordinates: Position[][][]) =>
@@ -28,11 +29,11 @@ describe("durationGrid", () => {
     expect(grid.values).toHaveLength(61 * 101);
   });
 
-  it("stores each point's duration row by row from the south-west corner", () => {
+  it("stores each point's signed squared duration row by row from the south-west corner", () => {
     const column = 20;
     const row = 60;
     expect(grid.values[row * grid.width + column]).toBe(
-      durationAt([AREA.west + column * STEP, AREA.south + row * STEP]),
+      at([AREA.west + column * STEP, AREA.south + row * STEP]).signedDurationSquared,
     );
   });
 
@@ -45,11 +46,12 @@ describe("durationGrid", () => {
 });
 
 describe("durationContours", () => {
-  const isolines = durationContours(grid, [0, 180, 360]);
+  const isolines = durationContours(grid, [0, 30, 180, 360]);
 
   it("returns one feature per threshold, labelled with its duration", () => {
     expect(isolines.features.map((f) => f.properties)).toEqual([
       { durationSeconds: 0, name: "Path of totality" },
+      { durationSeconds: 30, name: "0m30s" },
       { durationSeconds: 180, name: "3m00s" },
       { durationSeconds: 360, name: "6m00s" },
     ]);
@@ -66,8 +68,8 @@ describe("durationContours", () => {
     expect(isoline?.properties.name).toBe("1m30s");
   });
 
-  // Measured on this 0.05° grid: 0.6 s at 180 s, 0.07 s at 360 s.
-  it("draws the inner isolines where the engine gives that duration, within 1 s", () => {
+  // Measured on this 0.05° grid: 0.8 s at 30 s, 0.13 s at 180 s, 0.07 s at 360 s.
+  it("draws each isoline where the engine gives that duration, within 1 s", () => {
     for (const { properties, geometry } of isolines.features.slice(1)) {
       const vertices = isolineVertices(geometry.coordinates);
       expect(vertices.length).toBeGreaterThan(0);
@@ -77,14 +79,15 @@ describe("durationContours", () => {
     }
   });
 
-  // Known limitation: duration rises steeply just inside a limit, and grid points outside the
-  // path are all 0, so interpolation draws the edge on the outside, up to a grid cell away
-  // (~5.6 km measured here); isolines below ~150 s are off by 2–30 s.
-  it("draws the path's edge just outside the path", () => {
+  // Measured: within 30 m. The path runs west–east here, so a step north or south crosses it.
+  it("draws the path's edge within 100 m of the limit", () => {
     const vertices = isolineVertices(isolines.features[0]?.geometry.coordinates ?? []);
     expect(vertices.length).toBeGreaterThan(0);
-    for (const vertex of vertices) {
-      expect(durationAt(vertex)).toBe(0);
+    const hundredMetres = 0.1 / 111.2; // degrees of latitude
+    for (const [lon, lat] of vertices) {
+      const south = at([lon, lat - hundredMetres]).type === "total";
+      const north = at([lon, lat + hundredMetres]).type === "total";
+      expect(south).not.toBe(north);
     }
   });
 });
