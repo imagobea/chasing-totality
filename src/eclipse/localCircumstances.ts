@@ -54,10 +54,11 @@ export function localCircumstances(
 
   // Mid-eclipse: the shadow's centre is closest when its offset (u, v) is perpendicular to its
   // motion (a, b), i.e. u·a + v·b = 0.
-  const mid = iterate(0, (t) => {
-    const s = at(t);
-    return -(s.u * s.a + s.v * s.b) / s.n2;
-  });
+  const mid =
+    iterate(0, (t) => {
+      const s = at(t);
+      return -(s.u * s.a + s.v * s.b) / s.n2;
+    }) ?? noConvergence();
   const atMid = at(mid);
   const distance = Math.hypot(atMid.u, atMid.v);
   const umbraRadius = Math.abs(atMid.L2);
@@ -95,7 +96,20 @@ export function localCircumstances(
       const offAxis = (s.a * s.v - s.u * s.b) / (n * Math.abs(s.L2));
       const halfChord = (Math.abs(s.L2) / n) * Math.sqrt(Math.max(0, 1 - offAxis ** 2));
       return -(s.u * s.a + s.v * s.b) / s.n2 + sign * halfChord;
-    });
+    }) ?? bisectContact(sign);
+  // Just inside a limit, C2 and C3 are milliseconds apart and the iteration above can cycle
+  // between a few values without settling. Bisection always settles: the observer is inside the
+  // umbra at mid-eclipse, so step away from mid until they are outside, then halve the gap.
+  const insideUmbra = (t: number) => {
+    const s = at(t);
+    return Math.hypot(s.u, s.v) < Math.abs(s.L2);
+  };
+  const bisectContact = (sign: -1 | 1) => {
+    for (let hours = TOLERANCE_HOURS, i = 0; i < MAX_ITERATIONS; hours *= 2, i++) {
+      if (!insideUmbra(mid + sign * hours)) return bisect(mid, mid + sign * hours, insideUmbra);
+    }
+    return noConvergence();
+  };
   const c2 = contact(-1);
   const c3 = contact(1);
   const belowHorizon = [atMid, at(c2), at(c3)].map((s) => sunAltitude(s) < 0);
@@ -157,13 +171,27 @@ function shadowSeenFrom(
   };
 }
 
-// Newton-style iteration: apply step(t) until it is below the tolerance.
-function iterate(start: number, step: (t: number) => number): number {
+// Newton-style iteration: apply step(t) until it is below the tolerance; undefined if it never is.
+function iterate(start: number, step: (t: number) => number): number | undefined {
   let t = start;
   for (let i = 0; i < MAX_ITERATIONS; i++) {
     const delta = step(t);
     t += delta;
     if (Math.abs(delta) < TOLERANCE_HOURS) return t;
   }
+  return undefined;
+}
+
+// Bisection: narrows [inside, outside] around the time the observer crosses the umbra's edge.
+function bisect(inside: number, outside: number, isInside: (t: number) => boolean): number {
+  while (Math.abs(outside - inside) > TOLERANCE_HOURS) {
+    const middle = (inside + outside) / 2;
+    if (isInside(middle)) inside = middle;
+    else outside = middle;
+  }
+  return (inside + outside) / 2;
+}
+
+function noConvergence(): never {
   throw new Error(`No convergence after ${MAX_ITERATIONS} iterations`);
 }
