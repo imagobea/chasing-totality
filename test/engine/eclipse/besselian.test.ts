@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { evaluate, type BesselianElements } from "../../src/eclipse/besselian.js";
+import { evaluate, type BesselianElements } from "../../../src/engine/eclipse/besselian.js";
 
 // Round-number coefficients so every expected value can be checked by hand.
 const elements: BesselianElements = {

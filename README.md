@@ -68,14 +68,15 @@ docker compose run --rm app pnpm spike:grid  # out/ shows up on the host
 
 ```
 src/
-├── eclipse/           # Totality duration at one place
-│   ├── elements/      # Besselian elements per eclipse
-│   ├── besselian.ts   # Evaluates the elements at a given time
-│   ├── observer.ts    # Observer's position relative to the Earth's centre
-│   └── localCircumstances.ts  # Eclipse type, contact times and duration
-└── isolines/
-    ├── grid.ts        # Engine values on a lat/lon grid
-    └── contours.ts    # Grid to GeoJSON isolines
+└── engine/                # Everything that computes; a frontend/backend would only consume it
+    ├── eclipse/           # Totality duration at one place
+    │   ├── elements/      # Besselian elements per eclipse
+    │   ├── besselian.ts   # Evaluates the elements at a given time
+    │   ├── observer.ts    # Observer's position relative to the Earth's centre
+    │   └── localCircumstances.ts  # Eclipse type, contact times and duration
+    └── isolines/
+        ├── grid.ts        # Engine values on a lat/lon grid
+        └── contours.ts    # Grid to GeoJSON isolines
 
 scripts/               # spike:grid, spike:fixtures
 test/                  # Vitest tests and fixtures (NASA path table, JSEX)

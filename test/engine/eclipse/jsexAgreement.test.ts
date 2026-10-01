@@ -1,7 +1,7 @@
 import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
-import { eclipse2027Aug02 } from "../../src/eclipse/elements/2027-08-02.js";
-import { localCircumstances, type LocalCircumstances } from "../../src/eclipse/localCircumstances.js";
+import { eclipse2027Aug02 } from "../../../src/engine/eclipse/elements/2027-08-02.js";
+import { localCircumstances, type LocalCircumstances } from "../../../src/engine/eclipse/localCircumstances.js";
 
 // Points computed by NASA's JSEX (see scripts/generate-jsex-fixtures.ts). Unlike NASA's path
 // table, they cover the whole width of the path, where the isolines are drawn. JSEX uses the
@@ -13,7 +13,7 @@ type JsexPoint = Pick<LocalCircumstances, "type" | "mid" | "durationSeconds"> & 
   altitudeMeters: number;
 };
 const { points } = JSON.parse(
-  readFileSync(new URL("../fixtures/jsex-2027.json", import.meta.url), "utf8"),
+  readFileSync(new URL("../../fixtures/jsex-2027.json", import.meta.url), "utf8"),
 ) as { points: JsexPoint[] };
 
 describe("localCircumstances vs JSEX", () => {

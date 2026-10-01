@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { geocentricObserver } from "../../src/eclipse/observer.js";
+import { geocentricObserver } from "../../../src/engine/eclipse/observer.js";
 
 const EARTH_POLAR_TO_EQUATORIAL = 0.99664719;
 const EARTH_EQUATORIAL_RADIUS_METERS = 6378140;

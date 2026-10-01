@@ -1,8 +1,8 @@
 import { describe, expect, it } from "vitest";
-import { eclipse2027Aug02 } from "../../src/eclipse/elements/2027-08-02.js";
-import { localCircumstances } from "../../src/eclipse/localCircumstances.js";
-import { durationContours, type Position } from "../../src/isolines/contours.js";
-import { durationGrid } from "../../src/isolines/grid.js";
+import { eclipse2027Aug02 } from "../../../src/engine/eclipse/elements/2027-08-02.js";
+import { localCircumstances } from "../../../src/engine/eclipse/localCircumstances.js";
+import { durationContours, type Position } from "../../../src/engine/isolines/contours.js";
+import { durationGrid } from "../../../src/engine/isolines/grid.js";
 
 // A small grid across the path over Egypt, around 10:00 UT (central duration ~6m23s).
 const AREA = { west: 30, south: 24, east: 33, north: 29 };
