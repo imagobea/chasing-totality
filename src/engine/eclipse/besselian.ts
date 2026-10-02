@@ -1,17 +1,8 @@
-// To draw totality-duration isolines we need the duration at any lat/lon: how long the Moon's
-// umbra (full shadow) covers that spot. This module is the first step: it tells us where the
-// shadow is, and how it is moving, at any instant. Later steps place the observer in the same
-// frame and find when the umbra arrives and leaves.
-//
-// Besselian elements describe the shadow on the "fundamental plane", a plane through the Earth's
-// centre perpendicular to the Sun–Moon line. The shadow axis crosses it at (x, y), in Earth
-// radii; the penumbra and umbra cut it in circles of radius l1 and l2 (l2 negative while the
-// umbra reaches the Earth). d and μ orient the plane relative to the Earth. Each element is
-// published as a short polynomial in t, the hours since t0 (in TDT).
-// References: Meeus, "Elements of Solar Eclipses 1951–2200";
-// Explanatory Supplement to the Astronomical Almanac (3rd ed., 2013), ch. 11.
+// Where the Moon's shadow is, and how fast it moves, at any time: the Besselian elements
+// evaluated on the fundamental plane. Explained in ../README.md
 
-// The arrays are polynomial coefficients [c0, c1, c2, …]: value = c0 + c1·t + c2·t² + …
+// The arrays are polynomial coefficients [c0, c1, c2, …]: value = c0 + c1·t + c2·t² + …, with t
+// the hours since t0
 export type BesselianElements = {
   t0: number; // reference time on the eclipse date (TDT), hours
   deltaT: number; // TDT − UT, seconds
@@ -26,7 +17,7 @@ export type BesselianElements = {
 };
 
 // The elements evaluated at one instant t, plus hourly rates. d and mu become radians,
-// ready for trigonometry.
+// ready for trigonometry
 export type ElementsAt = {
   x: number; // Earth radii
   y: number; // Earth radii
@@ -57,7 +48,7 @@ export function evaluate(elements: BesselianElements, t: number): ElementsAt {
   };
 }
 
-// c0 + c1·t + c2·t² + …, in Horner form.
+// c0 + c1·t + c2·t² + …, in Horner form
 function polynomial(coefficients: number[], t: number): number {
   return coefficients.reduceRight((sum, c) => sum * t + c, 0);
 }

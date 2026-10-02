@@ -1,13 +1,5 @@
-// To find how long totality lasts at a lat/lon, we must know where that spot is relative to
-// the Moon's shadow. This module turns the observer's latitude, longitude and altitude into
-// geocentric coordinates; localCircumstances.ts then combines them with the Besselian elements
-// to place the observer on the fundamental plane, next to the shadow.
-//
-// The Earth is slightly flattened, so the direction from the Earth's centre to an observer
-// (geocentric latitude φ′) differs a little from their map latitude φ, and their distance ρ
-// from the centre depends on latitude. Eclipse formulas need ρ·sinφ′ (height above the
-// equatorial plane) and ρ·cosφ′ (distance from the Earth's axis), in equatorial Earth radii.
-// Reference: Meeus, "Astronomical Algorithms" (2nd ed., 1998), ch. 11.
+// The observer's position as the eclipse maths needs it: ρ·sinφ′ and ρ·cosφ′, from latitude,
+// longitude and altitude. Explained in ../README.md
 
 export type GeographicPosition = {
   latitude: number; // north positive, degrees
@@ -21,7 +13,7 @@ export type GeocentricObserver = {
   longitude: number; // east positive, radians
 };
 
-// IAU 1976 ellipsoid, as used by Meeus and the eclipse elements.
+// IAU 1976 ellipsoid, as used by Meeus and the eclipse elements
 const EQUATORIAL_RADIUS_METERS = 6378140;
 const POLAR_TO_EQUATORIAL = 0.99664719; // b/a, from flattening 1/298.257
 
@@ -44,9 +36,9 @@ export function geocentricObserver({
 
   const phi = latitude * RAD;
   // Reduced latitude: the angle that places the sea-level point on the ellipse. atan2 rather
-  // than atan(b/a · tan φ) keeps the poles exact.
+  // than atan(b/a · tan φ) keeps the poles exact
   const reducedLatitude = Math.atan2(POLAR_TO_EQUATORIAL * Math.sin(phi), Math.cos(phi));
-  // Altitude pushes the observer outwards along the local vertical, which points along φ.
+  // Altitude pushes the observer outwards along the local vertical, which points along φ
   const altitude = altitudeMeters / EQUATORIAL_RADIUS_METERS;
 
   return {

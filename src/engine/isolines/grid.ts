@@ -1,4 +1,5 @@
-// Totality duration sampled on a regular lat/lon grid: the input the isolines are traced from.
+// Totality on a regular lat/lon grid: the values the isolines are traced from.
+// Explained in ../README.md
 
 import type { BesselianElements } from "../eclipse/besselian.js";
 import { localCircumstances } from "../eclipse/localCircumstances.js";

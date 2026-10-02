@@ -1,9 +1,5 @@
-// Traces isolines through a duration grid and returns them as GeoJSON, ready for a map.
-//
-// Each feature is the area where totality lasts at least `durationSeconds`; its outline is the
-// isoline. A threshold of 0 gives the path of totality itself. d3-contour works in grid
-// coordinates (marching squares with linear interpolation between points); they are converted
-// back to longitude/latitude here.
+// Traces isolines through a duration grid and returns them as GeoJSON. Explained in
+// ../README.md
 
 import { contours } from "d3-contour";
 import type { DurationGrid } from "./grid.js";
@@ -43,12 +39,12 @@ export function durationContours(grid: DurationGrid, thresholdsSeconds: number[]
         },
       };
     })
-      // A duration no point reaches has no area to draw.
+      // A duration no point reaches has no area to draw
       .filter((feature) => feature.geometry.coordinates.length > 0),
   };
 }
 
-// "4m00s", as in NASA's path table; the 0 s isoline is the path of totality.
+// "4m00s", as in NASA's path table; the 0 s isoline is the path of totality
 function isolineName(durationSeconds: number): string {
   if (durationSeconds === 0) return "Path of totality";
   const minutes = Math.floor(durationSeconds / 60);

@@ -1,24 +1,5 @@
-// How long totality lasts at one lat/lon: the value the isolines are drawn from.
-//
-// besselian.ts gives the shadow on the fundamental plane and observer.ts gives the observer's
-// geocentric coordinates. Here the observer is projected onto the same plane as (ξ, η), with ζ
-// its height towards the Sun, so both are in one frame. From that frame:
-//   - (u, v) = shadow axis − observer is where the shadow's centre is, seen from the observer;
-//   - mid-eclipse is when that distance is smallest;
-//   - totality lasts while the distance is below the umbra's radius at the observer's height.
-// The contacts are found by Newton iteration, starting from the rates of (u, v).
-// References: Explanatory Supplement to the Astronomical Almanac (3rd ed., 2013), ch. 11;
-// Meeus, "Elements of Solar Eclipses 1951–2200".
-//
-// Limitations:
-//   - The Moon is a smooth sphere. Its real limb profile moves the limits by ~1–2 km and changes
-//     durations by ~1–2 s.
-//   - ΔT (Earth-rotation correction) is a fixed value from the elements; it shifts the whole
-//     path east–west (4.3 s of ΔT is ~1.7 km).
-//   - At the sunrise/sunset ends of the path, part of totality can happen with the Sun below the
-//     horizon; that is flagged by sunBelowHorizon, and durationSeconds is still the full
-//     geometric duration. Visibility is checked only at mid, C2 and C3, not at the partial
-//     phase's contacts. The Sun's altitude is geocentric and ignores refraction (~0.5°).
+// Mid-eclipse, C2, C3 and the duration of totality at one place. Explained in ../README.md;
+// limitations in docs/plans/004-local-totality-duration-plan.md
 
 import { evaluate, type BesselianElements } from "./besselian.js";
 import { geocentricObserver, type GeocentricObserver, type GeographicPosition } from "./observer.js";
@@ -53,7 +34,7 @@ export function localCircumstances(
   const at = (t: number) => shadowSeenFrom(elements, observer, t);
 
   // Mid-eclipse: the shadow's centre is closest when its offset (u, v) is perpendicular to its
-  // motion (a, b), i.e. u·a + v·b = 0.
+  // motion (a, b), i.e. u·a + v·b = 0
   const mid =
     iterate(0, (t) => {
       const s = at(t);
@@ -145,14 +126,14 @@ function shadowSeenFrom(
   const { x, y, d, mu, l1, l2, xRate, yRate, dRate, muRate } = evaluate(elements, t);
   const { rhoSinPhi, rhoCosPhi, longitude } = observer;
 
-  // Observer's hour angle from the shadow axis.
+  // Observer's hour angle from the shadow axis
   const H = mu + longitude - EARTH_ROTATION_DEGREES_PER_SECOND * elements.deltaT * RAD;
 
-  // Rotate the observer's geocentric position into the fundamental plane.
+  // Rotate the observer's geocentric position into the fundamental plane
   const xi = rhoCosPhi * Math.sin(H);
   const eta = rhoSinPhi * Math.cos(d) - rhoCosPhi * Math.cos(H) * Math.sin(d);
   const zeta = rhoSinPhi * Math.sin(d) + rhoCosPhi * Math.cos(H) * Math.cos(d);
-  // The observer moves on the plane as the Earth turns (μ′) and the plane tilts (d′).
+  // The observer moves on the plane as the Earth turns (μ′) and the plane tilts (d′)
   const xiRate = muRate * rhoCosPhi * Math.cos(H);
   const etaRate = muRate * xi * Math.sin(d) - zeta * dRate;
 
@@ -165,13 +146,13 @@ function shadowSeenFrom(
     b,
     n2: a * a + b * b,
     zeta,
-    // The shadow cones widen (or narrow) with height above the plane.
+    // The shadow cones widen (or narrow) with height above the plane
     L1: l1 - zeta * elements.tanF1,
     L2: l2 - zeta * elements.tanF2,
   };
 }
 
-// Newton-style iteration: apply step(t) until it is below the tolerance; undefined if it never is.
+// Newton-style iteration: apply step(t) until it is below the tolerance; undefined if it never is
 function iterate(start: number, step: (t: number) => number): number | undefined {
   let t = start;
   for (let i = 0; i < MAX_ITERATIONS; i++) {
@@ -182,7 +163,7 @@ function iterate(start: number, step: (t: number) => number): number | undefined
   return undefined;
 }
 
-// Bisection: narrows [inside, outside] around the time the observer crosses the umbra's edge.
+// Bisection: narrows [inside, outside] around the time the observer crosses the umbra's edge
 function bisect(inside: number, outside: number, isInside: (t: number) => boolean): number {
   while (Math.abs(outside - inside) > TOLERANCE_HOURS) {
     const middle = (inside + outside) / 2;
