@@ -2,6 +2,7 @@
 // limitations in docs/plans/004-local-totality-duration-plan.md
 
 import { evaluate, type BesselianElements } from "./besselian.js";
+import { RAD } from "./constants.js";
 import { geocentricObserver, type GeocentricObserver, type GeographicPosition } from "./observer.js";
 
 export type LocalCircumstances = {
@@ -18,95 +19,6 @@ export type LocalCircumstances = {
   signedDurationSquared: number;
 };
 
-const RAD = Math.PI / 180;
-// Besselian μ is measured against a meridian that turns with ephemeris time; an observer's
-// hour angle needs universal time. The Earth turns 1.002738 × 15°/h = 0.00417807° per
-// second of ΔT.
-const EARTH_ROTATION_DEGREES_PER_SECOND = 0.00417807;
-const TOLERANCE_HOURS = 1e-6; // ~4 ms
-const MAX_ITERATIONS = 50;
-
-export function localCircumstances(
-  elements: BesselianElements,
-  position: GeographicPosition,
-): LocalCircumstances {
-  const observer = geocentricObserver(position);
-  const at = (t: number) => shadowSeenFrom(elements, observer, t);
-
-  // Mid-eclipse: the shadow's centre is closest when its offset (u, v) is perpendicular to its
-  // motion (a, b), i.e. u·a + v·b = 0
-  const mid =
-    iterate(0, (t) => {
-      const s = at(t);
-      return -(s.u * s.a + s.v * s.b) / s.n2;
-    }) ?? noConvergence();
-  const atMid = at(mid);
-  const distance = Math.hypot(atMid.u, atMid.v);
-  const umbraRadius = Math.abs(atMid.L2);
-  // A track passing `distance` from the umbra's centre at speed n spends 2√(R² − distance²)/n
-  // hours inside it; squared, that is negative when the track misses the umbra.
-  const passSquared = ((4 * (umbraRadius ** 2 - distance ** 2)) / atMid.n2) * 3600 ** 2;
-  const toUT = (t: number) => elements.t0 + t - elements.deltaT / 3600;
-  // ζ is the observer's height towards the Sun, so ζ / (distance from the Earth's centre) is
-  // the sine of the Sun's altitude.
-  const observerDistance = Math.hypot(observer.rhoSinPhi, observer.rhoCosPhi);
-  const sunAltitude = (s: ShadowSeenFrom) => Math.asin(s.zeta / observerDistance) / RAD;
-
-  const result = {
-    mid: toUT(mid),
-    durationSeconds: 0,
-    sunAltitude: sunAltitude(atMid),
-    sunBelowHorizon: sunAltitude(atMid) < 0,
-    signedDurationSquared: Math.min(0, passSquared),
-  };
-  // The projection goes straight through the Earth, so a point on the night side can fall
-  // inside the shadow circle too. It sees nothing: the Sun is below its horizon.
-  const notVisible = { ...result, type: "none" } as const;
-  if (distance >= umbraRadius) {
-    if (result.sunBelowHorizon) return notVisible;
-    return { ...result, type: distance < atMid.L1 ? "partial" : "none" };
-  }
-
-  // Contacts: when the distance equals the umbra radius. Solving |(u, v) + (a, b)·Δt| = |L2′|
-  // for Δt, with the rates held constant, gives the step below; iterating refines it. The
-  // earlier root (−) is C2, the later (+) is C3.
-  const contact = (sign: -1 | 1) =>
-    iterate(mid, (t) => {
-      const s = at(t);
-      const n = Math.sqrt(s.n2);
-      const offAxis = (s.a * s.v - s.u * s.b) / (n * Math.abs(s.L2));
-      const halfChord = (Math.abs(s.L2) / n) * Math.sqrt(Math.max(0, 1 - offAxis ** 2));
-      return -(s.u * s.a + s.v * s.b) / s.n2 + sign * halfChord;
-    }) ?? bisectContact(sign);
-  // Just inside a limit, C2 and C3 are milliseconds apart and the iteration above can cycle
-  // between a few values without settling. Bisection always settles: the observer is inside the
-  // umbra at mid-eclipse, so step away from mid until they are outside, then halve the gap.
-  const insideUmbra = (t: number) => {
-    const s = at(t);
-    return Math.hypot(s.u, s.v) < Math.abs(s.L2);
-  };
-  const bisectContact = (sign: -1 | 1) => {
-    for (let hours = TOLERANCE_HOURS, i = 0; i < MAX_ITERATIONS; hours *= 2, i++) {
-      if (!insideUmbra(mid + sign * hours)) return bisect(mid, mid + sign * hours, insideUmbra);
-    }
-    return noConvergence();
-  };
-  const c2 = contact(-1);
-  const c3 = contact(1);
-  const belowHorizon = [atMid, at(c2), at(c3)].map((s) => sunAltitude(s) < 0);
-  if (belowHorizon.every(Boolean)) return notVisible;
-
-  return {
-    ...result,
-    type: atMid.L2 < 0 ? "total" : "annular",
-    c2: toUT(c2),
-    c3: toUT(c3),
-    durationSeconds: (c3 - c2) * 3600,
-    signedDurationSquared: ((c3 - c2) * 3600) ** 2,
-    sunBelowHorizon: belowHorizon.some(Boolean),
-  };
-}
-
 type ShadowSeenFrom = {
   u: number; // shadow axis − observer, eastward, Earth radii
   v: number; // shadow axis − observer, northward, Earth radii
@@ -117,6 +29,13 @@ type ShadowSeenFrom = {
   L1: number; // penumbra radius at the observer's height, Earth radii
   L2: number; // umbra radius at the observer's height (negative: total), Earth radii
 };
+
+// Besselian μ is measured against a meridian that turns with ephemeris time; an observer's
+// hour angle needs universal time. The Earth turns 1.002738 × 15°/h = 0.00417807° per
+// second of ΔT.
+const EARTH_ROTATION_DEGREES_PER_SECOND = 0.00417807;
+const TOLERANCE_HOURS = 1e-6; // ~4 ms
+const MAX_ITERATIONS = 50;
 
 function shadowSeenFrom(
   elements: BesselianElements,
@@ -175,4 +94,85 @@ function bisect(inside: number, outside: number, isInside: (t: number) => boolea
 
 function noConvergence(): never {
   throw new Error(`No convergence after ${MAX_ITERATIONS} iterations`);
+}
+
+export function localCircumstances(
+  elements: BesselianElements,
+  position: GeographicPosition,
+): LocalCircumstances {
+  const observer = geocentricObserver(position);
+  const at = (t: number) => shadowSeenFrom(elements, observer, t);
+
+  // Mid-eclipse: the shadow's centre is closest when its offset (u, v) is perpendicular to its
+  // motion (a, b), i.e. u·a + v·b = 0
+  const mid =
+    iterate(0, (t) => {
+      const s = at(t);
+      return -(s.u * s.a + s.v * s.b) / s.n2;
+    }) ?? noConvergence();
+  const atMid = at(mid);
+  const distance = Math.hypot(atMid.u, atMid.v);
+  const umbraRadius = Math.abs(atMid.L2);
+  // A track passing `distance` from the umbra's centre at speed n spends 2√(R² − distance²)/n
+  // hours inside it; squared, that is negative when the track misses the umbra.
+  const passSquared = ((4 * (umbraRadius ** 2 - distance ** 2)) / atMid.n2) * 3600 ** 2;
+  const toUT = (t: number) => elements.t0 + t - elements.deltaT / 3600;
+  // ζ is the observer's height towards the Sun, so ζ / (distance from the Earth's centre) is
+  // the sine of the Sun's altitude.
+  const observerDistance = Math.hypot(observer.rhoSinPhi, observer.rhoCosPhi);
+  const sunAltitude = (s: ShadowSeenFrom) => Math.asin(s.zeta / observerDistance) / RAD;
+
+  const result = {
+    mid: toUT(mid),
+    durationSeconds: 0,
+    sunAltitude: sunAltitude(atMid),
+    sunBelowHorizon: sunAltitude(atMid) < 0,
+    signedDurationSquared: Math.min(0, passSquared),
+  };
+  // The projection goes straight through the Earth, so a point on the night side can fall
+  // inside the shadow circle too. It sees nothing: the Sun is below its horizon.
+  const notVisible = { ...result, type: "none" } as const;
+  if (distance >= umbraRadius) {
+    if (result.sunBelowHorizon) return notVisible;
+    return { ...result, type: distance < atMid.L1 ? "partial" : "none" };
+  }
+
+  // Just inside a limit, C2 and C3 are milliseconds apart and the iteration below can cycle
+  // between a few values without settling. Bisection always settles: the observer is inside the
+  // umbra at mid-eclipse, so step away from mid until they are outside, then halve the gap.
+  const insideUmbra = (t: number) => {
+    const s = at(t);
+    return Math.hypot(s.u, s.v) < Math.abs(s.L2);
+  };
+  const bisectContact = (sign: -1 | 1) => {
+    for (let hours = TOLERANCE_HOURS, i = 0; i < MAX_ITERATIONS; hours *= 2, i++) {
+      if (!insideUmbra(mid + sign * hours)) return bisect(mid, mid + sign * hours, insideUmbra);
+    }
+    return noConvergence();
+  };
+  // Contacts: when the distance equals the umbra radius. Solving |(u, v) + (a, b)·Δt| = |L2′|
+  // for Δt, with the rates held constant, gives the step below; iterating refines it. The
+  // earlier root (−) is C2, the later (+) is C3.
+  const contact = (sign: -1 | 1) =>
+    iterate(mid, (t) => {
+      const s = at(t);
+      const n = Math.sqrt(s.n2);
+      const offAxis = (s.a * s.v - s.u * s.b) / (n * Math.abs(s.L2));
+      const halfChord = (Math.abs(s.L2) / n) * Math.sqrt(Math.max(0, 1 - offAxis ** 2));
+      return -(s.u * s.a + s.v * s.b) / s.n2 + sign * halfChord;
+    }) ?? bisectContact(sign);
+  const c2 = contact(-1);
+  const c3 = contact(1);
+  const belowHorizon = [atMid, at(c2), at(c3)].map((s) => sunAltitude(s) < 0);
+  if (belowHorizon.every(Boolean)) return notVisible;
+
+  return {
+    ...result,
+    type: atMid.L2 < 0 ? "total" : "annular",
+    c2: toUT(c2),
+    c3: toUT(c3),
+    durationSeconds: (c3 - c2) * 3600,
+    signedDurationSquared: ((c3 - c2) * 3600) ** 2,
+    sunBelowHorizon: belowHorizon.some(Boolean),
+  };
 }

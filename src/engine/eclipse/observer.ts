@@ -1,6 +1,8 @@
 // The observer's position as the eclipse maths needs it: ρ·sinφ′ and ρ·cosφ′, from latitude,
 // longitude and altitude. Explained in ../README.md
 
+import { RAD } from "./constants.js";
+
 export type GeographicPosition = {
   latitude: number; // north positive, degrees
   longitude: number; // east positive, degrees
@@ -16,8 +18,6 @@ export type GeocentricObserver = {
 // IAU 1976 ellipsoid, as used by Meeus and the eclipse elements
 const EQUATORIAL_RADIUS_METERS = 6378140;
 const POLAR_TO_EQUATORIAL = 0.99664719; // b/a, from flattening 1/298.257
-
-const RAD = Math.PI / 180;
 
 export function geocentricObserver({
   latitude,

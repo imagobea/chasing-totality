@@ -14,6 +14,14 @@ export type IsolineFeature = {
 
 export type IsolineCollection = { type: "FeatureCollection"; features: IsolineFeature[] };
 
+// "4m00s", as in NASA's path table; the 0 s isoline is the path of totality
+function isolineName(durationSeconds: number): string {
+  if (durationSeconds === 0) return "Path of totality";
+  const minutes = Math.floor(durationSeconds / 60);
+  const seconds = durationSeconds - minutes * 60;
+  return `${minutes}m${String(seconds).padStart(2, "0")}s`;
+}
+
 export function durationContours(grid: DurationGrid, thresholdsSeconds: number[]): IsolineCollection {
   // The grid holds squared durations; d3-contour keeps values ≥ threshold, so the path of
   // totality is where they are above 0.
@@ -42,12 +50,4 @@ export function durationContours(grid: DurationGrid, thresholdsSeconds: number[]
       // A duration no point reaches has no area to draw
       .filter((feature) => feature.geometry.coordinates.length > 0),
   };
-}
-
-// "4m00s", as in NASA's path table; the 0 s isoline is the path of totality
-function isolineName(durationSeconds: number): string {
-  if (durationSeconds === 0) return "Path of totality";
-  const minutes = Math.floor(durationSeconds / 60);
-  const seconds = durationSeconds - minutes * 60;
-  return `${minutes}m${String(seconds).padStart(2, "0")}s`;
 }
