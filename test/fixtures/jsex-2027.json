@@ -1,0 +1,492 @@
+{
+  "source": "https://raw.githubusercontent.com/ebradyjobory/eclipse-explorer/dbbd677c00e215c33d3d47a1aa920a6fbc2ff982/JSEX/program.js",
+  "generatedBy": "scripts/generate-jsex-fixtures.ts",
+  "points": [
+    {
+      "name": "Tarifa",
+      "lat": 36.013,
+      "lon": -5.604,
+      "altitudeMeters": 0,
+      "type": "total",
+      "mid": 8.788750293287803,
+      "durationSeconds": 278.48732022846843
+    },
+    {
+      "name": "Cádiz",
+      "lat": 36.529,
+      "lon": -6.292,
+      "altitudeMeters": 0,
+      "type": "total",
+      "mid": 8.778790308986574,
+      "durationSeconds": 172.6925294083494
+    },
+    {
+      "name": "Málaga",
+      "lat": 36.721,
+      "lon": -4.421,
+      "altitudeMeters": 0,
+      "type": "total",
+      "mid": 8.815842285239764,
+      "durationSeconds": 110.22283985000581
+    },
+    {
+      "name": "Tangier",
+      "lat": 35.767,
+      "lon": -5.8,
+      "altitudeMeters": 0,
+      "type": "total",
+      "mid": 8.783556888336093,
+      "durationSeconds": 290.3900105081063
+    },
+    {
+      "name": "Tétouan",
+      "lat": 35.578,
+      "lon": -5.368,
+      "altitudeMeters": 0,
+      "type": "total",
+      "mid": 8.790919833103626,
+      "durationSeconds": 290.6637943422349
+    },
+    {
+      "name": "Oran",
+      "lat": 35.697,
+      "lon": -0.633,
+      "altitudeMeters": 0,
+      "type": "total",
+      "mid": 8.891759454121685,
+      "durationSeconds": 307.87691769753894
+    },
+    {
+      "name": "Benghazi",
+      "lat": 32.119,
+      "lon": 20.086,
+      "altitudeMeters": 0,
+      "type": "total",
+      "mid": 9.513724836129875,
+      "durationSeconds": 369.14468931386307
+    },
+    {
+      "name": "Luxor",
+      "lat": 25.687,
+      "lon": 32.639,
+      "altitudeMeters": 0,
+      "type": "total",
+      "mid": 10.085575884185642,
+      "durationSeconds": 379.98467737953104
+    },
+    {
+      "name": "Jeddah",
+      "lat": 21.485,
+      "lon": 39.192,
+      "altitudeMeters": 0,
+      "type": "total",
+      "mid": 10.420608599554726,
+      "durationSeconds": 359.6572159508743
+    },
+    {
+      "name": "Mecca",
+      "lat": 21.389,
+      "lon": 39.858,
+      "altitudeMeters": 0,
+      "type": "total",
+      "mid": 10.444035525037108,
+      "durationSeconds": 309.32306301951047
+    },
+    {
+      "name": "Seville",
+      "lat": 37.389,
+      "lon": -5.984,
+      "altitudeMeters": 0,
+      "type": "partial",
+      "mid": 8.78999305857805,
+      "durationSeconds": 0
+    },
+    {
+      "name": "Aswan",
+      "lat": 24.089,
+      "lon": 32.899,
+      "altitudeMeters": 0,
+      "type": "partial",
+      "mid": 10.13806023646337,
+      "durationSeconds": 0
+    },
+    {
+      "name": "Madrid",
+      "lat": 40.417,
+      "lon": -3.704,
+      "altitudeMeters": 0,
+      "type": "partial",
+      "mid": 8.852145568387915,
+      "durationSeconds": 0
+    },
+    {
+      "name": "Cairo",
+      "lat": 30.044,
+      "lon": 31.236,
+      "altitudeMeters": 0,
+      "type": "partial",
+      "mid": 9.928648763773731,
+      "durationSeconds": 0
+    },
+    {
+      "name": "08:48 central line",
+      "lat": 35.718333333333334,
+      "lon": -5.01,
+      "altitudeMeters": 0,
+      "type": "total",
+      "mid": 8.79874868973275,
+      "durationSeconds": 293.73248823364816
+    },
+    {
+      "name": "08:48 halfway to north limit",
+      "lat": 36.24916666666667,
+      "lon": -5.165,
+      "altitudeMeters": 0,
+      "type": "total",
+      "mid": 8.798613386675145,
+      "durationSeconds": 252.75550044032036
+    },
+    {
+      "name": "08:48 halfway to south limit",
+      "lat": 35.18666666666667,
+      "lon": -4.88,
+      "altitudeMeters": 0,
+      "type": "total",
+      "mid": 8.798592524080174,
+      "durationSeconds": 255.8433134307192
+    },
+    {
+      "name": "08:48 north limit, 1 km inside",
+      "lat": 36.77124972296393,
+      "lon": -5.317444974052263,
+      "altitudeMeters": 0,
+      "type": "total",
+      "mid": 8.798689478555017,
+      "durationSeconds": 27.817614870422158
+    },
+    {
+      "name": "08:48 north limit, 1 km outside",
+      "lat": 36.78875027703607,
+      "lon": -5.3225550259477385,
+      "altitudeMeters": 0,
+      "type": "partial",
+      "mid": 8.79869558874046,
+      "durationSeconds": 0
+    },
+    {
+      "name": "08:48 south limit, 1 km inside",
+      "lat": 34.663820672751534,
+      "lon": -4.7521567789173025,
+      "altitudeMeters": 0,
+      "type": "total",
+      "mid": 8.798637337804175,
+      "durationSeconds": 43.21985773563828
+    },
+    {
+      "name": "08:48 south limit, 1 km outside",
+      "lat": 34.64617932724847,
+      "lon": -4.7478432210826975,
+      "altitudeMeters": 0,
+      "type": "partial",
+      "mid": 8.79864231090666,
+      "durationSeconds": 0
+    },
+    {
+      "name": "08:48 halfway to north limit, 2000 m altitude",
+      "lat": 36.24916666666667,
+      "lon": -5.165,
+      "altitudeMeters": 2000,
+      "type": "total",
+      "mid": 8.798083048882042,
+      "durationSeconds": 252.29813926831747
+    },
+    {
+      "name": "09:04 central line",
+      "lat": 35.225,
+      "lon": 6.35,
+      "altitudeMeters": 0,
+      "type": "total",
+      "mid": 9.06528843609399,
+      "durationSeconds": 330.39313000053494
+    },
+    {
+      "name": "09:04 halfway to north limit",
+      "lat": 35.778333333333336,
+      "lon": 6.378333333333333,
+      "altitudeMeters": 0,
+      "type": "total",
+      "mid": 9.065185351490422,
+      "durationSeconds": 284.8135125388783
+    },
+    {
+      "name": "09:04 halfway to south limit",
+      "lat": 34.6725,
+      "lon": 6.308333333333334,
+      "altitudeMeters": 0,
+      "type": "total",
+      "mid": 9.065171080254101,
+      "durationSeconds": 287.3519581093822
+    },
+    {
+      "name": "09:04 north limit, 1 km inside",
+      "lat": 36.32268171775514,
+      "lon": 6.406206593981437,
+      "altitudeMeters": 0,
+      "type": "total",
+      "mid": 9.065225341247503,
+      "durationSeconds": 39.58588538765313
+    },
+    {
+      "name": "09:04 north limit, 1 km outside",
+      "lat": 36.34065161557819,
+      "lon": 6.407126739351895,
+      "altitudeMeters": 0,
+      "type": "partial",
+      "mid": 9.065229036014927,
+      "durationSeconds": 0
+    },
+    {
+      "name": "09:04 south limit, 1 km inside",
+      "lat": 34.1289757890772,
+      "lon": 6.267343573836893,
+      "altitudeMeters": 0,
+      "type": "total",
+      "mid": 9.065189467428262,
+      "durationSeconds": 42.85195109691698
+    },
+    {
+      "name": "09:04 south limit, 1 km outside",
+      "lat": 34.11102421092279,
+      "lon": 6.26598975949644,
+      "altitudeMeters": 0,
+      "type": "partial",
+      "mid": 9.06519235427975,
+      "durationSeconds": 0
+    },
+    {
+      "name": "09:04 halfway to north limit, 2000 m altitude",
+      "lat": 35.778333333333336,
+      "lon": 6.378333333333333,
+      "altitudeMeters": 2000,
+      "type": "total",
+      "mid": 9.064720506309593,
+      "durationSeconds": 284.4679940399482
+    },
+    {
+      "name": "09:28 central line",
+      "lat": 32.535,
+      "lon": 18.805,
+      "altitudeMeters": 0,
+      "type": "total",
+      "mid": 9.465161710270245,
+      "durationSeconds": 366.27222687646423
+    },
+    {
+      "name": "09:28 halfway to north limit",
+      "lat": 33.07416666666666,
+      "lon": 19.020833333333336,
+      "altitudeMeters": 0,
+      "type": "total",
+      "mid": 9.465149506814626,
+      "durationSeconds": 316.1636668773373
+    },
+    {
+      "name": "09:28 halfway to south limit",
+      "lat": 31.9975,
+      "lon": 18.5875,
+      "altitudeMeters": 0,
+      "type": "total",
+      "mid": 9.465120667762655,
+      "durationSeconds": 318.09425583926753
+    },
+    {
+      "name": "09:28 north limit, 1 km inside",
+      "lat": 33.604812682745624,
+      "lon": 19.233255772536506,
+      "altitudeMeters": 0,
+      "type": "total",
+      "mid": 9.465162642273148,
+      "durationSeconds": 47.60892360481597
+    },
+    {
+      "name": "09:28 north limit, 1 km outside",
+      "lat": 33.621853983921035,
+      "lon": 19.24007756079683,
+      "altitudeMeters": 0,
+      "type": "partial",
+      "mid": 9.465163482464607,
+      "durationSeconds": 0
+    },
+    {
+      "name": "09:28 south limit, 1 km inside",
+      "lat": 31.46851116507198,
+      "lon": 18.37344405284308,
+      "altitudeMeters": 0,
+      "type": "total",
+      "mid": 9.465102388430092,
+      "durationSeconds": 40.52171407454597
+    },
+    {
+      "name": "09:28 south limit, 1 km outside",
+      "lat": 31.45148883492802,
+      "lon": 18.36655594715692,
+      "altitudeMeters": 0,
+      "type": "partial",
+      "mid": 9.46510215881946,
+      "durationSeconds": 0
+    },
+    {
+      "name": "09:28 halfway to north limit, 2000 m altitude",
+      "lat": 33.07416666666666,
+      "lon": 19.020833333333336,
+      "altitudeMeters": 2000,
+      "type": "total",
+      "mid": 9.464830028376362,
+      "durationSeconds": 315.8898931467485
+    },
+    {
+      "name": "10:00 central line",
+      "lat": 26.888333333333332,
+      "lon": 31.013333333333332,
+      "altitudeMeters": 0,
+      "type": "total",
+      "mid": 9.99847748204076,
+      "durationSeconds": 383.1071857939889
+    },
+    {
+      "name": "10:00 halfway to north limit",
+      "lat": 27.3725,
+      "lon": 31.373333333333335,
+      "altitudeMeters": 0,
+      "type": "total",
+      "mid": 9.998515970983203,
+      "durationSeconds": 331.35060129540307
+    },
+    {
+      "name": "10:00 halfway to south limit",
+      "lat": 26.405,
+      "lon": 30.65833333333333,
+      "altitudeMeters": 0,
+      "type": "total",
+      "mid": 9.998512761543934,
+      "durationSeconds": 332.058783526248
+    },
+    {
+      "name": "10:00 north limit, 1 km inside",
+      "lat": 27.849172094588912,
+      "lon": 31.72776077715848,
+      "altitudeMeters": 0,
+      "type": "total",
+      "mid": 9.998478969689357,
+      "durationSeconds": 56.834694455768954
+    },
+    {
+      "name": "10:00 north limit, 1 km outside",
+      "lat": 27.86416123874442,
+      "lon": 31.73890588950819,
+      "altitudeMeters": 0,
+      "type": "partial",
+      "mid": 9.99847662457216,
+      "durationSeconds": 0
+    },
+    {
+      "name": "10:00 south limit, 1 km inside",
+      "lat": 25.929189126193666,
+      "lon": 30.308858450158336,
+      "altitudeMeters": 0,
+      "type": "total",
+      "mid": 9.998471732675476,
+      "durationSeconds": 30.74710358208169
+    },
+    {
+      "name": "10:00 south limit, 1 km outside",
+      "lat": 25.914144207139667,
+      "lon": 30.297808216508333,
+      "altitudeMeters": 0,
+      "type": "partial",
+      "mid": 9.99846918432546,
+      "durationSeconds": 0
+    },
+    {
+      "name": "10:00 halfway to north limit, 2000 m altitude",
+      "lat": 27.3725,
+      "lon": 31.373333333333335,
+      "altitudeMeters": 2000,
+      "type": "total",
+      "mid": 9.99843289613491,
+      "durationSeconds": 330.9666277512114
+    },
+    {
+      "name": "10:24 central line",
+      "lat": 21.566666666666666,
+      "lon": 38.56333333333333,
+      "altitudeMeters": 0,
+      "type": "total",
+      "mid": 10.398504961091996,
+      "durationSeconds": 374.9458902606541
+    },
+    {
+      "name": "10:24 halfway to north limit",
+      "lat": 22.002499999999998,
+      "lon": 38.98166666666667,
+      "altitudeMeters": 0,
+      "type": "total",
+      "mid": 10.39858327215478,
+      "durationSeconds": 324.6016834146945
+    },
+    {
+      "name": "10:24 halfway to south limit",
+      "lat": 21.130000000000003,
+      "lon": 38.15166666666667,
+      "altitudeMeters": 0,
+      "type": "total",
+      "mid": 10.39855613954017,
+      "durationSeconds": 324.8394560290727
+    },
+    {
+      "name": "10:24 north limit, 1 km inside",
+      "lat": 22.43162456588457,
+      "lon": 39.39356060944688,
+      "altitudeMeters": 0,
+      "type": "total",
+      "mid": 10.398557773677863,
+      "durationSeconds": 60.22716546097939
+    },
+    {
+      "name": "10:24 north limit, 1 km outside",
+      "lat": 22.445042100782096,
+      "lon": 39.40643939055312,
+      "altitudeMeters": 0,
+      "type": "partial",
+      "mid": 10.39855536046731,
+      "durationSeconds": 0
+    },
+    {
+      "name": "10:24 south limit, 1 km inside",
+      "lat": 20.70009525258291,
+      "lon": 37.74637478646811,
+      "altitudeMeters": 0,
+      "type": "total",
+      "mid": 10.398503417256757,
+      "durationSeconds": 27.88606244008973
+    },
+    {
+      "name": "10:24 south limit, 1 km outside",
+      "lat": 20.68657141408376,
+      "lon": 37.733625213531894,
+      "altitudeMeters": 0,
+      "type": "partial",
+      "mid": 10.39850007161665,
+      "durationSeconds": 0
+    },
+    {
+      "name": "10:24 halfway to north limit, 2000 m altitude",
+      "lat": 22.002499999999998,
+      "lon": 38.98166666666667,
+      "altitudeMeters": 2000,
+      "type": "total",
+      "mid": 10.39868108044513,
+      "durationSeconds": 324.02619221685507
+    }
+  ]
+}
