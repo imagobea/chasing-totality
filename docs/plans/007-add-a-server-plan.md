@@ -49,3 +49,5 @@ No MCP needed: Docker, pnpm and curl through the shell cover everything here. Sk
 - `/simplify` and `/code-review` on the branch before opening the PR.
 
 ## Deviations and findings
+- The Docker and compose verification steps were not run: `docker` isn't available in this WSL distro. The healthcheck command was run by hand against `node dist/server/main.js` and passes. `docker compose up --build api`, `docker compose run --rm app pnpm test` and the devDependencies check still need running on a machine with Docker.
+- The Dockerfile has a shared `base` stage (corepack, user, package files) that `dev` and `runtime` build on, so the order is `base`, `dev`, `build`, `runtime`. `runtime` is last, so a plain `docker build .` produces the deployable image.
