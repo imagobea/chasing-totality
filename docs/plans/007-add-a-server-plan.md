@@ -49,5 +49,6 @@ No MCP needed: Docker, pnpm and curl through the shell cover everything here. Sk
 - `/simplify` and `/code-review` on the branch before opening the PR.
 
 ## Deviations and findings
-- The Docker and compose verification steps were not run: `docker` isn't available in this WSL distro. The healthcheck command was run by hand against `node dist/server/main.js` and passes. `docker compose up --build api`, `docker compose run --rm app pnpm test` and the devDependencies check still need running on a machine with Docker.
+- Docker was verified by hand after the commits: `docker compose up --build api` reports `healthy`, `/health` answers 200 from the host, and `docker compose stop` exits with code 0 straight away. `docker compose run --rm app pnpm test` passes (207 tests).
+- After adding a dependency, `docker compose run app` fails with `Cannot find package 'fastify'` until you run `docker compose down -v` and `docker compose build app`. The `app` service keeps an anonymous `/app/node_modules` volume and an old image across runs.
 - The Dockerfile has a shared `base` stage (corepack, user, package files) that `dev` and `runtime` build on, so the order is `base`, `dev`, `build`, `runtime`. `runtime` is last, so a plain `docker build .` produces the deployable image.
