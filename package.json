@@ -9,6 +9,8 @@
   },
   "scripts": {
     "test": "vitest run",
+    "build": "tsc -p tsconfig.build.json",
+    "start": "node dist/server/main.js",
     "dev": "tsx watch src/server/main.ts",
     "typecheck": "tsc",
     "spike:fixtures": "tsx scripts/generate-jsex-fixtures.ts",
