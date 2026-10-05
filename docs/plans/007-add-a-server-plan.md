@@ -6,13 +6,13 @@ The app so far is an engine (Besselian elements to isolines) with no way to serv
 - Dockerise the service
 - Add a `/health` endpoint
 
-No isolines endpoint yet; that comes in a later issue. Plan lands at `docs/plans/007-add-a-server-plan.md` as the first commit.
+Plan lands at `docs/plans/007-add-a-server-plan.md` as the first commit.
 
 **Decisions:**
 - **Layout:** `src/server/` in the existing single package, importing from `src/engine` directly. pnpm workspaces (ADR 001) wait until the frontend arrives.
 - **Build:** `tsc` compiles to `dist/`, the container runs plain `node`. No runtime TypeScript loader.
 - **Docker:** one multi-stage Dockerfile. A `dev` target keeps today's behaviour (all deps, `CMD pnpm test`); a `runtime` target is prod deps + `dist/` and starts the server.
-- **`/health`:** `GET /health` returns 200 `{ "status": "ok" }`. Liveness only; there's no database to check (ADR 003).
+- **API liveliness:** `GET /health` returns 200 `{ "status": "ok" }`.
 - **Config:** `PORT` (default 3000) and `HOST` (default `0.0.0.0`, needed inside a container) from the environment.
 
 ## Commits
@@ -47,8 +47,3 @@ No isolines endpoint yet; that comes in a later issue. Plan lands at `docs/plans
 No MCP needed: Docker, pnpm and curl through the shell cover everything here. Skills that fit:
 - `/run`: start the server and confirm `/health` in the real app, for the verification steps.
 - `/simplify` and `/code-review` on the branch before opening the PR.
-
-## Deviations and findings
-- Docker was verified by hand after the commits: `docker compose up --build api` reports `healthy`, `/health` answers 200 from the host, and `docker compose stop` exits with code 0 straight away. `docker compose run --rm app pnpm test` passes (207 tests).
-- After adding a dependency, `docker compose run app` fails with `Cannot find package 'fastify'` until you run `docker compose down -v` and `docker compose build app`. The `app` service keeps an anonymous `/app/node_modules` volume and an old image across runs.
-- The Dockerfile has a shared `base` stage (corepack, user, package files) that `dev` and `runtime` build on, so the order is `base`, `dev`, `build`, `runtime`. `runtime` is last, so a plain `docker build .` produces the deployable image.
