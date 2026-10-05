@@ -2,7 +2,7 @@
 
 How long does totality last, place by place? This project computes it for the total solar eclipse of 2 August 2027 and draws it as isolines on a map.
 
-**Stack:** TypeScript + Node 24, Vitest, d3-contour
+**Stack:** TypeScript + Node 24, Fastify, Vitest, d3-contour
 
 ![Isolines over the Strait of Gibraltar](docs/images/geojson-zoom-spain.jpg)
 
@@ -45,8 +45,13 @@ pnpm install
 
 pnpm test        # run the tests
 pnpm typecheck   # type-check without emitting
+pnpm dev         # start the API with reload on port 3000
+pnpm build       # compile src/ to dist/
+pnpm start       # run the compiled API
 pnpm spike:grid  # write the isolines to out/
 ```
+
+The API reads `PORT` (default 3000) and `HOST` (default 0.0.0.0). `GET /health` answers `{"status":"ok"}`.
 
 `pnpm spike:grid` writes two files:
 - `out/2027-durations.geojson`: the isolines.
@@ -62,6 +67,7 @@ Drop both into [geojson.io](https://geojson.io) to see them on a map.
 docker compose build
 docker compose run --rm app pnpm test
 docker compose run --rm app pnpm spike:grid  # out/ shows up on the host
+docker compose up --build api                # production image, http://localhost:3000/health
 ```
 
 ## Project Structure
@@ -77,6 +83,9 @@ src/
     └── isolines/
         ├── grid.ts        # Engine values on a lat/lon grid
         └── contours.ts    # Grid to GeoJSON isolines
+└── server/                # Fastify API
+    ├── app.ts             # Builds the app and its routes
+    └── main.ts            # Reads PORT/HOST, listens, shuts down cleanly
 
 scripts/               # spike:grid, spike:fixtures
 test/                  # Vitest tests and fixtures (NASA path table, JSEX)

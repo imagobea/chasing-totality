@@ -1,8 +1,18 @@
 services:
   app:
-    build: .
+    build:
+      context: .
+      target: dev
     volumes:
       # Live repo, so edits and outputs (e.g. out/) are shared with the host.
       - .:/app
       # Keep the image's node_modules rather than the host's.
       - /app/node_modules
+
+  api:
+    build:
+      context: .
+      target: runtime
+    ports:
+      - "3000:3000"
+    # Health check is defined in the Dockerfile
