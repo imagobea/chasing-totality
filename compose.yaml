@@ -1,14 +1,5 @@
+# Production stack. For development, add compose.dev.yaml (see README).
 services:
-  app:
-    build:
-      context: .
-      target: dev
-    volumes:
-      # Live repo, so edits and outputs (e.g. out/) are shared with the host.
-      - .:/app
-      # Keep the image's node_modules rather than the host's.
-      - /app/node_modules
-
   api:
     build:
       context: .
@@ -16,3 +7,13 @@ services:
     ports:
       - "3000:3000"
     # Health check is defined in the Dockerfile
+
+  web:
+    build:
+      context: .
+      dockerfile: web/Dockerfile
+      target: runtime
+    ports:
+      - "8080:80"
+    depends_on:
+      - api
