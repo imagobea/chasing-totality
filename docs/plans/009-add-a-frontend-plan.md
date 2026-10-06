@@ -56,4 +56,8 @@ Plan lands at `docs/plans/009-add-a-frontend-plan.md` as the first commit.
 No MCP needed. `/run` to see the page working, `/simplify` and `/code-review` before the PR.
 
 ## Deviations and findings
-(empty until work drifts)
+- **Compose layout.** The plan added a dev-only `web` service next to `app` and `api`, which left the API with no dev mode and the web with no prod mode. Instead, `compose.yaml` is the prod stack (`api`, plus `web` on nginx at 8080) and `compose.dev.yaml` overrides the same two services for development (`pnpm dev`, Vite on 5173, source mounted). The `app` service is gone: tests run with `docker compose -f compose.yaml -f compose.dev.yaml run --rm api pnpm test`.
+
+- **Dev ports.** The dev override uses `ports: !override` so `web` doesn't also publish nginx's port.
+
+- **Small additions.** An extra `ApiStatus` test for an error status from the API, and `"node"` in the web tsconfig `types` so the Vite config can read `process.env`.
