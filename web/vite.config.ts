@@ -8,8 +8,8 @@ export default defineConfig({
   plugins: [react()],
   server: {
     proxy: {
-      // The browser calls /api/health, the API serves /health
-      "/api": {
+      // The browser calls /api/health, the API serves /health (same rule as nginx.conf)
+      "/api/": {
         target: API_TARGET,
         rewrite: (path) => path.replace(/^\/api/, ""),
       },

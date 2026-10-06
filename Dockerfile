@@ -16,7 +16,8 @@ COPY --chown=node:node web/package.json ./web/
 
 # Development and tests: all dependencies, runs the test suite.
 FROM base AS dev
-RUN pnpm install --frozen-lockfile
+# Only this package's dependencies (the "." filter), so the web toolchain stays out of the API images
+RUN pnpm install --frozen-lockfile --filter .
 COPY --chown=node:node . .
 CMD ["pnpm", "test"]
 
@@ -29,7 +30,6 @@ RUN pnpm build
 # Production API: prod dependencies and the compiled output only.
 FROM base AS runtime
 ENV NODE_ENV=production
-# Only this package's dependencies (the "." filter), so React and Vite stay out of the API image
 RUN pnpm install --frozen-lockfile --prod --filter .
 COPY --from=build --chown=node:node /app/dist ./dist
 

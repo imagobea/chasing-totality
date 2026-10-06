@@ -43,14 +43,15 @@ Plan lands at `docs/plans/009-add-a-frontend-plan.md` as the first commit.
 ## Verification
 - `pnpm test` and `pnpm typecheck` at the root still pass; `pnpm --filter web test`, `typecheck` and `build` pass.
 - Local: `pnpm dev` (API) and `pnpm --filter web dev`; open `http://localhost:5173`, status line shows ok; stop the API, reload, it shows unreachable.
-- `docker compose up --build api web`: page loads on `localhost:5173` and shows ok.
+- `docker compose -f compose.yaml -f compose.dev.yaml up --build`: page loads on `localhost:5173` and shows ok.
 - API image still lean: `docker compose run --rm api ls node_modules` shows no react/vite.
-- `docker compose run --rm app pnpm test` still works.
-- Production web image: build the `runtime` target, run it on the compose network, `curl /api/health` through nginx returns `{"status":"ok"}`.
+- `docker compose -f compose.yaml -f compose.dev.yaml run --rm api pnpm test` still works.
+- Production stack: `docker compose up --build`; `curl localhost:8080/api/health` returns `{"status":"ok"}` through nginx, and `http://localhost:8080` shows the status line ok.
+
 
 ## Open points to confirm while working
-- Whether Vite 8 / plugin-react 6 install cleanly under pnpm 10's build-script approval (expect no native build scripts needed).
-- Whether the root `Dockerfile` `dev` stage is better off installing the whole workspace (current plan) or staying root-only.
+- ✅ Whether Vite 8 / plugin-react 6 install cleanly under pnpm 10's build-script approval: confirmed. Only the harmless "Ignored build scripts: esbuild" warning appears.
+- ✅ Whether the root `Dockerfile` `dev` stage is better off installing the whole workspace (current plan) or staying root-only: root-only (`--filter .`), so the API's dev and build images don't pull the web toolchain.
 
 ## Optional tooling
 No MCP needed. `/run` to see the page working, `/simplify` and `/code-review` before the PR.
