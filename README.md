@@ -51,7 +51,7 @@ pnpm start       # run the compiled API
 pnpm spike:grid  # write the isolines to out/
 ```
 
-The API reads `PORT` (default 3000), `HOST` (default 0.0.0.0) and `LOG_LEVEL` (default `info`; e.g. `debug`, `warn`, `silent`). `GET /health` answers `{"status":"ok"}`.
+The API settings and their defaults are in [`.env.example`](.env.example); copy it to `.env` to change them. `GET /health` answers `{"status":"ok"}`.
 
 `pnpm spike:grid` writes two files:
 - `out/2027-durations.geojson`: the isolines.
