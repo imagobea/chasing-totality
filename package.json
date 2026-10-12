@@ -8,14 +8,14 @@
     "node": ">=24"
   },
   "scripts": {
+    "lint": "eslint .",
     "test": "vitest run",
-    "build": "tsc -p tsconfig.build.json",
-    "start": "node dist/server/main.js",
-    "dev": "tsx watch src/server/main.ts",
     "typecheck": "tsc",
+    "build": "tsc -p tsconfig.build.json",
+    "dev": "tsx watch src/server/main.ts",
+    "start": "node dist/server/main.js",
     "spike:fixtures": "tsx scripts/generate-jsex-fixtures.ts",
-    "spike:grid": "tsx scripts/spike-grid.ts",
-    "lint": "eslint ."
+    "spike:grid": "tsx scripts/spike-grid.ts"
   },
   "keywords": [],
   "author": "",
