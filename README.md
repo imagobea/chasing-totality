@@ -51,13 +51,16 @@ pnpm start       # run the compiled API
 pnpm spike:grid  # write the isolines to out/
 ```
 
-The API settings and their defaults are in [`.env.example`](.env.example); copy it to `.env` to change them. `GET /health` answers `{"status":"ok"}`.
+The API settings and their defaults are in [`.env.example`](.env.example); copy it to `.env` to change them. Endpoints:
+- `GET /health`: `{"status":"ok"}`
+- `GET /eclipses`: dates with data, e.g. `["2027-08-02"]`
+- `GET /eclipses/:date/isolines`: GeoJSON isolines; 404 if there's no data, 422 for an invalid date
 
 `pnpm spike:grid` writes two files:
 - `out/2027-durations.geojson`: the isolines.
 - `out/2027-nasa-path.geojson`: NASA's limits and central line, to compare against.
 
-Drop both into [geojson.io](https://geojson.io) to see them on a map.
+Drop both into [geojson.io](https://geojson.io) to see them on a map. To update the data the API serves, copy `out/2027-durations.geojson` to `data/isolines/2027-08-02.geojson`.
 
 ### Frontend
 
@@ -109,13 +112,15 @@ src/
         ├── grid.ts        # Engine values on a lat/lon grid
         └── contours.ts    # Grid to GeoJSON isolines
 └── server/                # Fastify API
-    ├── app.ts             # Builds the app and its routes
-    └── main.ts            # Reads PORT/HOST, listens, shuts down cleanly
+    ├── app.ts             # Builds the app: logger, data dir, /health
+    ├── routes/eclipses.ts # /eclipses and /eclipses/:date/isolines
+    └── main.ts            # Reads the env, listens, shuts down cleanly
 
 web/                   # React + Vite frontend (own package, tests and Dockerfile)
 ├── src/               # App and the API status component
 └── test/              # Vitest + Testing Library tests, mirroring src/
 
+data/isolines/         # Pre-generated isolines the API serves, one file per eclipse
 scripts/               # spike:grid, spike:fixtures
 test/                  # Vitest tests and fixtures (NASA path table, JSEX)
 docs/plans/            # Plans, deviations and findings
