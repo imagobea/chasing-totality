@@ -24,6 +24,16 @@ describe("GET /eclipses", () => {
     await emptyApp.close();
     await rm(dataDir, { recursive: true });
   });
+
+  it("answers a generic 500 without the server path when the data dir is missing", async () => {
+    const dataDir = join(tmpdir(), "eclipses-missing");
+    const brokenApp = buildApp({ dataDir });
+    const res = await brokenApp.inject({ method: "GET", url: "/eclipses" });
+    expect(res.statusCode).toBe(500);
+    expect(res.json()).toEqual({ statusCode: 500, error: "Internal Server Error", message: "Internal Server Error" });
+    expect(res.body).not.toContain(dataDir);
+    await brokenApp.close();
+  });
 });
 
 describe("GET /eclipses/:date/isolines", () => {
