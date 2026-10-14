@@ -7,6 +7,8 @@ import type { FastifyPluginAsync } from "fastify";
 type EclipsesOptions = { dataDir: string };
 
 const EXTENSION = ".geojson";
+// A data file named after its eclipse, e.g. 2027-08-02.geojson
+const DATA_FILE =/^\d{4}-\d{2}-\d{2}\.geojson$/;
 
 // A real calendar date as YYYY-MM-DD, which also keeps the file lookup inside dataDir
 const DATE_PARAMS = {
@@ -23,7 +25,7 @@ export const eclipses: FastifyPluginAsync<EclipsesOptions> = async (app, { dataD
   app.get("/eclipses", async () => {
     const files = await readdir(dataDir);
     return files
-      .filter((file) => file.endsWith(EXTENSION))
+      .filter((file) => DATA_FILE.test(file))
       .map((file) => basename(file, EXTENSION))
       .sort();
   });

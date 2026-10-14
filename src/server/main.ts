@@ -1,10 +1,10 @@
 import { buildApp } from "./app.js";
 
-const port = Number(process.env.PORT ?? 3000);
+const port = Number(process.env.PORT) || 3000;
 // 0.0.0.0 so the server is reachable from outside a container
-const host = process.env.HOST ?? "0.0.0.0";
+const host = process.env.HOST || "0.0.0.0";
 // Production logs at info, request lines included, until that gets too noisy
-const level = process.env.LOG_LEVEL ?? (process.env.NODE_ENV === "production" ? "info" : "debug");
+const level = process.env.LOG_LEVEL || (process.env.NODE_ENV === "production" ? "info" : "debug");
 
 const app = buildApp({ logger: { level } });
 

@@ -1,12 +1,25 @@
-import { mkdtemp, rm } from "node:fs/promises";
+import { randomUUID } from "node:crypto";
+import { mkdtemp, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import { afterAll, describe, expect, it } from "vitest";
+import { afterAll, describe, expect, it, onTestFinished } from "vitest";
 import { buildApp } from "../../src/server/app.js";
 
 // Shared by every test that reads the real data dir
 const app = buildApp();
 afterAll(() => app.close());
+
+// An app over a temp data dir holding the given files; both are cleaned up when the test ends, even if it fails
+async function appWithFiles(names: string[]) {
+  const dataDir = await mkdtemp(join(tmpdir(), "eclipses-"));
+  await Promise.all(names.map((name) => writeFile(join(dataDir, name), "{}")));
+  const tempApp = buildApp({ dataDir });
+  onTestFinished(async () => {
+    await tempApp.close();
+    await rm(dataDir, { recursive: true });
+  });
+  return tempApp;
+}
 
 describe("GET /eclipses", () => {
   it("lists the dates that have data", async () => {
@@ -16,23 +29,28 @@ describe("GET /eclipses", () => {
   });
 
   it("answers an empty list when there is no data", async () => {
-    const dataDir = await mkdtemp(join(tmpdir(), "eclipses-"));
-    const emptyApp = buildApp({ dataDir });
+    const emptyApp = await appWithFiles([]);
     const res = await emptyApp.inject({ method: "GET", url: "/eclipses" });
     expect(res.statusCode).toBe(200);
     expect(res.json()).toEqual([]);
-    await emptyApp.close();
-    await rm(dataDir, { recursive: true });
+  });
+
+  it("leaves out files that aren't named after a date", async () => {
+    const mixedApp = await appWithFiles(["2027-08-02.geojson", "2027-durations.geojson"]);
+    const res = await mixedApp.inject({ method: "GET", url: "/eclipses" });
+    expect(res.statusCode).toBe(200);
+    expect(res.json()).toEqual(["2027-08-02"]);
   });
 
   it("answers a generic 500 without the server path when the data dir is missing", async () => {
-    const dataDir = join(tmpdir(), "eclipses-missing");
+    // A random name, so the dir can't already exist
+    const dataDir = join(tmpdir(), `eclipses-${randomUUID()}`);
     const brokenApp = buildApp({ dataDir });
+    onTestFinished(() => brokenApp.close());
     const res = await brokenApp.inject({ method: "GET", url: "/eclipses" });
     expect(res.statusCode).toBe(500);
     expect(res.json()).toEqual({ statusCode: 500, error: "Internal Server Error", message: "Internal Server Error" });
     expect(res.body).not.toContain(dataDir);
-    await brokenApp.close();
   });
 });
 

@@ -7,6 +7,10 @@ services:
     build:
       target: dev
     command: ["pnpm", "dev"]
+    # Pinned, so a host .env meant for pnpm dev can't move the API off the mapped port
+    environment:
+      PORT: 3000
+      HOST: 0.0.0.0
     volumes:
       # Live repo, so edits and outputs (e.g. out/) are shared with the host
       - .:/app

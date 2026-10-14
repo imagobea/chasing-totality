@@ -46,4 +46,6 @@ The frontend needs our isolines from the API. An eclipse's isolines never change
 No MCP needed. `/run` to hit the endpoints on the real server, `/security-review` since a URL param picks a file to read, `/simplify` and `/code-review` before the PR.
 
 ## Deviations and findings
-- **Env config.** Extra commit: `.env.example` documents the API settings; `LOG_LEVEL` defaults to `warn` in production, `debug` otherwise.
+- **Env config.** Extra commit: `.env.example` documents the API settings; `LOG_LEVEL` defaults to ~~`warn`~~ `info` in production, `debug` otherwise.
+- **Routes file.** The routes live in `src/server/routes/eclipses.ts`, not `app.ts`.
+- **Reviews.** The 422 handler moved to `app.ts` and also answers 5xx generically, so internals don't leak; `/eclipses` lists only date-named files.
