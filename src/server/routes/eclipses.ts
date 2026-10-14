@@ -1,8 +1,8 @@
 // Routes for the eclipses we have data for, one <date>.geojson each in dataDir
 
 import { readdir, readFile } from "node:fs/promises";
-import { join } from "node:path";
-import type { FastifyError, FastifyPluginAsync } from "fastify";
+import { basename, join } from "node:path";
+import type { FastifyPluginAsync } from "fastify";
 
 type EclipsesOptions = { dataDir: string };
 
@@ -12,7 +12,6 @@ const EXTENSION = ".geojson";
 const DATE_PARAMS = {
   type: "object",
   properties: { date: { type: "string", format: "date" } },
-  required: ["date"],
 } as const;
 
 function isNotFound(error: unknown): boolean {
@@ -20,19 +19,12 @@ function isNotFound(error: unknown): boolean {
 }
 
 export const eclipses: FastifyPluginAsync<EclipsesOptions> = async (app, { dataDir }) => {
-  // Fastify answers 400 for a request that fails its schema; well-formed but invalid input is 422
-  app.setErrorHandler<FastifyError>((error, _request, reply) => {
-    // Anything else goes to Fastify's default handler
-    if (!error.validation) throw error;
-    return reply.code(422).send({ statusCode: 422, error: "Unprocessable Entity", message: error.message });
-  });
-
   // Dates of the eclipses that have data
   app.get("/eclipses", async () => {
     const files = await readdir(dataDir);
     return files
       .filter((file) => file.endsWith(EXTENSION))
-      .map((file) => file.slice(0, -EXTENSION.length))
+      .map((file) => basename(file, EXTENSION))
       .sort();
   });
 
@@ -47,7 +39,8 @@ export const eclipses: FastifyPluginAsync<EclipsesOptions> = async (app, { dataD
         return reply.type("application/geo+json").send(isolines);
       } catch (error) {
         if (!isNotFound(error)) throw error;
-        return reply.code(404).send({ statusCode: 404, error: "Not Found", message: `No isolines for ${date}` });
+        // Fastify's default handler writes the error body
+        throw Object.assign(new Error(`No isolines for ${date}`), { statusCode: 404 });
       }
     },
   );

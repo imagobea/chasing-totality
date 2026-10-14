@@ -1,5 +1,5 @@
 import { fileURLToPath } from "node:url";
-import Fastify, { type FastifyServerOptions } from "fastify";
+import Fastify, { type FastifyError, type FastifyServerOptions } from "fastify";
 import { eclipses } from "./routes/eclipses.js";
 
 type AppOptions = {
@@ -15,6 +15,13 @@ const DATA_DIR = fileURLToPath(new URL("../../data/isolines/", import.meta.url))
 // Builds the app without listening, so tests can call it through inject
 export function buildApp({ logger = false, dataDir = DATA_DIR }: AppOptions = {}) {
   const app = Fastify({ logger });
+
+  // Fastify answers 400 for a request that fails its schema; well-formed but invalid input is 422.
+  // The default handler takes the status from the error, so set it there and rethrow
+  app.setErrorHandler<FastifyError>((error) => {
+    if (error.validation) error.statusCode = 422;
+    throw error;
+  });
 
   // Liveness only: there is no database or other dependency to check
   app.get("/health", async () => ({ status: "ok" }));
