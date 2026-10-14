@@ -32,6 +32,8 @@ FROM base AS runtime
 ENV NODE_ENV=production
 RUN pnpm install --frozen-lockfile --prod --filter .
 COPY --from=build --chown=node:node /app/dist ./dist
+# The pre-generated isolines the API serves
+COPY --chown=node:node data ./data
 
 # Node's fetch instead of curl, which the slim image doesn't have.
 HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
