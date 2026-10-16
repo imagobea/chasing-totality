@@ -51,7 +51,23 @@ export function EclipseMap() {
           "line-width": 1,
         },
       });
-
+      map.addLayer({
+        id: "isolines-label",
+        type: "symbol",
+        source: "isolines",
+        layout: {
+          "symbol-placement": "line",
+          "symbol-spacing": 800,
+          "text-field": ["get", "name"],
+          "text-font": ["Noto Sans Regular"],
+          "text-size": 11,
+        },
+        paint: {
+          "text-color": "#333",
+          "text-halo-color": "#ffffff",
+          "text-halo-width": 1,
+        },
+      });
     });
 
     return () => map.remove();
