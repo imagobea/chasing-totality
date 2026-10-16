@@ -5,11 +5,11 @@ The frontend shows only the API status. This adds a map: an OpenFreeMap base map
 
 **Decisions:**
 - **Integration:** plain `maplibre-gl` in a `useEffect` (create on mount, `map.remove()` on unmount); no React wrapper.
-- **Base map:** OpenFreeMap `positron` style URL; no key, no proxy, attribution control left on.
+- **Base map:** OpenFreeMap ~~`positron`~~ `bright` style URL; no key, no proxy, attribution control left on.
 - **View:** fixed centre and zoom over S Spain / N Africa; the eclipse date is a constant.
 - **Isolines:** one `geojson` source; a fill layer whose colour comes from `durationSeconds` (`interpolate`), an outline layer, and `name` labels along the lines (`symbol-placement: line`).
 - **Layer specs as data:** the source and layer definitions live in their own module, separate from the component, so they can be tested without WebGL.
-- **Tests:** unit tests on the layer specs only; the map itself is checked by eye in the browser.
+- **Tests:** unit tests on the layer specs ~~only~~ and on the map's lifecycle, with MapLibre mocked; the map itself is checked by eye in the browser.
 - **Out of scope:** legend, eclipse picker, click-for-duration, fit-to-data, gzip for the 1.2 MB GeoJSON.
 
 ## Commits
@@ -17,7 +17,7 @@ The frontend shows only the API status. This adds a map: an OpenFreeMap base map
 2. `feat:` the base map.
    - Add `maplibre-gl` to the web package, and its stylesheet.
    - A map component: created on mount, removed on unmount, OpenFreeMap style, fixed centre and zoom over the target area.
-   - The app renders the map filling the viewport; the API status stays visible on top.
+   - The app renders the map ~~filling the viewport~~; the API status stays visible on top.
 3. `feat:` the isolines on top.
    - Layer specs as data: the GeoJSON source pointing at the 2027-08-02 endpoint; fill, outline and label layers.
    - The map adds the source and layers once its style has loaded.
@@ -32,3 +32,8 @@ The frontend shows only the API status. This adds a map: an OpenFreeMap base map
 
 ## Optional tooling
 No MCP needed. `/run` for a screenshot of the map, `/simplify` and `/code-review` before the PR. No `/security-review`: no new input, routes or secrets; `pnpm audit` covers the new dependency.
+
+## Deviations and findings
+- **Worker.** MapLibre's worker is set with `setWorkerUrl` and Vite's `?worker&url` import, as the MapLibre docs recommend for bundlers.
+- **Fonts.** Labels need a font OpenFreeMap serves (Noto Sans); others, e.g. Open Sans, 404.
+- **Labels.** `symbol-spacing` is raised so labels repeat only a few times along each isoline.
