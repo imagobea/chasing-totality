@@ -1,7 +1,8 @@
 import { useEffect, useRef } from "react";
-import { Map as MapLibreMap, setWorkerUrl, type ExpressionSpecification } from "maplibre-gl";
+import { Map as MapLibreMap, setWorkerUrl } from "maplibre-gl";
 import "maplibre-gl/dist/maplibre-gl.css";
 import workerUrl from "maplibre-gl/dist/maplibre-gl-worker.mjs?worker&url";
+import { ISOLINES_LAYERS, ISOLINES_SOURCE, ISOLINES_SOURCE_ID } from "./isolines.js";
 
 // The worker URL as per MapLibre documentation at https://maplibre.org/maplibre-gl-js/docs/#esm
 setWorkerUrl(workerUrl);
@@ -10,12 +11,6 @@ setWorkerUrl(workerUrl);
 const MAP_STYLE = "https://tiles.openfreemap.org/styles/bright";
 const MAP_CENTER: [number, number] = [5, 36.5];
 const MAP_ZOOM = 5;
-
-// The URL for the isolines data for the 2027-08-02 eclipse
-const MAP_ISOLINES_URL = "/api/eclipses/2027-08-02/isolines";
-
-// Common styles shared between the isolines fill and line layers
-const MAP_LAYER_COLOR: ExpressionSpecification = ["interpolate", ["linear"], ["get", "durationSeconds"], 0, "#fdd49e", 360, "#b30000"];
 
 export function EclipseMap() {
   const mapContainerRef = useRef<HTMLDivElement>(null);
@@ -28,46 +23,10 @@ export function EclipseMap() {
       zoom: MAP_ZOOM,
     });
 
+    // Sources and layers can only be added once the style has loaded
     map.on("load", () => {
-      map.addSource("isolines", {
-        type: "geojson",
-        data: MAP_ISOLINES_URL,
-      });
-      map.addLayer({
-        id: "isolines-fill",
-        type: "fill",
-        source: "isolines",
-        paint: {
-          "fill-color": MAP_LAYER_COLOR,
-          "fill-opacity": 0.2,
-        },
-      });
-      map.addLayer({
-        id: "isolines-line",
-        type: "line",
-        source: "isolines",
-        paint: {
-          "line-color": MAP_LAYER_COLOR,
-          "line-width": 1,
-        },
-      });
-      map.addLayer({
-        id: "isolines-label",
-        type: "symbol",
-        source: "isolines",
-        layout: {
-          "symbol-placement": "line",
-          "symbol-spacing": 800,
-          "text-field": ["get", "name"],
-          "text-font": ["Noto Sans Regular"],
-          "text-size": 11,
-        },
-        paint: {
-          "text-color": "#333",
-          "text-halo-color": "#ffffff",
-          "text-halo-width": 1,
-        },
-      });
+      map.addSource(ISOLINES_SOURCE_ID, ISOLINES_SOURCE);
+      for (const layer of ISOLINES_LAYERS) map.addLayer(layer);
     });
 
     return () => map.remove();
