@@ -9,7 +9,7 @@ The frontend shows only the API status. This adds a map: an OpenFreeMap base map
 - **View:** fixed centre and zoom over S Spain / N Africa; the eclipse date is a constant.
 - **Isolines:** one `geojson` source; a fill layer whose colour comes from `durationSeconds` (`interpolate`), an outline layer, and `name` labels along the lines (`symbol-placement: line`).
 - **Layer specs as data:** the source and layer definitions live in their own module, separate from the component, so they can be tested without WebGL.
-- **Tests:** unit tests on the layer specs ~~only~~ and on the map's lifecycle, with MapLibre mocked; the map itself is checked by eye in the browser.
+- **Tests:** unit tests on the layer specs and on the map's lifecycle, with MapLibre mocked; the map itself is checked by eye in the browser.
 - **Out of scope:** legend, eclipse picker, click-for-duration, fit-to-data, gzip for the 1.2 MB GeoJSON.
 
 ## Commits
