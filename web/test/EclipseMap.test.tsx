@@ -9,6 +9,7 @@ const map = vi.hoisted(() => ({
   on: vi.fn(),
   addSource: vi.fn(),
   addLayer: vi.fn(),
+  getStyle: vi.fn(() => ({ layers: [] })),
   remove: vi.fn(),
 }));
 

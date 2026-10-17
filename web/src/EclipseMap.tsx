@@ -25,8 +25,12 @@ export function EclipseMap() {
 
     // Sources and layers can only be added once the style has loaded
     map.on("load", () => {
+      // Fills and outlines go under the base map's labels; our labels stay on top
+      const firstSymbolId = map.getStyle().layers.find((layer) => layer.type === "symbol")?.id;
       map.addSource(ISOLINES_SOURCE_ID, ISOLINES_SOURCE);
-      for (const layer of ISOLINES_LAYERS) map.addLayer(layer);
+      for (const layer of ISOLINES_LAYERS) {
+        map.addLayer(layer, layer.type === "symbol" ? undefined : firstSymbolId);
+      }
     });
 
     return () => map.remove();
