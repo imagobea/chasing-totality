@@ -1,5 +1,5 @@
 import { cleanup, render } from "@testing-library/react";
-import { Map as MapLibreMap } from "maplibre-gl";
+import { MapLibreMap } from "maplibre-gl";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { EclipseMap } from "../src/EclipseMap.js";
 import { ISOLINES_LAYERS, ISOLINES_SOURCE, ISOLINES_SOURCE_ID } from "../src/isolines.js";
@@ -14,7 +14,7 @@ const map = vi.hoisted(() => ({
 
 vi.mock("maplibre-gl", () => ({
   // A function, not an arrow, so the component can call it with new
-  Map: vi.fn(function () {
+  MapLibreMap: vi.fn(function () {
     return map;
   }),
   setWorkerUrl: vi.fn(),
