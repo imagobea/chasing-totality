@@ -2,7 +2,7 @@
 
 How long does totality last, place by place? This project computes it for the total solar eclipse of 2 August 2027 and draws it as isolines on a map.
 
-**Stack:** TypeScript + Node 24, Fastify, React + Vite, Vitest, d3-contour
+**Stack:** TypeScript + Node 24, Fastify, React + Vite, MapLibre GL JS + OpenFreeMap, Vitest, d3-contour
 
 ![Isolines over the Strait of Gibraltar](docs/images/geojson-zoom-spain.jpg)
 
@@ -74,7 +74,7 @@ pnpm --filter web typecheck
 pnpm --filter web build          # static files in web/dist
 ```
 
-The page shows the API status from `GET /api/health`. The proxy target is `API_PROXY_TARGET` (default `http://localhost:3000`).
+The page shows the API status from `GET /api/health` and a map: an [OpenFreeMap](https://openfreemap.org) base map drawn by [MapLibre GL JS](https://maplibre.org), with the 2027-08-02 isolines from `GET /api/eclipses/2027-08-02/isolines` on top. The tiles come straight from OpenFreeMap: no key, no proxy. The proxy target is `API_PROXY_TARGET` (default `http://localhost:3000`).
 
 `pnpm spike:fixtures` regenerates `test/fixtures/jsex-2027.json` from NASA's JSEX. Only needed if the test points or the elements change.
 
@@ -88,7 +88,7 @@ The page shows the API status from `GET /api/health`. The proxy target is `API_P
 | API | http://localhost:3000/health | http://localhost:3000/health (`pnpm dev`) |
 | Frontend | http://localhost:8080 (nginx) | http://localhost:5173 (Vite) |
 
-In both, the frontend reaches the API through `/api`.
+In both, the frontend reaches the API through `/api`. In dev, after adding a dependency, add `-V` to `up --build`: `node_modules` lives in a volume that otherwise keeps the old packages.
 
 ```bash
 # Tests and scripts run in the dev container; out/ shows up on the host
@@ -117,7 +117,7 @@ src/
     └── main.ts            # Reads the env, listens, shuts down cleanly
 
 web/                   # React + Vite frontend (own package, tests and Dockerfile)
-├── src/               # App and the API status component
+├── src/               # App, the API status and the map with its isolines layers
 └── test/              # Vitest + Testing Library tests, mirroring src/
 
 data/isolines/         # Pre-generated isolines the API serves, one file per eclipse
