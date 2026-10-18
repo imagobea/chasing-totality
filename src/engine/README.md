@@ -88,6 +88,7 @@ Rather than tracking the shadow in 3D, astronomers slice it with a flat plane, t
 ```
 
 NASA publishes each eclipse as **Besselian elements**: a handful of short polynomials in time that give, on that plane:
+
 - `x`, `y`: where the shadow's axis crosses it, in Earth radii;
 - `l1`, `l2`: the radii of the penumbra and umbra circles (`l2` is negative when the umbra reaches the Earth, a total eclipse; positive means annular);
 - `d`, `μ`: how the plane is tilted and turned relative to the Earth.
@@ -137,7 +138,7 @@ Both move: the shadow sweeps east, and the Earth's spin carries the observer alo
 ```
 
 1. **Mid-eclipse (●)**: when the observer is closest to the centre.
-3. **C2** and **C3**: when the observer enters and leaves the umbra. The duration is C3 − C2.
+2. **C2** and **C3**: when the observer enters and leaves the umbra. The duration is C3 − C2.
 
 Remember an observer outside the umbra will miss totality, but may still pass through the penumbra (partial) or miss the shadow entirely.
 
@@ -236,19 +237,19 @@ pnpm spike:grid
 
 ## Glossary
 
-| Term | Meaning |
-|---|---|
-| Umbra, penumbra | The Moon's full and partial shadow |
-| Path of totality | The band on the Earth swept by the umbra |
-| Fundamental plane | A plane through the Earth's centre, square to the Sun–Moon line, on which the shadow is described |
-| Besselian elements | NASA's polynomials describing the shadow on the fundamental plane |
-| C2, C3 | Start and end of totality (C1 and C4 are the start and end of the partial eclipse) |
-| Mid-eclipse | The moment the observer is closest to the shadow's axis |
-| Isoline | A line joining places where totality lasts the same time |
-| TDT, UT, ΔT | Two time scales: a uniform one the elements use (TDT), and one that follows the Earth's spin (UT). ΔT is the gap between them. |
+| Term               | Meaning                                                                                                                        |
+| ------------------ | ------------------------------------------------------------------------------------------------------------------------------ |
+| Umbra, penumbra    | The Moon's full and partial shadow                                                                                             |
+| Path of totality   | The band on the Earth swept by the umbra                                                                                       |
+| Fundamental plane  | A plane through the Earth's centre, square to the Sun–Moon line, on which the shadow is described                              |
+| Besselian elements | NASA's polynomials describing the shadow on the fundamental plane                                                              |
+| C2, C3             | Start and end of totality (C1 and C4 are the start and end of the partial eclipse)                                             |
+| Mid-eclipse        | The moment the observer is closest to the shadow's axis                                                                        |
+| Isoline            | A line joining places where totality lasts the same time                                                                       |
+| TDT, UT, ΔT        | Two time scales: a uniform one the elements use (TDT), and one that follows the Earth's spin (UT). ΔT is the gap between them. |
 
 ## References
 
 - Explanatory Supplement to the Astronomical Almanac (3rd ed., 2013), ch. 11.
-- Meeus, *Elements of Solar Eclipses 1951–2200*.
-- Meeus, *Astronomical Algorithms* (2nd ed., 1998), ch. 11 (observer's position).
+- Meeus, _Elements of Solar Eclipses 1951–2200_.
+- Meeus, _Astronomical Algorithms_ (2nd ed., 1998), ch. 11 (observer's position).

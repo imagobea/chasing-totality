@@ -43,7 +43,8 @@ describe("parseNasaPath", () => {
   });
 
   describe("with malformed input", () => {
-    const row = " 10:00   27 51.4N 031 44.0E  25 55.3N 030 18.2E  26 53.3N 031 00.8E  1.079  81 177  257  06m23.2s";
+    const row =
+      " 10:00   27 51.4N 031 44.0E  25 55.3N 030 18.2E  26 53.3N 031 00.8E  1.079  81 177  257  06m23.2s";
 
     it("ignores lines that are not table rows", () => {
       expect(parseNasaPath("# comment\n  Time   Latitude Longitude\n\n")).toEqual([]);

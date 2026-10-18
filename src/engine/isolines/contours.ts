@@ -22,11 +22,18 @@ function isolineName(durationSeconds: number): string {
   return `${minutes}m${String(seconds).padStart(2, "0")}s`;
 }
 
-export function durationContours(grid: DurationGrid, thresholdsSeconds: number[]): IsolineCollection {
+export function durationContours(
+  grid: DurationGrid,
+  thresholdsSeconds: number[],
+): IsolineCollection {
   // The grid holds squared durations; d3-contour keeps values ≥ threshold, so the path of
   // totality is where they are above 0.
-  const levels = thresholdsSeconds.map((seconds) => (seconds === 0 ? Number.MIN_VALUE : seconds ** 2));
-  const polygons = contours().size([grid.width, grid.height]).thresholds(levels)(Array.from(grid.values));
+  const levels = thresholdsSeconds.map((seconds) =>
+    seconds === 0 ? Number.MIN_VALUE : seconds ** 2,
+  );
+  const polygons = contours().size([grid.width, grid.height]).thresholds(levels)(
+    Array.from(grid.values),
+  );
 
   // d3-contour puts value i at the centre of pixel i, i.e. at grid coordinate i + 0.5.
   const toLonLat = ([x = 0, y = 0]: number[]): Position => [
@@ -36,17 +43,20 @@ export function durationContours(grid: DurationGrid, thresholdsSeconds: number[]
 
   return {
     type: "FeatureCollection",
-    features: polygons.map((polygon, i): IsolineFeature => {
-      const durationSeconds = thresholdsSeconds[i] ?? polygon.value;
-      return {
-        type: "Feature",
-        properties: { durationSeconds, name: isolineName(durationSeconds) },
-        geometry: {
-          type: "MultiPolygon",
-          coordinates: polygon.coordinates.map((rings) => rings.map((ring) => ring.map(toLonLat))),
-        },
-      };
-    })
+    features: polygons
+      .map((polygon, i): IsolineFeature => {
+        const durationSeconds = thresholdsSeconds[i] ?? polygon.value;
+        return {
+          type: "Feature",
+          properties: { durationSeconds, name: isolineName(durationSeconds) },
+          geometry: {
+            type: "MultiPolygon",
+            coordinates: polygon.coordinates.map((rings) =>
+              rings.map((ring) => ring.map(toLonLat)),
+            ),
+          },
+        };
+      })
       // A duration no point reaches has no area to draw
       .filter((feature) => feature.geometry.coordinates.length > 0),
   };

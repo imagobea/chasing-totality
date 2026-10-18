@@ -3,7 +3,11 @@
 
 import { evaluate, type BesselianElements } from "./besselian.js";
 import { RAD } from "./constants.js";
-import { geocentricObserver, type GeocentricObserver, type GeographicPosition } from "./observer.js";
+import {
+  geocentricObserver,
+  type GeocentricObserver,
+  type GeographicPosition,
+} from "./observer.js";
 
 export type LocalCircumstances = {
   type: "total" | "annular" | "partial" | "none";

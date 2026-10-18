@@ -1,6 +1,7 @@
 # Add a frontend (#9)
 
 ## Context
+
 The repo has an engine and a Fastify API but nothing a person can open in a browser. ADR 001 picks React + Vite for the frontend and says pnpm workspaces arrive with it. This issue only sets up the frontend skeleton:
 
 - Create a React + Vite + TypeScript app
@@ -10,6 +11,7 @@ The repo has an engine and a Fastify API but nothing a person can open in a brow
 Plan lands at `docs/plans/009-add-a-frontend-plan.md` as the first commit.
 
 **Decisions:**
+
 - **Layout:** pnpm workspace. The root package (engine + server) stays where it is; the frontend is a new `web/` package. No files move. `pnpm-workspace.yaml` lists `web`. The frontend doesn't import the engine, it will consume GeoJSON from the API.
 - **Stack:** Vite + React 19 + TypeScript (strict, same flags as root where they apply, plus DOM libs and `jsx`), `@vitejs/plugin-react`. Versions: latest at install time.
 - **Tests:** Vitest (already used) with jsdom and Testing Library. Each package owns its tests: the root keeps `test/` (engine + server, already split in `test/engine`, `test/server`), and `web/` gets its own `web/test/` mirroring `web/src/`, same convention as the root (separate folder, not colocated). Not `test/web/` at the root: the web tests need jsdom, other deps and a DOM tsconfig, and would break the "one package, one set of deps" rule that workspaces give us. Root `pnpm test` keeps running only the root tests; `web` has its own `test` script; `pnpm -r test` runs both. If the layout feels wrong once there's real code, moving a test folder is a cheap change.
@@ -19,6 +21,7 @@ Plan lands at `docs/plans/009-add-a-frontend-plan.md` as the first commit.
 - **Root Dockerfile and workspace:** it must copy `pnpm-workspace.yaml` and `web/package.json` before `pnpm install --frozen-lockfile`, and the `runtime` stage must install only the root package's prod deps (filtered), so the API image doesn't pull React.
 
 ## Commits
+
 1. This plan.
 2. `chore:` workspace.
    - `pnpm-workspace.yaml` with `web`.
@@ -41,6 +44,7 @@ Plan lands at `docs/plans/009-add-a-frontend-plan.md` as the first commit.
 7. `docs:` README (Stack line, run instructions for web, Docker, project structure), ADR note only if a decision changed (none expected).
 
 ## Verification
+
 - `pnpm test` and `pnpm typecheck` at the root still pass; `pnpm --filter web test`, `typecheck` and `build` pass.
 - Local: `pnpm dev` (API) and `pnpm --filter web dev`; open `http://localhost:5173`, status line shows ok; stop the API, reload, it shows unreachable.
 - `docker compose -f compose.yaml -f compose.dev.yaml up --build`: page loads on `localhost:5173` and shows ok.
@@ -48,15 +52,17 @@ Plan lands at `docs/plans/009-add-a-frontend-plan.md` as the first commit.
 - `docker compose -f compose.yaml -f compose.dev.yaml run --rm api pnpm test` still works.
 - Production stack: `docker compose up --build`; `curl localhost:8080/api/health` returns `{"status":"ok"}` through nginx, and `http://localhost:8080` shows the status line ok.
 
-
 ## Open points to confirm while working
+
 - ✅ Whether Vite 8 / plugin-react 6 install cleanly under pnpm 10's build-script approval: confirmed. Only the harmless "Ignored build scripts: esbuild" warning appears.
 - ✅ Whether the root `Dockerfile` `dev` stage is better off installing the whole workspace (current plan) or staying root-only: root-only (`--filter .`), so the API's dev and build images don't pull the web toolchain.
 
 ## Optional tooling
+
 No MCP needed. `/run` to see the page working, `/simplify` and `/code-review` before the PR.
 
 ## Deviations and findings
+
 - **Compose layout.** The plan added a dev-only `web` service next to `app` and `api`, which left the API with no dev mode and the web with no prod mode. Instead, `compose.yaml` is the prod stack (`api`, plus `web` on nginx at 8080) and `compose.dev.yaml` overrides the same two services for development (`pnpm dev`, Vite on 5173, source mounted). The `app` service is gone: tests run with `docker compose -f compose.yaml -f compose.dev.yaml run --rm api pnpm test`.
 
 - **Dev ports.** The dev override uses `ports: !override` so `web` doesn't also publish nginx's port.
