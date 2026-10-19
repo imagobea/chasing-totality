@@ -41,3 +41,9 @@ Node 24 (`.nvmrc`), pnpm via corepack. Run from the repo root.
 - Don't commit, push or open PRs: leave changes uncommitted, one commit's worth at a time
 - For review findings, describe the fix (file, line, exact change); the user applies it
 - No plan docs for scaffold/tooling work
+
+## UI
+
+- Part A in `docs/design/DESIGN.md` (structure, components) is settled: follow it
+- Part B (colors, fonts, sizes) is provisional: use design tokens (CSS variables plus `web/src/theme.ts` for MapLibre), never hardcode values, and skip visual polish
+- Mockups in `docs/design/mockups/` show structure, not pixel-perfect specs
