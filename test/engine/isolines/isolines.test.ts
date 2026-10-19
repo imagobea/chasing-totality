@@ -18,8 +18,7 @@ const isolineVertices = (coordinates: Position[][][]) =>
   coordinates
     .flat(2)
     .filter(
-      ([lon, lat]) =>
-        lon > AREA.west && lon < AREA.east && lat > AREA.south && lat < AREA.north,
+      ([lon, lat]) => lon > AREA.west && lon < AREA.east && lat > AREA.south && lat < AREA.north,
     );
 
 describe("durationGrid", () => {
@@ -59,7 +58,9 @@ describe("durationContours", () => {
 
   it("leaves out durations no point reaches", () => {
     // The longest totality of this eclipse is ~6m23s.
-    const durations = durationContours(grid, [360, 390]).features.map((f) => f.properties.durationSeconds);
+    const durations = durationContours(grid, [360, 390]).features.map(
+      (f) => f.properties.durationSeconds,
+    );
     expect(durations).toEqual([360]);
   });
 

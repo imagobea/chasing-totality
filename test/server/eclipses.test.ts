@@ -49,7 +49,11 @@ describe("GET /eclipses", () => {
     onTestFinished(() => brokenApp.close());
     const res = await brokenApp.inject({ method: "GET", url: "/eclipses" });
     expect(res.statusCode).toBe(500);
-    expect(res.json()).toEqual({ statusCode: 500, error: "Internal Server Error", message: "Internal Server Error" });
+    expect(res.json()).toEqual({
+      statusCode: 500,
+      error: "Internal Server Error",
+      message: "Internal Server Error",
+    });
     expect(res.body).not.toContain(dataDir);
   });
 });
@@ -72,8 +76,11 @@ describe("GET /eclipses/:date/isolines", () => {
   });
 
   // The last one would climb out of the data dir if the schema let slashes through
-  it.each(["2027-8-2", "not-a-date", "2027-02-30", "2027-08-02%2F..%2F..%2Fpackage"])("answers 422 for %s", async (date) => {
-    const res = await app.inject({ method: "GET", url: `/eclipses/${date}/isolines` });
-    expect(res.statusCode).toBe(422);
-  });
+  it.each(["2027-8-2", "not-a-date", "2027-02-30", "2027-08-02%2F..%2F..%2Fpackage"])(
+    "answers 422 for %s",
+    async (date) => {
+      const res = await app.inject({ method: "GET", url: `/eclipses/${date}/isolines` });
+      expect(res.statusCode).toBe(422);
+    },
+  );
 });

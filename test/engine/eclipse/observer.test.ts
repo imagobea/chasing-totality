@@ -28,38 +28,45 @@ describe("geocentricObserver", () => {
   });
 
   // 1000 m: a mountain, moved outwards. -430 m: the Dead Sea shore, moved inwards.
-  it.each([1000, -430])("moves the observer along the vertical by an altitude of %s m", (altitudeMeters) => {
-    const seaLevel = geocentricObserver({ latitude: 45, longitude: 0, altitudeMeters: 0 });
-    const observer = geocentricObserver({ latitude: 45, longitude: 0, altitudeMeters });
-    expect(distanceFromCentre(observer) - distanceFromCentre(seaLevel)).toBeCloseTo(
-      altitudeMeters / EARTH_EQUATORIAL_RADIUS_METERS,
-      8,
-    );
-  });
+  it.each([1000, -430])(
+    "moves the observer along the vertical by an altitude of %s m",
+    (altitudeMeters) => {
+      const seaLevel = geocentricObserver({ latitude: 45, longitude: 0, altitudeMeters: 0 });
+      const observer = geocentricObserver({ latitude: 45, longitude: 0, altitudeMeters });
+      expect(distanceFromCentre(observer) - distanceFromCentre(seaLevel)).toBeCloseTo(
+        altitudeMeters / EARTH_EQUATORIAL_RADIUS_METERS,
+        8,
+      );
+    },
+  );
 
   it("returns the longitude in radians, east positive", () => {
-    expect(geocentricObserver({ latitude: 0, longitude: 30, altitudeMeters: 0 }).longitude).toBeCloseTo(
-      Math.PI / 6,
-      12,
-    );
-    expect(geocentricObserver({ latitude: 0, longitude: -45, altitudeMeters: 0 }).longitude).toBeCloseTo(
-      -Math.PI / 4,
-      12,
-    );
+    expect(
+      geocentricObserver({ latitude: 0, longitude: 30, altitudeMeters: 0 }).longitude,
+    ).toBeCloseTo(Math.PI / 6, 12);
+    expect(
+      geocentricObserver({ latitude: 0, longitude: -45, altitudeMeters: 0 }).longitude,
+    ).toBeCloseTo(-Math.PI / 4, 12);
   });
 
   it.each([91, -91, Number.NaN])("rejects latitude %s", (latitude) => {
-    expect(() => geocentricObserver({ latitude, longitude: 0, altitudeMeters: 0 })).toThrow(RangeError);
+    expect(() => geocentricObserver({ latitude, longitude: 0, altitudeMeters: 0 })).toThrow(
+      RangeError,
+    );
   });
 
   it.each([181, -181, Number.NaN])("rejects longitude %s", (longitude) => {
-    expect(() => geocentricObserver({ latitude: 0, longitude, altitudeMeters: 0 })).toThrow(RangeError);
+    expect(() => geocentricObserver({ latitude: 0, longitude, altitudeMeters: 0 })).toThrow(
+      RangeError,
+    );
   });
 
   it.each([Number.NaN, Number.POSITIVE_INFINITY, Number.NEGATIVE_INFINITY])(
     "rejects altitude %s",
     (altitudeMeters) => {
-      expect(() => geocentricObserver({ latitude: 0, longitude: 0, altitudeMeters })).toThrow(RangeError);
+      expect(() => geocentricObserver({ latitude: 0, longitude: 0, altitudeMeters })).toThrow(
+        RangeError,
+      );
     },
   );
 });

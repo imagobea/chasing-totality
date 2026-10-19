@@ -48,9 +48,18 @@ function nasaPath() {
   return {
     type: "FeatureCollection",
     features: [
-      line("NASA northern limit", rows.map((row) => row.north)),
-      line("NASA southern limit", rows.map((row) => row.south)),
-      line("NASA central line", rows.map((row) => row.central)),
+      line(
+        "NASA northern limit",
+        rows.map((row) => row.north),
+      ),
+      line(
+        "NASA southern limit",
+        rows.map((row) => row.south),
+      ),
+      line(
+        "NASA central line",
+        rows.map((row) => row.central),
+      ),
     ],
   };
 }

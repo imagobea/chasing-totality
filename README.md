@@ -23,6 +23,7 @@ graph LR
 ```
 
 **Key Features:**
+
 - ✅ Totality duration for any lat/lon, from NASA's Besselian elements
 - ✅ Isolines every 30 s, from the path's edge up to 6 minutes, as GeoJSON
 - ✅ Tested against NASA's path table and NASA's JSEX calculator
@@ -52,11 +53,13 @@ pnpm spike:grid  # write the isolines to out/
 ```
 
 The API settings and their defaults are in [`.env.example`](.env.example); copy it to `.env` to change them. Endpoints:
+
 - `GET /health`: `{"status":"ok"}`
 - `GET /eclipses`: dates with data, e.g. `["2027-08-02"]`
 - `GET /eclipses/:date/isolines`: GeoJSON isolines; 404 if there's no data, 422 for an invalid date
 
 `pnpm spike:grid` writes two files:
+
 - `out/2027-durations.geojson`: the isolines.
 - `out/2027-nasa-path.geojson`: NASA's limits and central line, to compare against.
 
@@ -82,11 +85,11 @@ The page shows the API status from `GET /api/health` and a map: an [OpenFreeMap]
 
 `compose.yaml` is the production stack: the compiled API and the built frontend served by nginx. `compose.dev.yaml` is an override that turns the same two services into development mode, with your source mounted and reload on.
 
-| | Prod | Dev |
-|---|---|---|
-| Command | `docker compose up --build` | `docker compose -f compose.yaml -f compose.dev.yaml up --build` |
-| API | http://localhost:3000/health | http://localhost:3000/health (`pnpm dev`) |
-| Frontend | http://localhost:8080 (nginx) | http://localhost:5173 (Vite) |
+|          | Prod                          | Dev                                                             |
+| -------- | ----------------------------- | --------------------------------------------------------------- |
+| Command  | `docker compose up --build`   | `docker compose -f compose.yaml -f compose.dev.yaml up --build` |
+| API      | http://localhost:3000/health  | http://localhost:3000/health (`pnpm dev`)                       |
+| Frontend | http://localhost:8080 (nginx) | http://localhost:5173 (Vite)                                    |
 
 In both, the frontend reaches the API through `/api`. In dev, after adding a dependency, add `-V` to `up --build`: `node_modules` lives in a volume that otherwise keeps the old packages.
 

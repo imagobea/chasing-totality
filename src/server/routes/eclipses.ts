@@ -8,7 +8,7 @@ type EclipsesOptions = { dataDir: string };
 
 const EXTENSION = ".geojson";
 // A data file named after its eclipse, e.g. 2027-08-02.geojson
-const DATA_FILE =/^\d{4}-\d{2}-\d{2}\.geojson$/;
+const DATA_FILE = /^\d{4}-\d{2}-\d{2}\.geojson$/;
 
 // A real calendar date as YYYY-MM-DD, which also keeps the file lookup inside dataDir
 const DATE_PARAMS = {

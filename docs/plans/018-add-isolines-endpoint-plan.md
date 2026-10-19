@@ -1,9 +1,11 @@
 # Add isolines endpoint (#18)
 
 ## Context
+
 The frontend needs our isolines from the API. An eclipse's isolines never change, so they're generated once by hand and committed as static GeoJSON (ADR 003). Plan lands at `docs/plans/018-add-isolines-endpoint-plan.md` as the first commit.
 
 **Decisions:**
+
 - **`GET /eclipses`:** dates that have data, sorted (e.g. `["2027-08-02"]`). Always 200.
 - **`GET /eclipses/:date/isolines`:** 200 with the file as `application/geo+json`, path of totality included (the 0 s isoline). 404 for a valid date with no data: an empty 200 would claim the eclipse has no totality. 422 for a malformed or impossible date, via a route schema (`format: "date"`) and an error handler, since Fastify defaults to 400.
 - **Data:** `data/isolines/<date>.geojson`, copied by hand from `pnpm spike:grid`'s output; the spike stays unchanged.
@@ -12,6 +14,7 @@ The frontend needs our isolines from the API. An eclipse's isolines never change
 - **Out of scope:** NASA's path, a `?data=` selector, caching.
 
 ## Commits
+
 1. `docs:` this plan.
 2. `chore:` configure the API logger.
    - `src/server/app.ts`: `buildApp` takes an options object; its `logger` goes to `Fastify()` and is off when not given, which keeps tests silent.
@@ -33,6 +36,7 @@ The frontend needs our isolines from the API. An eclipse's isolines never change
 6. `docs:` README: both endpoints, their responses, and how to regenerate the data (run the spike, copy the file under the eclipse's date).
 
 ## Verification
+
 - `pnpm test`, `pnpm typecheck`, `pnpm lint` pass.
 - `pnpm dev`, then:
   - `curl -i localhost:3000/eclipses` → 200, `["2027-08-02"]`.
@@ -43,9 +47,11 @@ The frontend needs our isolines from the API. An eclipse's isolines never change
 - `docker compose up --build api`: the same curls work against the container.
 
 ## Optional tooling
+
 No MCP needed. `/run` to hit the endpoints on the real server, `/security-review` since a URL param picks a file to read, `/simplify` and `/code-review` before the PR.
 
 ## Deviations and findings
+
 - **Env config.** Extra commit: `.env.example` documents the API settings; `LOG_LEVEL` defaults to ~~`warn`~~ `info` in production, `debug` otherwise.
 - **Routes file.** The routes live in `src/server/routes/eclipses.ts`, not `app.ts`.
 - **Reviews.** The 422 handler moved to `app.ts` and also answers 5xx generically, so internals don't leak; `/eclipses` lists only date-named files.
