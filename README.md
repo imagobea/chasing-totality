@@ -1,6 +1,8 @@
 # Chasing totality
 
-How long does totality last, place by place? This project computes it for the total solar eclipse of 2 August 2027 and draws it as isolines on a map.
+A personal tool for picking a spot to watch a total solar eclipse. You explore a map with the path of totality on it, click a location, and get what you need to decide: how long totality lasts there, whether the sky is usually clear, how to fly there and whether it's safe.
+
+**Current status:** totality duration for any lat/lon and isolines on a map, for 2 August 2027. Weather, flights and safety are planned.
 
 **Stack:** TypeScript + Node 24, Fastify, React + Vite, MapLibre GL JS + OpenFreeMap, Vitest, d3-contour
 
