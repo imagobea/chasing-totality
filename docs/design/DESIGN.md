@@ -1,31 +1,25 @@
 # Chasing Totality — Design
 
-> Lives at `docs/design/DESIGN.md`. Mockups live in `docs/design/mockups/`.
->
-> This doc has two halves with different rules:
->
-> | Section                   | Status         | How to treat it                                                                 |
-> | ------------------------- | -------------- | ------------------------------------------------------------------------------- |
-> | **Part A — Structure**    | ✅ Settled     | Follow it. Changes need a deliberate decision and an update here.               |
-> | **Part B — Visual style** | 🧪 Provisional | Current best guess, expected to change. Always go through tokens. Don't polish. |
->
-> Mockups show **structure**, not pixel-perfect specs.
+Design for the app described in [README](../../README.md). Desktop only.
+
+This doc has two halves with different rules:
+
+| Section                   | Status            | How to treat it                                                                       |
+| ------------------------- | ----------------- | ------------------------------------------------------------------------------------- |
+| **Part A — Structure**    | ✅ Mostly settled | Follow it but keep an open mind. Items marked as 🧪 are tentative - see legend below. |
+| **Part B — Visual style** | 🧪 Provisional    | Current best guess, expected to change. Always go through tokens. Don't polish.       |
+
+🧪 = tentative: discuss ahead of building, expect changes
+💡 = idea: feature is out of scope, might be implemented at a later stage
+📦 = resources
+
+Mockups in `docs/design/mockups/` show **structure**, not pixel-perfect specs.
 
 ---
 
-## What the app is
+## Part A — Structure ✅ Mostly settled
 
-A personal tool, for me, family and friends, for picking a spot to watch a total solar eclipse. You explore a map with the path of totality on it, click a location, and get what you need to decide: how long totality lasts there, whether the sky is usually clear, how to fly there and whether it's safe.
-
-- **First eclipse:** 2 August 2027 (Spain → North Africa → Egypt → Arabia).
-- **Platform:** desktop only. Planning happens ahead of time at a desk; no phone layout for now.
-- **Stack:** Fastify + React + Vite + MapLibre + OpenFreeMap. Path data is pregenerated from NASA data and served by the API.
-
----
-
-# Part A — Structure ✅ Settled
-
-## A1. Screen layout
+### A1. Screen layout
 
 One screen. The map is the app; everything else floats over it or frames it.
 
@@ -51,71 +45,82 @@ One screen. The map is the app; everything else floats over it or frames it.
 - **Panels:** LayersPanel and SpotPanel are overlays on the map, not columns. The map keeps its full width underneath them.
 - **SpotPanel:** anchored top-right, at most the map height, and scrolls internally.
 
-## A2. Components
+### A2. Components
 
 Components are described by **role**, not by colour or font.
 
-### AppHeader
+#### AppHeader
 
 - **Contains:** logo mark plus wordmark, `EclipsePicker`, `Countdown`, `ApiStatus`.
 - **Order:** left to right as listed. A flexible spacer pushes Countdown and ApiStatus to the right.
 
-### EclipsePicker
+📦 If no logo is provided, a placeholder is fine.
 
-- **Trigger:** a button showing the selected eclipse as date · type, e.g. `2027 · AUG 02 · TOTAL`, plus a chevron.
+`EclipsePicker`
+
+- **Trigger:** a button showing the selected eclipse as date, e.g. `2027 · AUG 02`, plus a chevron.
 - **Dropdown:** one row per eclipse, containing:
   - date
-  - type
-  - regions crossed
-  - a short data-status tag (`DATA` / `NO DATA YET`)
-- **Unavailable eclipses:** rows without data are shown but disabled. This tells people more are coming.
-- **On select:** sets the app-wide `eclipseId`; every data request is scoped to it.
-- **Current state:** only 2027-08-02 has data. 2028-07-22 and 2030-11-25 are listed as disabled.
+- **On select:** if we handle eclipse dates as ids, we could set an app-wide `eclipseId`, then every data request would be scoped to it.
+- **Current state:** only 2027-08-02 has data.
 
-### Countdown
+🧪 Eclipse ids are a suggestion, anything related to the API should be agreed ahead of coding and documented
+📦 Eclipse dates source from API `/api/eclipses`
 
-- **Shows:** days until the selected eclipse's greatest eclipse, as `T−N D`, computed client-side.
+`Countdown`
 
-### ApiStatus
+- **Shows:** days until the selected eclipse, as `T−N D`, computed client-side.
+
+📦 Compute remaining days based on the selected eclipse date
+
+`ApiStatus`
 
 - **Shows:** a small status indicator plus a text label (`API OK` / `API DOWN`).
 - **Colour:** never the only signal; the text label always carries the status.
 
-### MapStage
+📦 API `/api/health`
+
+#### MapStage
 
 - MapLibre map with an OpenFreeMap basemap. The style is provisional; see B4.
 - **Click anywhere:** selects that point (`lng/lat`) and opens SpotPanel with data for that point.
   - Clicks are map-level (`map.on('click')`), never per-layer, so labels and fills never block them.
-  - Point data comes from the API: `GET /api/eclipses/:id/point?lat&lng`.
+  - Point data to come from the API.
   - Never read point data from rendered features.
   - `inPath` may be derived from `queryRenderedFeatures` on our own layers, but only for cursor and UI hints.
 - **Cursor:** crosshair over the path.
-- **Markers:** saved spots show as markers with a name label. The selected spot is visually emphasised.
-- **Greatest eclipse:** marked with a small cross and label.
+- **Greatest eclipse:** highlighted, maybe with a small cross and label. 🧪 This is only a nice to have.
 
-#### Map layer stack (bottom → top). Settled.
+💡 Another idea would to allow saving spots, but it is not a priority.
+📦 Location data - where it comes from and how it is handled - needs discussion.
+
+Map layer stack (bottom → top):
 
 1. Basemap fills (land, water, roads), from the style.
 2. **Advisories:** hatched `fill-pattern` (image added via `map.addImage`) plus a dashed outline.
 3. **Isoline fills:** translucent. Stacked bands get stronger toward the centre line.
 4. **Isoline lines:** crisp edges, plus a dashed centre line.
-5. Basemap labels, kept readable with halos.
-6. **Our symbols:** duration labels, airport icons, greatest-eclipse marker.
+5. Basemap labels, kept readable maybe with halos.
+6. **Our symbols:** duration labels, airport icons, etc.
 7. Spot markers and the selection highlight.
 
 Our fills and lines are inserted **before the first basemap symbol layer**. Our symbols go on top. Only one layer may ever be near-opaque; everything else stays translucent so labels stay readable.
 
-### LayersPanel (bottom-left overlay)
+📦 Travel advisories and airport data need to be integrated.
+
+`LayersPanel` (bottom-left overlay)
 
 - **Layer toggles**, in this order:
   1. Totality path
   2. Airports
   3. Travel advisories
 - **Each toggle:** a real button with `aria-pressed`, a checkbox mark, a label and a small swatch matching the layer.
-- **Legend: "Totality duration".** A 5-step ramp from edge to centre, with end labels `EDGE · 0s` and `CENTRE · <max>`. `<max>` comes from the eclipse data (6m 23s for 2027).
-- **No flight-route layer.** It was considered and dropped.
+- **Legend: "Totality duration".** A 5-step ramp - CHECK - from edge to centre, with end labels `EDGE · 0s` and `CENTRE · <max>`. `<max>` comes from the eclipse data (6m 23s for 2027).
 
-### SpotPanel (right overlay)
+🧪 Toggles are a nice to have and can come later. Consider the design description for the legend/totality duration as tentative.
+📦 Travel advisories and airport data need to be integrated.
+
+`SpotPanel` (right overlay)
 
 Sections in this exact order: will I see it → will the sky be clear → can I get there → should I go.
 
@@ -128,14 +133,14 @@ Sections in this exact order: will I see it → will the sky be clear → can I 
    - duration as the panel's largest number
    - a bar showing the share of the eclipse's maximum
    - caption: `NN% OF MAX (6m 23s)`
-3. **Timing.** Two columns:
-   - mid-totality time (UTC)
-   - sun altitude
-4. **Sky · August history**
+   - when totality starts and ends
+   - when eclipse starts and ends
+   - sun altitude is a nice to have 🧪, should only be displayed if the data is already available
+3. **Sky · August history**
    - clear-sky percentage as a bar plus a number
    - average high temperature
    - caption naming the period (e.g. `2000–2025`)
-5. **Getting there**
+4. **Getting there** - 🧪 consider following requirements and UX provisional
    - "Fly from" select: the user's origin airport.
    - Fixed date window caption: `OUT 31 JUL–1 AUG · BACK 3–4 AUG`, derived from the eclipse date.
    - Nearest airports list. Each row has:
@@ -145,55 +150,40 @@ Sections in this exact order: will I see it → will the sky be clear → can I 
      - cached fare (`from €X`)
      - a "Search" link to Google Flights, prefilled with origin, airport and the date window
    - Freshness note: `Fares cached nightly · checked <date>`.
-6. **Travel advisory**
+5. **Travel advisory**
    - level indicator plus text (e.g. "Exercise increased caution")
    - source, and a "checked on" date
-7. **Saved spots:** chips (real buttons) to jump between saved spots.
 
-**Empty state:** when nothing is selected, show a short prompt ("Pick a spot inside the band") plus one line on what clicking shows. The Saved spots chips stay visible.
+**Empty state:** when nothing is selected, show a short prompt ("Pick a spot inside the band") plus one line on what clicking shows.
 
 **Loading state:** keep the section skeleton in place and fill values as they arrive. Don't collapse the panel.
 
-### StatusBar (footer)
+📦 Weather data, airport data and travel advisories need to be integrated.
+
+`StatusBar` (footer)
 
 - **Left:** selected coordinates (`—` when nothing is selected).
-- **Centre:** basemap name, then the path data source (`NASA GSFC`).
 - **Right:** map attribution, `MapLibre | OpenFreeMap © OpenMapTiles · © OpenStreetMap`. Required; never remove it.
 
-## A3. Flow
+🧪 Keep the center blank, we might use it to reference other sources.
+
+### A3. Flow
 
 1. The app loads with the next eclipse that has data. The map is centred on the path.
-2. The user explores the map, turns layers on and off, and clicks a point or a saved-spot marker.
+2. The user explores the map, ~~toggles layers on and off~~, and clicks a point ~~or a saved-spot marker~~.
 3. SpotPanel opens with that point's data, loading section by section.
-4. The user changes "Fly from" and the airport rows update: distances, fares and search links.
-5. The user saves a spot. _(Save is planned; see Open questions.)_
+4. 🧪 The user changes "Fly from" and the airport rows update: distances, fares and search links.
+5. ~~The user saves a spot.~~
 
-## A4. Data each component expects
+### A4. Content rules
 
-These shapes guide the API. They aren't final field names.
-
-| Endpoint                               | Returns                                                                                                                                                                                      | Used by                                      |
-| -------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------- |
-| `GET /api/eclipses`                    | list of `{ id, date, type, regions, hasData, greatestEclipse: { lat, lng, durationS } }`                                                                                                     | EclipsePicker, Countdown, LayersPanel legend |
-| `GET /api/eclipses/:id/isolines`       | GeoJSON bands and lines, each with a duration property                                                                                                                                       | MapStage                                     |
-| `GET /api/eclipses/:id/point?lat&lng`  | `{ inPath, durationS, midTotalityUtc, sunAltitudeDeg, sky: { clearPct, avgHighC, period }, airports: [{ iata, name, lat, lng, kmFromSpot }], advisory: { level, text, source, checkedAt } }` | SpotPanel                                    |
-| `GET /api/fares?origin&dest` _(later)_ | `{ fromPrice, currency, checkedAt }` from a nightly cache                                                                                                                                    | SpotPanel airport rows                       |
-
-**Data sources (planned):**
-
-- **Airports:** OurAirports, filtered to medium and large airports with scheduled service. Nearest-k lookup by great-circle distance.
-- **Sky:** pregenerated August clear-sky stats on a coarse grid, e.g. ERA5 or NASA POWER.
-- **Advisories:** a small hand-maintained GeoJSON, with source and date.
-
-## A5. Content rules
-
-- **Never invent data.** Unknown values render as `—` or a clearly marked placeholder.
+- **Never invent data.** VERY IMPORTANT. Unknown values render as `—` or a clearly marked placeholder.
 - **Times:** always label the zone (UTC by default).
 - **Distances:** km.
 - **Durations:** `Xm YYs`.
-- **Sources:** every external number (weather, fares, advisories) shows its source and how fresh it is.
+- **Sources:** VERY IMPORTANT. Every external number (weather, fares, advisories) shows its source and how fresh it is.
 
-## A6. Accessibility (non-negotiable)
+### A5. Accessibility (non-negotiable)
 
 - Real `<button>`, `<a>`, `<select>` and `<label>` elements. No click handlers on divs.
 - Touch and click targets at least 44 px, including map markers.
@@ -206,48 +196,50 @@ These shapes guide the API. They aren't final field names.
 
 ---
 
-# Part B — Visual style 🧪 Provisional
+## Part B — Visual style 🧪 Provisional
 
 > Everything below is **current best guess, expected to change.** Components must reference **tokens only**; never hardcode a colour, font, size or spacing value. Restyling should be an edit to one tokens file.
 
-## B1. Direction (mood, not spec)
+### B1. Direction (mood, not spec)
 
 - **Feel:** minimal, retro sci-fi, "mission control".
 - **Hierarchy:** the eclipse path is the loudest thing on screen. The basemap is quiet but readable. The UI chrome is quieter still.
 - **Accents:** one warm accent (the eclipse) and one cool accent (travel/airports), plus a warning colour for advisories.
 - **Flat UI:** no gradients-as-decoration and no drop shadows.
 
-## B2. Tokens
+### B2. Tokens
 
 **Naming:** tokens are named by role. Components use these names only; the values are provisional.
 
-**Current values:** the "Retro (custom)" theme, i.e. the Current page of the mockup.
+**Themes:** each UI theme pairs with the OpenFreeMap style of the same name: Positron, Dark and Fiord. Each candidate is a set of values for the same tokens; components never change between themes.
 
-### Colour
+#### Colour
 
-| Token                    | Role                                                     | Current value       |
-| ------------------------ | -------------------------------------------------------- | ------------------- |
-| `--color-bg`             | app background                                           | `#07090D`           |
-| `--color-surface`        | floating panel background                                | `rgba(9,12,17,.94)` |
-| `--color-surface-raised` | inputs, selected rows                                    | `#0E1218`           |
-| `--color-border`         | panel and header borders                                 | `#232C38`           |
-| `--color-divider`        | section dividers inside panels                           | `#1A212B`           |
-| `--color-control-border` | buttons, chips, selects                                  | `#2A3646`           |
-| `--color-text`           | primary text                                             | `#E6E1D6`           |
-| `--color-text-muted`     | labels, captions                                         | `#8C97A6`           |
-| `--color-text-faint`     | disabled, fine print                                     | `#7E8A9A`           |
-| `--color-accent`         | primary emphasis: selection, key numbers, focus brackets | `#FFB547`           |
-| `--color-on-accent`      | text/icons on accent                                     | `#07090D`           |
-| `--color-path-fill`      | isoline band fill (used translucent)                     | `#F08A24`           |
-| `--color-path-edge`      | isoline band outlines                                    | `#FFB547`           |
-| `--color-path-center`    | centre line                                              | `#FFF3DC`           |
-| `--color-travel`         | airports, flight links, distance bars                    | `#63C7DB`           |
-| `--color-advisory`       | advisory hatch and outline                               | `#FF6B6B`           |
-| `--color-advisory-text`  | advisory text on dark                                    | `#FF9A9A`           |
-| `--color-status-ok`      | API OK dot                                               | `#8FD4A0`           |
-| `--color-label-halo`     | halo behind map labels                                   | `#0A0D12`           |
+| Token                    | Role                                                     | Positron                | Dark                 | Fiord                |
+| ------------------------ | -------------------------------------------------------- | ----------------------- | -------------------- | -------------------- |
+| `--color-bg`             | app background                                           | `#F7F7F5`               | `#0C0C0D`            | `#2A3245`            |
+| `--color-surface`        | floating panel background                                | `rgba(255,255,255,.95)` | `rgba(18,18,20,.94)` | `rgba(36,43,60,.95)` |
+| `--color-surface-raised` | inputs, selected rows                                    | `#FFFFFF`               | `#17171A`            | `#2F3850`            |
+| `--color-border`         | panel and header borders                                 | `#D3D8DD`               | `#2C2C31`            | `#55617E`            |
+| `--color-divider`        | section dividers inside panels                           | `#E6E9EC`               | `#202024`            | `#3C4661`            |
+| `--color-control-border` | buttons, chips, selects                                  | `#BFC6CE`               | `#3A3A40`            | `#5E6A88`            |
+| `--color-text`           | primary text                                             | `#1D232B`               | `#ECECEE`            | `#EEF1F7`            |
+| `--color-text-muted`     | labels, captions                                         | `#59636F`               | `#9C9CA4`            | `#B3BDD0`            |
+| `--color-text-faint`     | disabled, fine print                                     | `#5F6975`               | `#8E8E96`            | `#AAB4C8`            |
+| `--color-accent`         | primary emphasis: selection, key numbers, focus brackets | `#B85400`               | `#FFB547`            | `#FFB547`            |
+| `--color-on-accent`      | text/icons on accent                                     | `#FFFFFF`               | `#0C0C0D`            | `#1E2433`            |
+| `--color-path-fill`      | isoline band fill (used translucent)                     | `#F07A12`               | `#F08A24`            | `#FFA040`            |
+| `--color-path-edge`      | isoline band outlines                                    | `#D96400`               | `#FFB547`            | `#FFC46B`            |
+| `--color-path-center`    | centre line                                              | `#8A3B00`               | `#FFF3DC`            | `#FFF3DC`            |
+| `--color-travel`         | airports, flight links, distance bars                    | `#0B6E86`               | `#63C7DB`            | `#8BE4F2`            |
+| `--color-advisory`       | advisory hatch and outline                               | `#C62828`               | `#FF6B6B`            | `#FF8A8A`            |
+| `--color-advisory-text`  | advisory text                                            | `#A51D1D`               | `#FF9A9A`            | `#FFB3B3`            |
+| `--color-status-ok`      | API OK dot                                               | `#2E8540`               | `#8FD4A0`            | `#9BE0AE`            |
+| `--color-label-halo`     | halo behind map labels                                   | `#FFFFFF`               | `#0C0C0D`            | `#2E3850`            |
 
-### Map-layer paint (provisional)
+On the light theme (Positron) the accent and path colours are darker, to keep 4.5:1 text contrast on white.
+
+#### Map-layer paint (provisional, same for all themes)
 
 | Token                     | Current value                       |
 | ------------------------- | ----------------------------------- |
@@ -258,52 +250,46 @@ These shapes guide the API. They aren't final field names.
 
 MapLibre paint properties can't read CSS variables. Mirror these tokens in a small JS theme object, e.g. `theme.ts`, that both CSS generation and map layers import. That keeps one source of truth.
 
-### Typography
+#### Typography (same for all themes)
 
-| Token               | Role                                         | Current value                   |
-| ------------------- | -------------------------------------------- | ------------------------------- |
-| `--font-display`    | wordmark, spot name, big numbers             | `Michroma` (wide, retro sci-fi) |
-| `--font-body`       | everything else, data                        | `JetBrains Mono`                |
-| `--text-xs`         | kickers, captions (uppercase, wide tracking) | `10px`                          |
-| `--text-sm`         | body, rows                                   | `12px`                          |
-| `--text-md`         | secondary values                             | `16px`                          |
-| `--text-lg`         | spot name                                    | `24px`                          |
-| `--text-xl`         | totality duration                            | `40px`                          |
-| `--tracking-kicker` | uppercase labels                             | `0.2em`                         |
+| Token               | Role                                         | Current value             |
+| ------------------- | -------------------------------------------- | ------------------------- |
+| `--font-display`    | wordmark, spot name, big numbers             | `Michroma` (wide, sci-fi) |
+| `--font-body`       | everything else, data                        | `JetBrains Mono`          |
+| `--text-xs`         | kickers, captions (uppercase, wide tracking) | `10px`                    |
+| `--text-sm`         | body, rows                                   | `12px`                    |
+| `--text-md`         | secondary values                             | `16px`                    |
+| `--text-lg`         | spot name                                    | `24px`                    |
+| `--text-xl`         | totality duration                            | `40px`                    |
+| `--tracking-kicker` | uppercase labels                             | `0.2em`                   |
 
 The fonts in particular are **not decided**. Swap freely via the two font tokens.
 
-### Space, shape, motion
+#### Space, shape, motion (same for all themes)
 
 | Token                     | Current value            | Notes                                    |
 | ------------------------- | ------------------------ | ---------------------------------------- |
 | `--space-1` … `--space-5` | `4 / 8 / 12 / 16 / 20px` |                                          |
 | `--radius`                | `0`                      | square, HUD-like                         |
 | `--panel-corner`          | `10px`                   | accent L-brackets on panel corners       |
-| `--target-min`            | `44px`                   | Settled (A6). Keep it as a token anyway. |
+| `--target-min`            | `44px`                   | Settled (A5). Keep it as a token anyway. |
 | Selected spot             | pulse ring, ~2.4 s       | Respect `prefers-reduced-motion`.        |
 
-## B3. Theme candidates explored
+### B3. Themes and mockups
 
-The mockup has four pages: Current, Positron, Dark and Fiord. Each one overrides the same tokens. Key values for comparison:
+There are 3 mockups, one per theme: Positron, Dark and Fiord - screenshots in `docs/design/mockups/{positron,dark,fiord}.png`. These are candidates, not a feature: we'll pick one and ship only that theme. There is no theme switch in the app.
 
-| Token                | Retro     | Positron  | Dark      | Fiord     |
-| -------------------- | --------- | --------- | --------- | --------- |
-| `--color-bg`         | `#07090D` | `#F7F7F5` | `#0C0C0D` | `#2A3245` |
-| `--color-text`       | `#E6E1D6` | `#1D232B` | `#ECECEE` | `#EEF1F7` |
-| `--color-text-muted` | `#8C97A6` | `#59636F` | `#9C9CA4` | `#B3BDD0` |
-| `--color-accent`     | `#FFB547` | `#B85400` | `#FFB547` | `#FFB547` |
-| `--color-path-fill`  | `#F08A24` | `#F07A12` | `#F08A24` | `#FFA040` |
-| `--color-travel`     | `#63C7DB` | `#0B6E86` | `#63C7DB` | `#8BE4F2` |
-| `--color-advisory`   | `#FF6B6B` | `#C62828` | `#FF6B6B` | `#FF8A8A` |
+- **Dark:** neutral near-black; the eclipse path stands out most.
+- **Fiord:** slate blue; the most atmospheric, but with the least contrast against the bands.
+- **Positron:** light and calm; the most readable for long planning sessions.
 
-On light themes the accent must darken to keep 4.5:1 contrast. That's why Positron uses `#B85400`.
+The UI theme and the basemap are chosen **together**: picking a theme means loading its matching OpenFreeMap style. Mockup colours approximate each style; tune the tokens against the real basemap.
 
-## B4. Basemap (provisional)
+### B4. Basemap (provisional)
 
-- **Today:** OpenFreeMap `bright`.
-- **Candidates:** `positron` (light), `dark`, `fiord`.
-- **Decide by testing on the real isolines,** not the mockup. Swap `MAP_STYLE` and look.
+- **Today:** OpenFreeMap `bright` (to be replaced).
+- **Candidates:** `positron` (light), `dark`, `fiord`, each paired with the UI theme of the same name.
+- **Decide by testing on the real isolines,** not the mockup. The winning basemap’s palette becomes the only token set. Swap `MAP_STYLE` and look.
 - **Whichever wins:**
   - quiet the basemap (desaturate, drop POIs)
   - add label halos
@@ -311,25 +297,3 @@ On light themes the accent must darken to keep 4.5:1 contrast. That's why Positr
 - **Customising:** tweak paint properties in code on `load`, or edit the style in Maputnik and self-host the JSON.
 
 ---
-
-## Rules for implementation (for Claude and me)
-
-1. **Part A is settled.** Build exactly these components, sections, order and interactions.
-2. **Part B is provisional:**
-   - all styling goes through tokens: a CSS variables file plus a mirrored `theme.ts` for MapLibre
-   - no hardcoded colours, fonts or sizes in components
-   - don't spend time polishing visuals
-3. **First issue: "Set up design tokens / theme".** Components come after.
-4. **Changes to structure:** update Part A here in the same PR.
-
-## Open questions
-
-- How saved spots persist: JSON file, SQLite, or localStorage per person.
-- Which sources to use for advisories.
-- Whether to build cached fares at all, or keep only Search links.
-- The final basemap and fonts.
-
-## References
-
-- **Mockup canvas (Claude design):** pages Current, Positron, Dark, Fiord. Interactive, with a theme switch in Tweaks.
-- **Exported screenshots:** `docs/design/mockups/`.

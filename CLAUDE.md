@@ -44,6 +44,6 @@ Node 24 (`.nvmrc`), pnpm via corepack. Run from the repo root.
 
 ## UI
 
-- Part A in `docs/design/DESIGN.md` (structure, components) is settled: follow it
+- Part A in `docs/design/DESIGN.md` (structure, components) is mostly settled: follow it
 - Part B (colors, fonts, sizes) is provisional: use design tokens (CSS variables plus `web/src/theme.ts` for MapLibre), never hardcode values, and skip visual polish
 - Mockups in `docs/design/mockups/` show structure, not pixel-perfect specs
