@@ -8,7 +8,7 @@ import { ISOLINES_LAYERS, ISOLINES_SOURCE, ISOLINES_SOURCE_ID } from "./isolines
 setWorkerUrl(workerUrl);
 
 // Styles as per OpenFreeMap documentation at https://openfreemap.org/quick_start/
-const MAP_STYLE = "https://tiles.openfreemap.org/styles/bright";
+const MAP_STYLE = "https://tiles.openfreemap.org/styles/fiord";
 const MAP_CENTER: [number, number] = [5, 36.5];
 const MAP_ZOOM = 5;
 

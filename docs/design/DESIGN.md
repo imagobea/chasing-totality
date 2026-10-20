@@ -215,38 +215,39 @@ Sections in this exact order: will I see it → will the sky be clear → can I 
 
 #### Colour
 
-| Token                    | Role                                                     | Positron                | Dark                 | Fiord                |
-| ------------------------ | -------------------------------------------------------- | ----------------------- | -------------------- | -------------------- |
-| `--color-bg`             | app background                                           | `#F7F7F5`               | `#0C0C0D`            | `#2A3245`            |
-| `--color-surface`        | floating panel background                                | `rgba(255,255,255,.95)` | `rgba(18,18,20,.94)` | `rgba(36,43,60,.95)` |
-| `--color-surface-raised` | inputs, selected rows                                    | `#FFFFFF`               | `#17171A`            | `#2F3850`            |
-| `--color-border`         | panel and header borders                                 | `#D3D8DD`               | `#2C2C31`            | `#55617E`            |
-| `--color-divider`        | section dividers inside panels                           | `#E6E9EC`               | `#202024`            | `#3C4661`            |
-| `--color-control-border` | buttons, chips, selects                                  | `#BFC6CE`               | `#3A3A40`            | `#5E6A88`            |
-| `--color-text`           | primary text                                             | `#1D232B`               | `#ECECEE`            | `#EEF1F7`            |
-| `--color-text-muted`     | labels, captions                                         | `#59636F`               | `#9C9CA4`            | `#B3BDD0`            |
-| `--color-text-faint`     | disabled, fine print                                     | `#5F6975`               | `#8E8E96`            | `#AAB4C8`            |
-| `--color-accent`         | primary emphasis: selection, key numbers, focus brackets | `#B85400`               | `#FFB547`            | `#FFB547`            |
-| `--color-on-accent`      | text/icons on accent                                     | `#FFFFFF`               | `#0C0C0D`            | `#1E2433`            |
-| `--color-path-fill`      | isoline band fill (used translucent)                     | `#F07A12`               | `#F08A24`            | `#FFA040`            |
-| `--color-path-edge`      | isoline band outlines                                    | `#D96400`               | `#FFB547`            | `#FFC46B`            |
-| `--color-path-center`    | centre line                                              | `#8A3B00`               | `#FFF3DC`            | `#FFF3DC`            |
-| `--color-travel`         | airports, flight links, distance bars                    | `#0B6E86`               | `#63C7DB`            | `#8BE4F2`            |
-| `--color-advisory`       | advisory hatch and outline                               | `#C62828`               | `#FF6B6B`            | `#FF8A8A`            |
-| `--color-advisory-text`  | advisory text                                            | `#A51D1D`               | `#FF9A9A`            | `#FFB3B3`            |
-| `--color-status-ok`      | API OK dot                                               | `#2E8540`               | `#8FD4A0`            | `#9BE0AE`            |
-| `--color-label-halo`     | halo behind map labels                                   | `#FFFFFF`               | `#0C0C0D`            | `#2E3850`            |
+| Token                     | Role                                                           | Positron                | Dark                 | Fiord                |
+| ------------------------- | -------------------------------------------------------------- | ----------------------- | -------------------- | -------------------- |
+| `--color-bg`              | app background                                                 | `#F7F7F5`               | `#0C0C0D`            | `#2A3245`            |
+| `--color-surface`         | floating panel background                                      | `rgba(255,255,255,.95)` | `rgba(18,18,20,.94)` | `rgba(36,43,60,.95)` |
+| `--color-surface-raised`  | inputs, selected rows                                          | `#FFFFFF`               | `#17171A`            | `#2F3850`            |
+| `--color-border`          | panel and header borders                                       | `#D3D8DD`               | `#2C2C31`            | `#55617E`            |
+| `--color-divider`         | section dividers inside panels                                 | `#E6E9EC`               | `#202024`            | `#3C4661`            |
+| `--color-control-border`  | buttons, chips, selects                                        | `#BFC6CE`               | `#3A3A40`            | `#5E6A88`            |
+| `--color-text`            | primary text                                                   | `#1D232B`               | `#ECECEE`            | `#EEF1F7`            |
+| `--color-text-muted`      | labels, captions                                               | `#59636F`               | `#9C9CA4`            | `#B3BDD0`            |
+| `--color-text-faint`      | disabled, fine print                                           | `#5F6975`               | `#8E8E96`            | `#AAB4C8`            |
+| `--color-accent`          | primary emphasis: selection, key numbers, focus brackets       | `#B85400`               | `#FFB547`            | `#FFB547`            |
+| `--color-on-accent`       | text/icons on accent                                           | `#FFFFFF`               | `#0C0C0D`            | `#1E2433`            |
+| `--color-path-fill-short` | isoline band fill at the shortest totality (translucent)       | `#FBD9A8`               | `#FFD9A0`            | `#FFD9A0`            |
+| `--color-path-fill-long`  | isoline band fill at the longest totality, 6 min (translucent) | `#B33A00`               | `#F2661F`            | `#F2661F`            |
+| `--color-path-edge`       | isoline band outlines                                          | `#D96400`               | `#FFB547`            | `#FFC46B`            |
+| `--color-path-center`     | centre line                                                    | `#8A3B00`               | `#FFF3DC`            | `#FFF3DC`            |
+| `--color-travel`          | airports, flight links, distance bars                          | `#0B6E86`               | `#63C7DB`            | `#8BE4F2`            |
+| `--color-advisory`        | advisory hatch and outline                                     | `#C62828`               | `#FF6B6B`            | `#FF8A8A`            |
+| `--color-advisory-text`   | advisory text                                                  | `#A51D1D`               | `#FF9A9A`            | `#FFB3B3`            |
+| `--color-status-ok`       | API OK dot                                                     | `#2E8540`               | `#8FD4A0`            | `#9BE0AE`            |
+| `--color-label-halo`      | halo behind map labels                                         | `#FFFFFF`               | `#0C0C0D`            | `#2E3850`            |
 
 On the light theme (Positron) the accent and path colours are darker, to keep 4.5:1 text contrast on white.
 
 #### Map-layer paint (provisional, same for all themes)
 
-| Token                     | Current value                       |
-| ------------------------- | ----------------------------------- |
-| `--path-fill-opacity`     | `0.14` per band (centre band `0.2`) |
-| `--path-edge-width`       | `1px`                               |
-| `--advisory-fill-opacity` | `0.55` (hatch)                      |
-| `--label-halo-width`      | `1.5` (MapLibre `text-halo-width`)  |
+| Token                     | Current value                      |
+| ------------------------- | ---------------------------------- |
+| `--path-fill-opacity`     | `0.3` per band                     |
+| `--path-edge-width`       | `1px`                              |
+| `--advisory-fill-opacity` | `0.55` (hatch)                     |
+| `--label-halo-width`      | `1.5` (MapLibre `text-halo-width`) |
 
 MapLibre paint properties can't read CSS variables. Mirror these tokens in a small JS theme object, e.g. `theme.ts`, that both CSS generation and map layers import. That keeps one source of truth.
 

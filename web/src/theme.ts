@@ -13,7 +13,8 @@ export const theme = {
   "--color-text-faint": "#aab4c8",
   "--color-accent": "#ffb547",
   "--color-on-accent": "#1e2433",
-  "--color-path-fill": "#ffa040",
+  "--color-path-fill-short": "#ffd9a0",
+  "--color-path-fill-long": "#f2661f",
   "--color-path-edge": "#ffc46b",
   "--color-path-center": "#fff3dc",
   "--color-travel": "#8be4f2",
@@ -22,7 +23,7 @@ export const theme = {
   "--color-status-ok": "#9be0ae",
   "--color-label-halo": "#2e3850",
 
-  "--path-fill-opacity": "0.14",
+  "--path-fill-opacity": "0.3",
   "--path-edge-width": "1px",
   "--advisory-fill-opacity": "0.55",
   "--label-halo-width": "1.5",
