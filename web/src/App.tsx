@@ -27,7 +27,7 @@ export function App() {
   return (
     <div className="app">
       <AppHeader dates={dates} date={date} onDateChange={setDate} />
-      <EclipseMap />
+      <EclipseMap date={date} />
     </div>
   );
 }
