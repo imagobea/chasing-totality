@@ -8,9 +8,9 @@ import { ISOLINES_LAYERS, ISOLINES_SOURCE_ID, isolinesSource } from "./isolines.
 type EclipseMapProps = {
   date: string | null;
   // Called with the mouse position as it moves, and null when it leaves the map
-  onCursorMove?: (cursor: Coordinates | null) => void;
-  // Where to put the attribution; without it, it stays in the map's corner
-  attributionRef?: RefObject<HTMLElement | null>;
+  onCursorMove: (cursor: Coordinates | null) => void;
+  // Where to put the attribution, outside the map
+  attributionRef: RefObject<HTMLElement | null>;
 };
 
 // The worker URL as per MapLibre documentation at https://maplibre.org/maplibre-gl-js/docs/#esm
@@ -29,7 +29,7 @@ export function EclipseMap({ date, onCursorMove, attributionRef }: EclipseMapPro
   // Sources and layers can only be added once the style has loaded
   const [styleLoaded, setStyleLoaded] = useState(false);
   // Always calls the latest callback, without recreating the map when it changes
-  const reportCursor = useEffectEvent((cursor: Coordinates | null) => onCursorMove?.(cursor));
+  const reportCursor = useEffectEvent((cursor: Coordinates | null) => onCursorMove(cursor));
 
   // One map for the component's lifetime, whatever the date
   useEffect(() => {
@@ -47,14 +47,12 @@ export function EclipseMap({ date, onCursorMove, attributionRef }: EclipseMapPro
     map.on("mouseout", () => reportCursor(null));
 
     // MapLibre's own control, so the credits follow the style and sources. Mounted by hand
-    // through its public onAdd/onRemove when it goes outside the map
+    // through its public onAdd/onRemove, because it goes outside the map
     const attribution = new AttributionControl({ compact: false });
-    const attributionSlot = attributionRef?.current;
-    if (attributionSlot) attributionSlot.append(attribution.onAdd(map));
-    else map.addControl(attribution);
+    attributionRef.current!.append(attribution.onAdd(map));
 
     return () => {
-      if (attributionSlot) attribution.onRemove();
+      attribution.onRemove();
       map.remove();
       mapRef.current = null;
       setStyleLoaded(false);

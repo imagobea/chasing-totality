@@ -1,6 +1,5 @@
 import { act, cleanup, render } from "@testing-library/react";
 import { AttributionControl, MapLibreMap } from "maplibre-gl";
-import { createRef } from "react";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { EclipseMap } from "../src/EclipseMap.js";
 import { ISOLINES_LAYERS, ISOLINES_SOURCE_ID, isolinesSource } from "../src/isolines.js";
@@ -12,7 +11,6 @@ const map = vi.hoisted(() => ({
   addLayer: vi.fn(),
   getSource: vi.fn(),
   getStyle: vi.fn(() => ({ layers: [] })),
-  addControl: vi.fn(),
   remove: vi.fn(),
 }));
 
@@ -46,6 +44,15 @@ function fireLoad() {
   fire("load");
 }
 
+// The props App passes, with a fresh slot for the attribution
+function mapProps(date: string | null) {
+  return {
+    date,
+    onCursorMove: vi.fn(),
+    attributionRef: { current: document.createElement("div") },
+  };
+}
+
 describe("EclipseMap", () => {
   afterEach(() => {
     cleanup();
@@ -54,7 +61,7 @@ describe("EclipseMap", () => {
   });
 
   it("creates one map in its container", () => {
-    const { container } = render(<EclipseMap date="2027-08-02" />);
+    const { container } = render(<EclipseMap {...mapProps("2027-08-02")} />);
     expect(MapLibreMap).toHaveBeenCalledOnce();
     expect(MapLibreMap).toHaveBeenCalledWith(
       expect.objectContaining({ container: container.firstChild }),
@@ -62,37 +69,39 @@ describe("EclipseMap", () => {
   });
 
   it("adds nothing until the style has loaded", () => {
-    render(<EclipseMap date="2027-08-02" />);
+    render(<EclipseMap {...mapProps("2027-08-02")} />);
     expect(map.addSource).not.toHaveBeenCalled();
     expect(map.addLayer).not.toHaveBeenCalled();
   });
 
   it("adds nothing without a date", () => {
-    render(<EclipseMap date={null} />);
+    render(<EclipseMap {...mapProps(null)} />);
     fireLoad();
     expect(map.addSource).not.toHaveBeenCalled();
     expect(map.addLayer).not.toHaveBeenCalled();
   });
 
   it("adds the date's isolines once the style has loaded", () => {
-    render(<EclipseMap date="2027-08-02" />);
+    render(<EclipseMap {...mapProps("2027-08-02")} />);
     fireLoad();
     expect(map.addSource).toHaveBeenCalledWith(ISOLINES_SOURCE_ID, isolinesSource("2027-08-02"));
     expect(map.addLayer.mock.calls.map(([layer]) => layer)).toEqual(ISOLINES_LAYERS);
   });
 
   it("adds the isolines when the first date arrives after the style", () => {
-    const { rerender } = render(<EclipseMap date={null} />);
+    const props = mapProps(null);
+    const { rerender } = render(<EclipseMap {...props} />);
     fireLoad();
-    rerender(<EclipseMap date="2027-08-02" />);
+    rerender(<EclipseMap {...props} date="2027-08-02" />);
     expect(map.addSource).toHaveBeenCalledWith(ISOLINES_SOURCE_ID, isolinesSource("2027-08-02"));
   });
 
   it("swaps the data on the same map when the date changes", () => {
-    const { rerender } = render(<EclipseMap date="2027-08-02" />);
+    const props = mapProps("2027-08-02");
+    const { rerender } = render(<EclipseMap {...props} />);
     fireLoad();
     map.getSource.mockReturnValue(source);
-    rerender(<EclipseMap date="2028-07-22" />);
+    rerender(<EclipseMap {...props} date="2028-07-22" />);
     expect(source.setData).toHaveBeenCalledWith(isolinesSource("2028-07-22").data);
     expect(map.addSource).toHaveBeenCalledOnce();
     expect(map.addLayer).toHaveBeenCalledTimes(ISOLINES_LAYERS.length);
@@ -101,7 +110,7 @@ describe("EclipseMap", () => {
 
   it("reports the wrapped cursor position, and null when it leaves the map", () => {
     const onCursorMove = vi.fn();
-    render(<EclipseMap date={null} onCursorMove={onCursorMove} />);
+    render(<EclipseMap {...mapProps(null)} onCursorMove={onCursorMove} />);
     const wrapped = { lng: -170, lat: 36 };
     fire("mousemove", { lngLat: { wrap: () => wrapped } });
     expect(onCursorMove).toHaveBeenLastCalledWith(wrapped);
@@ -109,34 +118,25 @@ describe("EclipseMap", () => {
     expect(onCursorMove).toHaveBeenLastCalledWith(null);
   });
 
-  it("puts the attribution in the given slot instead of the map", () => {
-    const slot = document.createElement("div");
-    render(<EclipseMap date={null} attributionRef={{ current: slot }} />);
+  it("puts the attribution in the given slot", () => {
+    const props = mapProps(null);
+    render(<EclipseMap {...props} />);
     expect(MapLibreMap).toHaveBeenCalledWith(
       expect.objectContaining({ attributionControl: false }),
     );
     expect(AttributionControl).toHaveBeenCalledWith({ compact: false });
     expect(attribution.onAdd).toHaveBeenCalledWith(map);
-    expect(slot.contains(attribution.element)).toBe(true);
-    expect(map.addControl).not.toHaveBeenCalled();
-  });
-
-  it("keeps the attribution on the map without a slot", () => {
-    render(<EclipseMap date={null} attributionRef={createRef()} />);
-    expect(map.addControl).toHaveBeenCalledWith(attribution);
-    expect(attribution.onAdd).not.toHaveBeenCalled();
+    expect(props.attributionRef.current.contains(attribution.element)).toBe(true);
   });
 
   it("takes the attribution out of its slot when unmounted", () => {
-    const { unmount } = render(
-      <EclipseMap date={null} attributionRef={{ current: document.createElement("div") }} />,
-    );
+    const { unmount } = render(<EclipseMap {...mapProps(null)} />);
     unmount();
     expect(attribution.onRemove).toHaveBeenCalledOnce();
   });
 
   it("removes the map when unmounted", () => {
-    const { unmount } = render(<EclipseMap date="2027-08-02" />);
+    const { unmount } = render(<EclipseMap {...mapProps("2027-08-02")} />);
     unmount();
     expect(map.remove).toHaveBeenCalledOnce();
   });
