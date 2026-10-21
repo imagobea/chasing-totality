@@ -39,6 +39,8 @@ Node 24 (`.nvmrc`), pnpm via corepack. Run from the repo root.
 ## Working with Claude
 
 - Don't commit, push or open PRs: leave changes uncommitted, one commit's worth at a time
+- Fix mistakes forward in the next commit, never rewrite history: PRs are squash-merged. Plans are
+  intent, not contract; record changes of mind in the plan's "Deviations and findings"
 - For review findings, describe the fix (file, line, exact change); the user applies it
 - No plan docs for scaffold/tooling work
 
