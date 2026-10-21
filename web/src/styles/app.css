@@ -55,6 +55,29 @@ body {
   margin-left: auto;
 }
 
+.api-status {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  margin: 0;
+  letter-spacing: var(--tracking-kicker);
+}
+
+.api-status-dot {
+  width: var(--space-2);
+  height: var(--space-2);
+  border-radius: 50%;
+  background: var(--color-text-faint);
+}
+
+.api-status[data-status="ok"] .api-status-dot {
+  background: var(--color-status-ok);
+}
+
+.api-status[data-status="down"] .api-status-dot {
+  background: var(--color-advisory);
+}
+
 .eclipse-map {
   min-height: 0;
 }
