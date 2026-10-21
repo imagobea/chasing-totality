@@ -5,6 +5,7 @@ import type {
   GeoJSONSourceSpecification,
   LayerSpecification,
 } from "maplibre-gl";
+import { MAP_FONT, theme, toNumber } from "./theme.js";
 
 export const ISOLINES_SOURCE_ID = "isolines";
 
@@ -14,15 +15,15 @@ export const ISOLINES_SOURCE: GeoJSONSourceSpecification = {
   data: "/api/eclipses/2027-08-02/isolines",
 };
 
-// Light to dark as totality gets longer, 0 s to 6 min
+// Short to long totality, 0 s to 6 min
 const DURATION_COLOR: ExpressionSpecification = [
   "interpolate",
   ["linear"],
   ["get", "durationSeconds"],
   0,
-  "#fdd49e",
+  theme["--color-path-fill-short"],
   360,
-  "#b30000",
+  theme["--color-path-fill-long"],
 ];
 
 // Drawn in order: fills, then outlines, then labels on top
@@ -33,7 +34,8 @@ export const ISOLINES_LAYERS: LayerSpecification[] = [
     source: ISOLINES_SOURCE_ID,
     paint: {
       "fill-color": DURATION_COLOR,
-      "fill-opacity": 0.2,
+      // The bands are nested, so the translucent fills also stack up towards the centre
+      "fill-opacity": toNumber(theme["--path-fill-opacity"]),
     },
   },
   {
@@ -41,8 +43,8 @@ export const ISOLINES_LAYERS: LayerSpecification[] = [
     type: "line",
     source: ISOLINES_SOURCE_ID,
     paint: {
-      "line-color": DURATION_COLOR,
-      "line-width": 1,
+      "line-color": theme["--color-path-edge"],
+      "line-width": toNumber(theme["--path-edge-width"]),
     },
   },
   {
@@ -53,13 +55,13 @@ export const ISOLINES_LAYERS: LayerSpecification[] = [
       "symbol-placement": "line",
       "symbol-spacing": 800,
       "text-field": ["get", "name"],
-      "text-font": ["Noto Sans Regular"],
-      "text-size": 11,
+      "text-font": [MAP_FONT],
+      "text-size": toNumber(theme["--text-sm"]),
     },
     paint: {
-      "text-color": "#333",
-      "text-halo-color": "#ffffff",
-      "text-halo-width": 1,
+      "text-color": theme["--color-text"],
+      "text-halo-color": theme["--color-label-halo"],
+      "text-halo-width": toNumber(theme["--label-halo-width"]),
     },
   },
 ];
