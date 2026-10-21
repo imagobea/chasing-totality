@@ -129,11 +129,56 @@ body {
   min-height: 0;
 }
 
+.status-bar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-2) var(--space-4);
+  padding: var(--space-2) var(--space-5);
+  border-top: var(--border-width) solid var(--color-border);
+  color: var(--color-text-muted);
+  font-size: var(--text-xs);
+  letter-spacing: var(--tracking-kicker);
+}
+
+.cursor {
+  margin: 0;
+  text-transform: uppercase;
+}
+
+.attribution {
+  margin-left: auto;
+}
+
+/* MapLibre's attribution, restyled to sit in the footer instead of over the map */
+.attribution .maplibregl-ctrl-attrib {
+  padding: 0;
+  background: none;
+}
+
+.attribution .maplibregl-ctrl-attrib a {
+  color: var(--color-text-muted);
+}
+
+.attribution .maplibregl-ctrl-attrib a:hover {
+  color: var(--color-text);
+}
+
 /* Phones: a literal width, because media queries can't read custom properties */
 @media (max-width: 720px) {
   .app-header {
     gap: var(--space-2);
     padding: var(--space-2) var(--space-3);
+  }
+
+  .status-bar {
+    padding: var(--space-2) var(--space-3);
+  }
+
+  /* Touch has no hover, so there's no cursor to follow */
+  .cursor {
+    display: none;
   }
 
   /* Hidden from sight only, so the page keeps its heading */

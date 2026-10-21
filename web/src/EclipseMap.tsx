@@ -1,11 +1,16 @@
-import { useEffect, useRef, useState } from "react";
-import { type GeoJSONSource, MapLibreMap, setWorkerUrl } from "maplibre-gl";
+import { type RefObject, useEffect, useEffectEvent, useRef, useState } from "react";
+import { AttributionControl, type GeoJSONSource, MapLibreMap, setWorkerUrl } from "maplibre-gl";
 import "maplibre-gl/dist/maplibre-gl.css";
 import workerUrl from "maplibre-gl/dist/maplibre-gl-worker.mjs?worker&url";
+import type { Coordinates } from "./coordinates.js";
 import { ISOLINES_LAYERS, ISOLINES_SOURCE_ID, isolinesSource } from "./isolines.js";
 
 type EclipseMapProps = {
   date: string | null;
+  // Called with the mouse position as it moves, and null when it leaves the map
+  onCursorMove?: (cursor: Coordinates | null) => void;
+  // Where to put the attribution; without it, it stays in the map's corner
+  attributionRef?: RefObject<HTMLElement | null>;
 };
 
 // The worker URL as per MapLibre documentation at https://maplibre.org/maplibre-gl-js/docs/#esm
@@ -18,11 +23,13 @@ const MAP_STYLE = "https://tiles.openfreemap.org/styles/fiord";
 const MAP_CENTER: [number, number] = [5, 36.5];
 const MAP_ZOOM = 5;
 
-export function EclipseMap({ date }: EclipseMapProps) {
+export function EclipseMap({ date, onCursorMove, attributionRef }: EclipseMapProps) {
   const mapContainerRef = useRef<HTMLDivElement>(null);
   const mapRef = useRef<MapLibreMap | null>(null);
   // Sources and layers can only be added once the style has loaded
   const [styleLoaded, setStyleLoaded] = useState(false);
+  // Always calls the latest callback, without recreating the map when it changes
+  const reportCursor = useEffectEvent((cursor: Coordinates | null) => onCursorMove?.(cursor));
 
   // One map for the component's lifetime, whatever the date
   useEffect(() => {
@@ -31,16 +38,29 @@ export function EclipseMap({ date }: EclipseMapProps) {
       style: MAP_STYLE,
       center: MAP_CENTER,
       zoom: MAP_ZOOM,
+      attributionControl: false,
     });
     mapRef.current = map;
     map.on("load", () => setStyleLoaded(true));
+    // Wrapped, so panning past the antimeridian still reads -180 to 180
+    map.on("mousemove", (event) => reportCursor(event.lngLat.wrap()));
+    map.on("mouseout", () => reportCursor(null));
+
+    // MapLibre's own control, so the credits follow the style and sources. Mounted by hand
+    // through its public onAdd/onRemove when it goes outside the map
+    const attribution = new AttributionControl({ compact: false });
+    const attributionSlot = attributionRef?.current;
+    if (attributionSlot) attributionSlot.append(attribution.onAdd(map));
+    else map.addControl(attribution);
 
     return () => {
+      if (attributionSlot) attribution.onRemove();
       map.remove();
       mapRef.current = null;
       setStyleLoaded(false);
     };
-  }, []);
+    // A ref object stays the same across renders, so the map is still created once
+  }, [attributionRef]);
 
   // The selected eclipse's isolines: added the first time, swapped in place afterwards
   useEffect(() => {
