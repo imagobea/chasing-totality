@@ -1,4 +1,4 @@
-import { cleanup, fireEvent, render, screen, waitFor } from "@testing-library/react";
+import { act, cleanup, fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { App } from "../src/App.js";
 
@@ -44,8 +44,9 @@ describe("App", () => {
   it("leaves the picker empty when the dates can't be fetched", async () => {
     mockApi(async () => ({ ok: false, json: async () => ({}) }));
     render(<App />);
-    // Both requests have settled by then; an uncaught rejection would also fail the run
-    await screen.findByText("API OK");
+    await waitFor(() => expect(fetch).toHaveBeenCalledWith("/api/eclipses"));
+    // Lets the failed request settle; an uncaught rejection would also fail the run
+    await act(async () => {});
     expect(picker().disabled).toBe(true);
     expect(screen.getByRole("option", { name: "—" })).toBeTruthy();
   });

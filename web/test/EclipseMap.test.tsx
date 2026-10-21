@@ -40,10 +40,6 @@ function fire(event: string, payload?: unknown) {
   act(() => listener(payload));
 }
 
-function fireLoad() {
-  fire("load");
-}
-
 // The props App passes, with a fresh slot for the attribution
 function mapProps(date: string | null) {
   return {
@@ -76,14 +72,14 @@ describe("EclipseMap", () => {
 
   it("adds nothing without a date", () => {
     render(<EclipseMap {...mapProps(null)} />);
-    fireLoad();
+    fire("load");
     expect(map.addSource).not.toHaveBeenCalled();
     expect(map.addLayer).not.toHaveBeenCalled();
   });
 
   it("adds the date's isolines once the style has loaded", () => {
     render(<EclipseMap {...mapProps("2027-08-02")} />);
-    fireLoad();
+    fire("load");
     expect(map.addSource).toHaveBeenCalledWith(ISOLINES_SOURCE_ID, isolinesSource("2027-08-02"));
     expect(map.addLayer.mock.calls.map(([layer]) => layer)).toEqual(ISOLINES_LAYERS);
   });
@@ -91,7 +87,7 @@ describe("EclipseMap", () => {
   it("adds the isolines when the first date arrives after the style", () => {
     const props = mapProps(null);
     const { rerender } = render(<EclipseMap {...props} />);
-    fireLoad();
+    fire("load");
     rerender(<EclipseMap {...props} date="2027-08-02" />);
     expect(map.addSource).toHaveBeenCalledWith(ISOLINES_SOURCE_ID, isolinesSource("2027-08-02"));
   });
@@ -99,7 +95,7 @@ describe("EclipseMap", () => {
   it("swaps the data on the same map when the date changes", () => {
     const props = mapProps("2027-08-02");
     const { rerender } = render(<EclipseMap {...props} />);
-    fireLoad();
+    fire("load");
     map.getSource.mockReturnValue(source);
     rerender(<EclipseMap {...props} date="2028-07-22" />);
     expect(source.setData).toHaveBeenCalledWith(isolinesSource("2028-07-22").data);
