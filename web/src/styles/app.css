@@ -48,6 +48,37 @@ body {
   text-transform: uppercase;
 }
 
+.kicker {
+  color: var(--color-text-muted);
+  font-size: var(--text-xs);
+  letter-spacing: var(--tracking-kicker);
+  text-transform: uppercase;
+}
+
+.eclipse-picker {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  min-height: var(--target-min);
+  padding: 0 var(--space-3);
+  border: var(--border-width) solid var(--color-control-border);
+  border-radius: var(--radius);
+}
+
+.eclipse-picker select {
+  min-height: var(--target-min);
+  border: none;
+  border-radius: var(--radius);
+  background: var(--color-surface-raised);
+  color: var(--color-text);
+  font: inherit;
+  letter-spacing: var(--tracking-kicker);
+}
+
+.eclipse-picker select:disabled {
+  color: var(--color-text-faint);
+}
+
 .header-end {
   display: flex;
   align-items: center;
