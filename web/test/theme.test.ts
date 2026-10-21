@@ -4,6 +4,7 @@ import { describe, expect, it } from "vitest";
 import { theme } from "../src/theme.js";
 
 // Turns "--color-bg: #2a3245;" lines into { "--color-bg": "#2a3245" }
+// Naive on purpose: breaks on commented-out tokens or values containing ";", so keep tokens.css plain
 function readTokens(css: string): Record<string, string> {
   const tokens: Record<string, string> = {};
   for (const [, name, value] of css.matchAll(/(--[\w-]+):\s*([^;]+);/g)) {

@@ -51,6 +51,6 @@ export const theme = {
 export const MAP_FONT = "Noto Sans Regular";
 
 // MapLibre wants numbers where the CSS tokens carry units
-export function toNumber(token: string): number {
+export function toNumber(token: `${number}${string}`): number {
   return Number.parseFloat(token);
 }
