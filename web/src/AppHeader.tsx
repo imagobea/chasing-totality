@@ -1,5 +1,6 @@
 import { ApiStatus } from "./ApiStatus.js";
 import logoUrl from "./assets/logo.svg";
+import { Countdown } from "./Countdown.js";
 import { EclipsePicker } from "./EclipsePicker.js";
 
 type AppHeaderProps = {
@@ -15,6 +16,7 @@ export function AppHeader({ dates, date, onDateChange }: AppHeaderProps) {
       <h1 className="wordmark">Chasing totality</h1>
       <EclipsePicker dates={dates} date={date} onChange={onDateChange} />
       <div className="header-end">
+        <Countdown date={date} />
         <ApiStatus />
       </div>
     </header>

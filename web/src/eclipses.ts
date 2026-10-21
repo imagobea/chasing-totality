@@ -1,5 +1,6 @@
 // Eclipse dates from the API, and how the UI writes them
 
+const MS_PER_DAY = 86_400_000;
 const MONTHS = ["JAN", "FEB", "MAR", "APR", "MAY", "JUN", "JUL", "AUG", "SEP", "OCT", "NOV", "DEC"];
 
 // Dates of the eclipses that have data, as YYYY-MM-DD, earliest first
@@ -13,4 +14,13 @@ export async function fetchEclipseDates(): Promise<string[]> {
 export function formatEclipseDate(date: string): string {
   const [year, month, day] = date.split("-");
   return `${year} · ${MONTHS[Number(month) - 1]} ${day}`;
+}
+
+// Whole days from now's local calendar day to the eclipse date, 0 once it's here or past.
+// Both days are taken as UTC midnights, so time zones and DST can't add or lose a day
+export function daysUntil(date: string, now: Date): number {
+  const today = Date.UTC(now.getFullYear(), now.getMonth(), now.getDate());
+  // A YYYY-MM-DD string parses as UTC midnight
+  const eclipse = Date.parse(date);
+  return Math.max(0, Math.round((eclipse - today) / MS_PER_DAY));
 }
