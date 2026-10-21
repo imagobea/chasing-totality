@@ -42,6 +42,7 @@ export const theme = {
   "--space-3": "12px",
   "--space-4": "16px",
   "--space-5": "20px",
+  "--border-width": "1px",
   "--radius": "0",
   "--panel-corner": "10px",
   "--target-min": "44px",

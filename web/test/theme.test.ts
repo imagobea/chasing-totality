@@ -27,4 +27,12 @@ describe("theme", () => {
   it("has nothing in tokens.css that theme.ts lacks", () => {
     expect(Object.keys(cssTokens).sort()).toEqual(Object.keys(theme).sort());
   });
+
+  // The logo is an <img> and the favicon, so it can't read CSS variables
+  it("draws the logo in the accent colour", () => {
+    const svg = readFileSync(new URL("../src/assets/logo.svg", import.meta.url), "utf8");
+    const colours = svg.match(/#[0-9a-f]{3,8}\b/gi) ?? [];
+    expect(colours.length).toBeGreaterThan(0);
+    for (const colour of colours) expect(colour.toLowerCase()).toBe(theme["--color-accent"]);
+  });
 });

@@ -1,12 +1,11 @@
-import { ApiStatus } from "./ApiStatus.js";
+import { AppHeader } from "./AppHeader.js";
 import { EclipseMap } from "./EclipseMap.js";
 
 export function App() {
   return (
-    <>
-      <h1>Chasing totality</h1>
-      <ApiStatus />
+    <div className="app">
+      <AppHeader />
       <EclipseMap />
-    </>
+    </div>
   );
 }

@@ -37,5 +37,12 @@ export function EclipseMap() {
     return () => map.remove();
   }, []);
 
-  return <div ref={mapContainerRef} style={{ width: "100%", height: "400px" }} />;
+  return (
+    <div
+      ref={mapContainerRef}
+      className="eclipse-map"
+      role="region"
+      aria-label="Map of the eclipse path and totality duration"
+    />
+  );
 }
