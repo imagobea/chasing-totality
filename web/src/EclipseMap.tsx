@@ -25,9 +25,8 @@ const MAP_ZOOM = 5;
 
 export function EclipseMap({ date, onCursorMove, attributionRef }: EclipseMapProps) {
   const mapContainerRef = useRef<HTMLDivElement>(null);
-  const mapRef = useRef<MapLibreMap | null>(null);
-  // Sources and layers can only be added once the style has loaded
-  const [styleLoaded, setStyleLoaded] = useState(false);
+  // Set once the style has loaded, since sources and layers can only be added after that
+  const [map, setMap] = useState<MapLibreMap | null>(null);
   // Always calls the latest callback, without recreating the map when it changes
   const reportCursor = useEffectEvent((cursor: Coordinates | null) => onCursorMove(cursor));
 
@@ -40,8 +39,7 @@ export function EclipseMap({ date, onCursorMove, attributionRef }: EclipseMapPro
       zoom: MAP_ZOOM,
       attributionControl: false,
     });
-    mapRef.current = map;
-    map.on("load", () => setStyleLoaded(true));
+    map.on("load", () => setMap(map));
     // Wrapped, so panning past the antimeridian still reads -180 to 180
     map.on("mousemove", (event) => reportCursor(event.lngLat.wrap()));
     map.on("mouseout", () => reportCursor(null));
@@ -54,16 +52,14 @@ export function EclipseMap({ date, onCursorMove, attributionRef }: EclipseMapPro
     return () => {
       attribution.onRemove();
       map.remove();
-      mapRef.current = null;
-      setStyleLoaded(false);
+      setMap(null);
     };
     // A ref object stays the same across renders, so the map is still created once
   }, [attributionRef]);
 
   // The selected eclipse's isolines: added the first time, swapped in place afterwards
   useEffect(() => {
-    const map = mapRef.current;
-    if (!map || !styleLoaded || date === null) return;
+    if (!map || date === null) return;
 
     const source = isolinesSource(date);
     const existing = map.getSource<GeoJSONSource>(ISOLINES_SOURCE_ID);
@@ -78,7 +74,7 @@ export function EclipseMap({ date, onCursorMove, attributionRef }: EclipseMapPro
     for (const layer of ISOLINES_LAYERS) {
       map.addLayer(layer, layer.type === "symbol" ? undefined : firstSymbolId);
     }
-  }, [date, styleLoaded]);
+  }, [map, date]);
 
   return (
     <div
