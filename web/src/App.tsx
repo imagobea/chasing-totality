@@ -10,6 +10,7 @@ export function App() {
   // The selected eclipse; the first one with data until the user picks another
   const [date, setDate] = useState<string | null>(null);
   // Where the mouse is on the map, null when it's off the map
+  // TODO: every mouse move re-renders the whole app; move cursor state out of App when panels land
   const [cursor, setCursor] = useState<Coordinates | null>(null);
   const attributionRef = useRef<HTMLDivElement>(null);
 
