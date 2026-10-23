@@ -1,8 +1,8 @@
 import { act, cleanup, render } from "@testing-library/react";
 import { AttributionControl, MapLibreMap } from "maplibre-gl";
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { EclipseMap } from "../src/map/EclipseMap.js";
-import { ISOLINES_LAYERS, ISOLINES_SOURCE_ID, isolinesSource } from "../src/map/isolines.js";
+import { EclipseMap } from "../../src/map/EclipseMap.js";
+import { ISOLINES_LAYERS, ISOLINES_SOURCE_ID, isolinesSource } from "../../src/map/isolines.js";
 
 // jsdom has no WebGL, so MapLibre is replaced by a map that only records calls
 const map = vi.hoisted(() => ({

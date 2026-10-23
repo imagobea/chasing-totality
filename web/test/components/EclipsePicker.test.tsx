@@ -1,6 +1,6 @@
 import { cleanup, fireEvent, render, screen } from "@testing-library/react";
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { EclipsePicker } from "../src/components/EclipsePicker.js";
+import { EclipsePicker } from "../../src/components/EclipsePicker.js";
 
 const DATES = ["2027-08-02", "2028-07-22"];
 

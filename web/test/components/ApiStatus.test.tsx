@@ -1,6 +1,6 @@
 import { act, cleanup, render, screen } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { ApiStatus } from "../src/components/ApiStatus.js";
+import { ApiStatus } from "../../src/components/ApiStatus.js";
 
 const OK = { ok: true, json: async () => ({ status: "ok" }) };
 
