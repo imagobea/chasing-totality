@@ -6,7 +6,7 @@ type CountdownProps = {
 
 // Worked out on render; it doesn't tick over at midnight
 export function Countdown({ date }: CountdownProps) {
-  const days = date === null ? "—" : daysUntil(date, new Date());
+  const days = date === null ? "—" : daysUntil(date);
 
   return (
     <p className="countdown">

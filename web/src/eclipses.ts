@@ -18,9 +18,9 @@ export function formatEclipseDate(date: string): string {
 
 // Whole days from now's local calendar day to the eclipse date, 0 once it's here or past.
 // Both days are taken as UTC midnights, so time zones and DST can't add or lose a day
-export function daysUntil(date: string, now: Date): number {
-  const today = Date.UTC(now.getFullYear(), now.getMonth(), now.getDate());
+export function daysUntil(date: string, now = new Date()): number {
+  const todayMs = Date.UTC(now.getFullYear(), now.getMonth(), now.getDate());
   // A YYYY-MM-DD string parses as UTC midnight
-  const eclipse = Date.parse(date);
-  return Math.max(0, Math.round((eclipse - today) / MS_PER_DAY));
+  const eclipseMs = Date.parse(date);
+  return Math.max(0, Math.round((eclipseMs - todayMs) / MS_PER_DAY));
 }
