@@ -1,6 +1,6 @@
 // @vitest-environment node
 import { describe, expect, it } from "vitest";
-import { daysUntil, formatEclipseDate } from "../src/eclipses.js";
+import { daysUntil, formatCoordinates, formatEclipseDate } from "../src/utils.js";
 
 describe("formatEclipseDate", () => {
   it("writes year, short month and two-digit day", () => {
@@ -24,5 +24,15 @@ describe("daysUntil", () => {
   it("is 0 on the day and after it", () => {
     expect(daysUntil("2027-08-02", new Date(2027, 7, 2, 23, 59))).toBe(0);
     expect(daysUntil("2027-08-02", new Date(2027, 7, 3))).toBe(0);
+  });
+});
+
+describe("formatCoordinates", () => {
+  it("writes latitude then longitude, north and east", () => {
+    expect(formatCoordinates({ lng: 32.64, lat: 25.69 })).toBe("25.69° N · 32.64° E");
+  });
+
+  it("uses south and west instead of minus signs", () => {
+    expect(formatCoordinates({ lng: -5.6047, lat: -36.0136 })).toBe("36.01° S · 5.60° W");
   });
 });

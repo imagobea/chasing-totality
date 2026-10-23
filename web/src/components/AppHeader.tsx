@@ -1,5 +1,5 @@
 import { ApiStatus } from "./ApiStatus.js";
-import logoUrl from "./assets/logo.svg";
+import logoUrl from "../assets/logo.svg";
 import { Countdown } from "./Countdown.js";
 import { EclipsePicker } from "./EclipsePicker.js";
 

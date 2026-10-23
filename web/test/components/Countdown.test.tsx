@@ -1,6 +1,6 @@
 import { cleanup, render, screen } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { Countdown } from "../src/Countdown.js";
+import { Countdown } from "../../src/components/Countdown.js";
 
 describe("Countdown", () => {
   beforeEach(() => {

@@ -1,4 +1,4 @@
-import { daysUntil } from "./eclipses.js";
+import { daysUntil } from "../utils.js";
 
 type CountdownProps = {
   date: string | null;

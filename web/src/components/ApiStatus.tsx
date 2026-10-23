@@ -1,6 +1,8 @@
 import { useEffect, useState } from "react";
+import { fetchHealth, type Health } from "../api/health.js";
 
-type Status = "checking" | "ok" | "down";
+// Checking until the first answer arrives
+type Status = Health | "checking";
 
 const LABELS: Record<Status, string> = {
   checking: "API …",
@@ -10,17 +12,6 @@ const LABELS: Record<Status, string> = {
 
 const POLL_INTERVAL_MS = 30_000;
 
-async function fetchStatus(): Promise<Status> {
-  try {
-    const response = await fetch("/api/health");
-    if (!response.ok) return "down";
-    const body = (await response.json()) as { status?: string };
-    return body.status === "ok" ? "ok" : "down";
-  } catch {
-    return "down";
-  }
-}
-
 export function ApiStatus() {
   const [status, setStatus] = useState<Status>("checking");
 
@@ -28,7 +19,7 @@ export function ApiStatus() {
     // Ignore answers that arrive after the component has gone away
     let active = true;
     const check = () =>
-      void fetchStatus().then((result) => {
+      void fetchHealth().then((result) => {
         if (active) setStatus(result);
       });
     check();

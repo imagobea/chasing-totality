@@ -1,9 +1,9 @@
 import { useEffect, useRef, useState } from "react";
-import { AppHeader } from "./AppHeader.js";
-import type { Coordinates } from "./coordinates.js";
-import { EclipseMap } from "./EclipseMap.js";
-import { fetchEclipseDates } from "./eclipses.js";
-import { StatusBar } from "./StatusBar.js";
+import { fetchEclipseDates } from "./api/eclipses.js";
+import { AppHeader } from "./components/AppHeader.js";
+import { StatusBar } from "./components/StatusBar.js";
+import { EclipseMap } from "./map/EclipseMap.js";
+import type { Coordinates } from "./utils.js";
 
 export function App() {
   const [dates, setDates] = useState<string[]>([]);
