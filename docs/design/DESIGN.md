@@ -37,7 +37,7 @@ One screen. The map is the app; everything else floats over it or frames it.
 │ │(bottom-left)                                      │              │ │
 │ └────────────┘                                      └──────────────┘ │
 ├──────────────────────────────────────────────────────────────────────┤
-│ StatusBar: [selected coords]   [basemap · data source]  [attribution]│
+│ StatusBar: [cursor coords]     [basemap · data source]  [attribution]│
 └──────────────────────────────────────────────────────────────────────┘
 ```
 
@@ -162,7 +162,7 @@ Sections in this exact order: will I see it → will the sky be clear → can I 
 
 `StatusBar` (footer)
 
-- **Left:** selected coordinates (`—` when nothing is selected).
+- **Left:** cursor coordinates, `CURSOR · 25.69° N · 32.64° E` (`—` when the cursor is off the map).
 - **Right:** map attribution, `MapLibre | OpenFreeMap © OpenMapTiles · © OpenStreetMap`. Required; never remove it.
 
 🧪 Keep the center blank, we might use it to reference other sources.

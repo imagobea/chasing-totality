@@ -1,10 +1,10 @@
 import type { SymbolLayerSpecification } from "maplibre-gl";
 import { describe, expect, it } from "vitest";
-import { ISOLINES_LAYERS, ISOLINES_SOURCE, ISOLINES_SOURCE_ID } from "../src/isolines.js";
+import { ISOLINES_LAYERS, ISOLINES_SOURCE_ID, isolinesSource } from "../src/isolines.js";
 
 describe("isolines", () => {
-  it("reads the 2027-08-02 isolines from the API", () => {
-    expect(ISOLINES_SOURCE.data).toBe("/api/eclipses/2027-08-02/isolines");
+  it("reads the eclipse's isolines from the API", () => {
+    expect(isolinesSource("2027-08-02").data).toBe("/api/eclipses/2027-08-02/isolines");
   });
 
   it("gives every layer its own id", () => {

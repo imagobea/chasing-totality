@@ -35,12 +35,18 @@ Node 24 (`.nvmrc`), pnpm via corepack. Run from the repo root.
 - Prettier (printWidth 100) owns formatting, so don't hand-format
 - One-line comments have no trailing full stop
 - File order: imports, types, consts, helpers, main function last
+- Component order: state, refs, effect events, effects
 
 ## Working with Claude
 
-- Don't commit, push or open PRs: leave changes uncommitted, one commit's worth at a time
-- For review findings, describe the fix (file, line, exact change); the user applies it
-- No plan docs for scaffold/tooling work
+- Plan first: agree what and how before writing code
+- Spikes, features and complex tasks get a committed plan in `docs/plans/`; scaffold/tooling work doesn't
+- Plans state intent and decisions, not implementation: no variable, function or file names. Log only real changes of mind in the plan's "Deviations and findings", not trivial additions.
+- Don't commit unless asked; never push or open PRs. Leave one commit's worth of changes uncommitted, suggest a commit message, and wait for the user to commit before starting the next.
+- Fix mistakes forward in a new commit; never amend, rebase or force-push (PRs are squash-merged)
+- Review findings: start with a table (issue in one line | file:line | address? yes/no + why | suggested fix), then details or snippets below. Describe fixes; apply only the ones asked for.
+- Verify claims from subagents or reviews (read the code, reason it through) before passing them on
+- Before running web tests, run `source ~/.nvm/nvm.sh && nvm use` (the shell defaults to Node 20)
 
 ## UI
 

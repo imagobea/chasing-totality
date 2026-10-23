@@ -9,12 +9,6 @@ import { MAP_FONT, theme, toNumber } from "./theme.js";
 
 export const ISOLINES_SOURCE_ID = "isolines";
 
-// The 2027-08-02 isolines, served by the API
-export const ISOLINES_SOURCE: GeoJSONSourceSpecification = {
-  type: "geojson",
-  data: "/api/eclipses/2027-08-02/isolines",
-};
-
 // Short to long totality, 0 s to 6 min
 const DURATION_COLOR: ExpressionSpecification = [
   "interpolate",
@@ -65,3 +59,8 @@ export const ISOLINES_LAYERS: LayerSpecification[] = [
     },
   },
 ];
+
+// One eclipse's isolines, served by the API
+export function isolinesSource(date: string): GeoJSONSourceSpecification & { data: string } {
+  return { type: "geojson", data: `/api/eclipses/${date}/isolines` };
+}
