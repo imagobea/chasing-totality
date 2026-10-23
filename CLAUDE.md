@@ -35,6 +35,7 @@ Node 24 (`.nvmrc`), pnpm via corepack. Run from the repo root.
 - Prettier (printWidth 100) owns formatting, so don't hand-format
 - One-line comments have no trailing full stop
 - File order: imports, types, consts, helpers, main function last
+- Component order: state, refs, effect events, effects
 
 ## Working with Claude
 

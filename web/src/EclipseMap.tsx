@@ -24,9 +24,9 @@ const MAP_CENTER: [number, number] = [5, 36.5];
 const MAP_ZOOM = 5;
 
 export function EclipseMap({ date, onCursorMove, attributionRef }: EclipseMapProps) {
-  const mapContainerRef = useRef<HTMLDivElement>(null);
   // Set once the style has loaded, since sources and layers can only be added after that
   const [map, setMap] = useState<MapLibreMap | null>(null);
+  const mapContainerRef = useRef<HTMLDivElement>(null);
   // Always calls the latest callback, without recreating the map when it changes
   const reportCursor = useEffectEvent((cursor: Coordinates | null) => onCursorMove(cursor));
 
