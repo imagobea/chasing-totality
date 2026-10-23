@@ -120,7 +120,10 @@ describe("EclipseMap", () => {
     expect(MapLibreMap).toHaveBeenCalledWith(
       expect.objectContaining({ attributionControl: false }),
     );
-    expect(AttributionControl).toHaveBeenCalledWith({ compact: false });
+    expect(AttributionControl).toHaveBeenCalledWith({
+      compact: false,
+      customAttribution: expect.stringContaining("MapLibre"),
+    });
     expect(attribution.onAdd).toHaveBeenCalledWith(map);
     expect(props.attributionRef.current.contains(attribution.element)).toBe(true);
   });

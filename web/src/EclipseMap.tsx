@@ -46,7 +46,11 @@ export function EclipseMap({ date, onCursorMove, attributionRef }: EclipseMapPro
 
     // MapLibre's own control, so the credits follow the style and sources. Mounted by hand
     // through its public onAdd/onRemove, because it goes outside the map
-    const attribution = new AttributionControl({ compact: false });
+    const attribution = new AttributionControl({
+      compact: false,
+      // Passing options replaces MapLibre's defaults, so its own credit goes back in by hand
+      customAttribution: '<a href="https://maplibre.org/" target="_blank">MapLibre</a>',
+    });
     attributionRef.current!.append(attribution.onAdd(map));
 
     return () => {
