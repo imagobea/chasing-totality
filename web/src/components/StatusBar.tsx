@@ -1,5 +1,5 @@
 import type { RefObject } from "react";
-import { type Coordinates, formatCoordinates } from "./coordinates.js";
+import { type Coordinates, formatCoordinates } from "../utils.js";
 
 type StatusBarProps = {
   cursor: Coordinates | null;

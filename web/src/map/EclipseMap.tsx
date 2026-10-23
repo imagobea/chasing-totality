@@ -2,7 +2,7 @@ import { type RefObject, useEffect, useEffectEvent, useRef, useState } from "rea
 import { AttributionControl, type GeoJSONSource, MapLibreMap, setWorkerUrl } from "maplibre-gl";
 import "maplibre-gl/dist/maplibre-gl.css";
 import workerUrl from "maplibre-gl/dist/maplibre-gl-worker.mjs?worker&url";
-import type { Coordinates } from "./coordinates.js";
+import type { Coordinates } from "../utils.js";
 import { ISOLINES_LAYERS, ISOLINES_SOURCE_ID, isolinesSource } from "./isolines.js";
 
 type EclipseMapProps = {

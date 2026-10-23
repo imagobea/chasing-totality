@@ -1,7 +1,7 @@
 import { cleanup, render, screen } from "@testing-library/react";
 import { createRef } from "react";
 import { afterEach, describe, expect, it } from "vitest";
-import { StatusBar } from "../src/StatusBar.js";
+import { StatusBar } from "../src/components/StatusBar.js";
 
 describe("StatusBar", () => {
   afterEach(cleanup);

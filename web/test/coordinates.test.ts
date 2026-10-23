@@ -1,6 +1,6 @@
 // @vitest-environment node
 import { describe, expect, it } from "vitest";
-import { formatCoordinates } from "../src/coordinates.js";
+import { formatCoordinates } from "../src/utils.js";
 
 describe("formatCoordinates", () => {
   it("writes latitude then longitude, north and east", () => {

@@ -1,4 +1,4 @@
-import { formatEclipseDate } from "./eclipses.js";
+import { formatEclipseDate } from "../utils.js";
 
 type EclipsePickerProps = {
   dates: string[];

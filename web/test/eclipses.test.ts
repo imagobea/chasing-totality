@@ -1,6 +1,6 @@
 // @vitest-environment node
 import { describe, expect, it } from "vitest";
-import { daysUntil, formatEclipseDate } from "../src/eclipses.js";
+import { daysUntil, formatEclipseDate } from "../src/utils.js";
 
 describe("formatEclipseDate", () => {
   it("writes year, short month and two-digit day", () => {

@@ -1,13 +1,13 @@
-// Eclipse dates from the API, and how the UI writes them
+// How the UI writes dates, countdowns and positions on the map
+
+export type Coordinates = { lng: number; lat: number };
 
 const MS_PER_DAY = 86_400_000;
 const MONTHS = ["JAN", "FEB", "MAR", "APR", "MAY", "JUN", "JUL", "AUG", "SEP", "OCT", "NOV", "DEC"];
 
-// Dates of the eclipses that have data, as YYYY-MM-DD, earliest first
-export async function fetchEclipseDates(): Promise<string[]> {
-  const response = await fetch("/api/eclipses");
-  if (!response.ok) throw new Error(`GET /api/eclipses answered ${response.status}`);
-  return (await response.json()) as string[];
+// 25.69 → "25.69° N", -6.5 → "6.50° S": hemisphere letters instead of signs
+function formatDegrees(value: number, positive: string, negative: string): string {
+  return `${Math.abs(value).toFixed(2)}° ${value < 0 ? negative : positive}`;
 }
 
 // "2027-08-02" → "2027 · AUG 02", read from the string so time zones can't shift the day
@@ -23,4 +23,9 @@ export function daysUntil(date: string, now = new Date()): number {
   // A YYYY-MM-DD string parses as UTC midnight
   const eclipseMs = Date.parse(date);
   return Math.max(0, Math.round((eclipseMs - todayMs) / MS_PER_DAY));
+}
+
+// { lng: 32.64, lat: 25.69 } → "25.69° N · 32.64° E", latitude first
+export function formatCoordinates({ lng, lat }: Coordinates): string {
+  return `${formatDegrees(lat, "N", "S")} · ${formatDegrees(lng, "E", "W")}`;
 }

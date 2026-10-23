@@ -1,6 +1,6 @@
 import type { SymbolLayerSpecification } from "maplibre-gl";
 import { describe, expect, it } from "vitest";
-import { ISOLINES_LAYERS, ISOLINES_SOURCE_ID, isolinesSource } from "../src/isolines.js";
+import { ISOLINES_LAYERS, ISOLINES_SOURCE_ID, isolinesSource } from "../src/map/isolines.js";
 
 describe("isolines", () => {
   it("reads the eclipse's isolines from the API", () => {
