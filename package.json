@@ -17,7 +17,8 @@
     "build": "tsc -p tsconfig.build.json",
     "start": "node --env-file-if-exists=.env dist/server/main.js",
     "spike:fixtures": "tsx scripts/generate-jsex-fixtures.ts",
-    "spike:grid": "tsx scripts/spike-grid.ts"
+    "spike:grid": "tsx scripts/spike-grid.ts",
+    "data:airports": "tsx scripts/generate-airports.ts"
   },
   "keywords": [],
   "author": "",
