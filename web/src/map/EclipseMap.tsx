@@ -3,6 +3,14 @@ import { AttributionControl, type GeoJSONSource, MapLibreMap, setWorkerUrl } fro
 import "maplibre-gl/dist/maplibre-gl.css";
 import workerUrl from "maplibre-gl/dist/maplibre-gl-worker.mjs?worker&url";
 import type { Coordinates } from "../utils.js";
+import {
+  AIRPORT_ICON_ID,
+  AIRPORT_ICON_OPTIONS,
+  AIRPORTS_LAYERS,
+  AIRPORTS_SOURCE_ID,
+  airportsSource,
+  loadAirportIcon,
+} from "./airports.js";
 import { ISOLINES_LAYERS, ISOLINES_SOURCE_ID, isolinesSource } from "./isolines.js";
 
 type EclipseMapProps = {
@@ -79,6 +87,27 @@ export function EclipseMap({ date, onCursorMove, attributionRef }: EclipseMapPro
       map.addLayer(layer, layer.type === "symbol" ? undefined : firstSymbolId);
     }
   }, [map, date]);
+
+  // The airports, whatever the date, on top of everything, the base map's labels included.
+  // Added once their icon has loaded, so MapLibre never draws them without it
+  useEffect(() => {
+    if (!map) return;
+
+    // Ignore the icon if the map goes away before it loads
+    let active = true;
+    loadAirportIcon()
+      .then((icon) => {
+        if (!active) return;
+        map.addImage(AIRPORT_ICON_ID, icon, AIRPORT_ICON_OPTIONS);
+        map.addSource(AIRPORTS_SOURCE_ID, airportsSource());
+        for (const layer of AIRPORTS_LAYERS) map.addLayer(layer);
+      })
+      // Without the icon the map shows no airports
+      .catch(() => {});
+    return () => {
+      active = false;
+    };
+  }, [map]);
 
   return (
     <div
