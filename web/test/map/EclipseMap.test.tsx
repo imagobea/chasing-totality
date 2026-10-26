@@ -83,6 +83,7 @@ describe("EclipseMap", () => {
   afterEach(() => {
     cleanup();
     vi.clearAllMocks();
+    vi.restoreAllMocks();
     map.getSource.mockReset();
     map.getLayer.mockReset();
   });
@@ -186,10 +187,13 @@ describe("EclipseMap", () => {
     expect(map.addSource).not.toHaveBeenCalled();
   });
 
-  it("still adds everything, airports without their icon, when the icon fails to load", async () => {
-    vi.mocked(loadAirportIcon).mockRejectedValueOnce(new Error("not found"));
+  it("warns and still adds everything, airports without their icon, when the icon fails to load", async () => {
+    const error = new Error("not found");
+    vi.mocked(loadAirportIcon).mockRejectedValueOnce(error);
+    const warn = vi.spyOn(console, "warn").mockImplementation(() => {});
     render(<EclipseMap {...mapProps("2027-08-02")} />);
     await loadStyle();
+    expect(warn).toHaveBeenCalledWith(expect.any(String), error);
     expect(map.addImage).not.toHaveBeenCalled();
     expect(map.addSource).toHaveBeenCalledWith(ISOLINES_SOURCE_ID, isolinesSource("2027-08-02"));
     expect(map.addSource).toHaveBeenCalledWith(AIRPORTS_SOURCE_ID, airportsSource());

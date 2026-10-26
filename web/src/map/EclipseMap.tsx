@@ -56,7 +56,7 @@ export function EclipseMap({ date, onCursorMove, attributionRef }: EclipseMapPro
           if (!removed) map.addImage(AIRPORT_ICON_ID, icon, AIRPORT_ICON_OPTIONS);
         })
         // Without the icon, airports show their IATA codes only
-        .catch(() => {})
+        .catch((error) => console.warn("Airport icon not loaded", error))
         .finally(() => {
           if (!removed) setMap(map);
         });
