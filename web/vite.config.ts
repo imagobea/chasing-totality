@@ -18,5 +18,12 @@ export default defineConfig({
   test: {
     environment: "jsdom",
     include: ["test/**/*.test.{ts,tsx}"],
+    coverage: {
+      provider: "v8",
+      // Every source file, tested or not, so untested ones show up as gaps
+      include: ["src/**/*.{ts,tsx}"],
+      // json-summary feeds the CI job summary
+      reporter: ["text", "html", "json-summary"],
+    },
   },
 });

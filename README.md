@@ -47,6 +47,7 @@ nvm use
 pnpm install
 
 pnpm test        # run the tests
+pnpm test:coverage  # run the tests with coverage, report in coverage/
 pnpm typecheck   # type-check without emitting
 pnpm dev         # start the API with reload on port 3000
 pnpm build       # compile src/ to dist/
