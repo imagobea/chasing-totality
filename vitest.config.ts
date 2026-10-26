@@ -8,7 +8,8 @@ export default defineConfig({
       provider: "v8",
       // Every source file, tested or not, so untested ones show up as gaps
       include: ["src/**/*.ts", "scripts/**/*.ts"],
-      reporter: ["text", "html"],
+      // json-summary feeds the CI job summary
+      reporter: ["text", "html", "json-summary"],
     },
   },
 });

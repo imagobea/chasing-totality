@@ -8,7 +8,8 @@ See README.md for the overview and docs/DECISIONS.md for past decisions.
 
 Node 24 (`.nvmrc`), pnpm via corepack. Run from the repo root.
 
-- `pnpm lint`, `pnpm format:check`, `pnpm typecheck`, `pnpm test`: the same checks CI runs
+- `pnpm lint`, `pnpm format:check`, `pnpm typecheck`, `pnpm test`: the same checks CI runs (CI runs
+  `pnpm test:coverage` instead, which adds coverage)
 - `pnpm dev`: API with watch. `pnpm build` / `pnpm start`: compiled API
 - Frontend lives in `web/` (pnpm workspace) with its own package.json: `pnpm --dir web dev`
 

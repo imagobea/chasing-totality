@@ -22,9 +22,24 @@ jobs:
       - run: pnpm install --frozen-lockfile
       - run: pnpm lint
       - run: pnpm format:check
-      - run: pnpm test
+      - run: pnpm test:coverage
       - run: pnpm typecheck
       - run: pnpm build
-      - run: pnpm --filter web test
+      - run: pnpm --filter web test:coverage
+      # One row per workspace from the json-summary reporter; no thresholds yet
+      - name: Coverage summary
+        run: |
+          node --input-type=module >> "$GITHUB_STEP_SUMMARY" <<'EOF'
+          import { readFileSync } from "node:fs";
+          const workspaces = { API: "coverage", Web: "web/coverage" };
+          const metrics = ["statements", "branches", "functions", "lines"];
+          console.log("## Coverage\n");
+          console.log("| Workspace | Statements | Branches | Functions | Lines |");
+          console.log("| --- | --- | --- | --- | --- |");
+          for (const [name, dir] of Object.entries(workspaces)) {
+            const { total } = JSON.parse(readFileSync(`${dir}/coverage-summary.json`, "utf8"));
+            console.log(`| ${name} | ${metrics.map((metric) => `${total[metric].pct}%`).join(" | ")} |`);
+          }
+          EOF
       - run: pnpm --filter web typecheck
       - run: pnpm --filter web build
