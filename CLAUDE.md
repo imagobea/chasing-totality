@@ -44,7 +44,7 @@ Node 24 (`.nvmrc`), pnpm via corepack. Run from the repo root.
 - Plans state intent and decisions, not implementation: no variable, function or file names. Log only real changes of mind in the plan's "Deviations and findings", not trivial additions.
 - Don't commit unless asked; never push or open PRs. Leave one commit's worth of changes uncommitted, suggest a commit message, and wait for the user to commit before starting the next.
 - Fix mistakes forward in a new commit; never amend, rebase or force-push (PRs are squash-merged)
-- Review findings: start with a table (issue in one line | file:line | address? yes/no + why | suggested fix), then details or snippets below. Describe fixes; apply only the ones asked for.
+- Review findings, including `/code-review` and `/simplify` output: a numbered table, most severe first (# | issue in one line | file:line | address? yes/no + why | suggested fix), then a recommendation and details or snippets below. Describe fixes; apply only the ones asked for, even when the skill would apply them itself.
 - Verify claims from subagents or reviews (read the code, reason it through) before passing them on
 - Before running web tests, run `source ~/.nvm/nvm.sh && nvm use` (the shell defaults to Node 20)
 

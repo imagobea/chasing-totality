@@ -3,6 +3,14 @@ import { AttributionControl, type GeoJSONSource, MapLibreMap, setWorkerUrl } fro
 import "maplibre-gl/dist/maplibre-gl.css";
 import workerUrl from "maplibre-gl/dist/maplibre-gl-worker.mjs?worker&url";
 import type { Coordinates } from "../utils.js";
+import {
+  AIRPORT_ICON_ID,
+  AIRPORT_ICON_OPTIONS,
+  AIRPORTS_LAYERS,
+  AIRPORTS_SOURCE_ID,
+  airportsSource,
+  loadAirportIcon,
+} from "./airports.js";
 import { ISOLINES_LAYERS, ISOLINES_SOURCE_ID, isolinesSource } from "./isolines.js";
 
 type EclipseMapProps = {
@@ -24,7 +32,8 @@ const MAP_CENTER: [number, number] = [5, 36.5];
 const MAP_ZOOM = 5;
 
 export function EclipseMap({ date, onCursorMove, attributionRef }: EclipseMapProps) {
-  // Set once the style has loaded, since sources and layers can only be added after that
+  // Set once the style has loaded and our images are in, since sources and layers can only be
+  // added after that
   const [map, setMap] = useState<MapLibreMap | null>(null);
   const mapContainerRef = useRef<HTMLDivElement>(null);
   // Always calls the latest callback, without recreating the map when it changes
@@ -39,7 +48,19 @@ export function EclipseMap({ date, onCursorMove, attributionRef }: EclipseMapPro
       zoom: MAP_ZOOM,
       attributionControl: false,
     });
-    map.on("load", () => setMap(map));
+    // Ignore the icon if the map goes away before it loads
+    let removed = false;
+    map.on("load", () => {
+      loadAirportIcon()
+        .then((icon) => {
+          if (!removed) map.addImage(AIRPORT_ICON_ID, icon, AIRPORT_ICON_OPTIONS);
+        })
+        // Without the icon, airports show their IATA codes only
+        .catch((error) => console.warn("Airport icon not loaded", error))
+        .finally(() => {
+          if (!removed) setMap(map);
+        });
+    });
     // Wrapped, so panning past the antimeridian still reads -180 to 180
     map.on("mousemove", (event) => reportCursor(event.lngLat.wrap()));
     map.on("mouseout", () => reportCursor(null));
@@ -54,6 +75,7 @@ export function EclipseMap({ date, onCursorMove, attributionRef }: EclipseMapPro
     attributionRef.current!.append(attribution.onAdd(map));
 
     return () => {
+      removed = true;
       attribution.onRemove();
       map.remove();
       setMap(null);
@@ -72,13 +94,23 @@ export function EclipseMap({ date, onCursorMove, attributionRef }: EclipseMapPro
       return;
     }
 
-    // Fills and outlines go under the base map's labels; our labels stay on top
+    // Fills and outlines go under the base map's labels; our labels go on top, but under the
+    // airports if those are already there
     const firstSymbolId = map.getStyle().layers.find((layer) => layer.type === "symbol")?.id;
+    const airportsId = AIRPORTS_LAYERS.find((layer) => map.getLayer(layer.id))?.id;
     map.addSource(ISOLINES_SOURCE_ID, source);
     for (const layer of ISOLINES_LAYERS) {
-      map.addLayer(layer, layer.type === "symbol" ? undefined : firstSymbolId);
+      map.addLayer(layer, layer.type === "symbol" ? airportsId : firstSymbolId);
     }
   }, [map, date]);
+
+  // The airports, whatever the date, on top of everything, the base map's labels included
+  useEffect(() => {
+    if (!map) return;
+
+    map.addSource(AIRPORTS_SOURCE_ID, airportsSource());
+    for (const layer of AIRPORTS_LAYERS) map.addLayer(layer);
+  }, [map]);
 
   return (
     <div
