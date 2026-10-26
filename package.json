@@ -1,8 +1,25 @@
 {
   "name": "chasing-totality",
   "version": "1.0.0",
-  "description": "",
-  "main": "index.js",
+  "private": true,
+  "description": "Totality duration isolines and map for total solar eclipses, starting with 2 August 2027",
+  "keywords": [
+    "eclipse",
+    "totality",
+    "besselian-elements",
+    "isolines",
+    "geojson"
+  ],
+  "homepage": "https://github.com/imagobea/chasing-totality#readme",
+  "bugs": {
+    "url": "https://github.com/imagobea/chasing-totality/issues"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/imagobea/chasing-totality.git"
+  },
+  "license": "MIT",
+  "author": "imagobea",
   "type": "module",
   "engines": {
     "node": ">=24"
@@ -20,9 +37,6 @@
     "spike:grid": "tsx scripts/spike-grid.ts",
     "data:airports": "tsx scripts/generate-airports.ts"
   },
-  "keywords": [],
-  "author": "",
-  "license": "ISC",
   "packageManager": "pnpm@10.18.2",
   "devDependencies": {
     "@eslint/js": "^10.0.1",
