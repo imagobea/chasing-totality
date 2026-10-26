@@ -95,21 +95,31 @@ function round(value: number): number {
   return Number(value.toFixed(COORDINATE_DECIMALS));
 }
 
-// Large and medium airports with scheduled service and an IATA code, sorted by IATA code
+// parseFloat, not Number, so a blank cell reads as NaN rather than 0
+function coordinates(row: Record<string, string>): [longitude: number, latitude: number] {
+  return [round(parseFloat(row.longitude_deg)), round(parseFloat(row.latitude_deg))];
+}
+
+// Large and medium airports with scheduled service, an IATA code and coordinates, sorted by IATA
+// code. Fails rather than return none, so a broken download can't replace the committed snapshot
 function toAirportsGeoJson(rows: Record<string, string>[], retrieved: string): AirportsSnapshot {
   const missing = rows.length ? REQUIRED_COLUMNS.filter((column) => !(column in rows[0])) : [];
   if (missing.length) throw new Error(`OurAirports CSV has no ${missing.join(", ")} column`);
 
   const features = rows
     .filter(
-      (row) => row.type in SIZES && row.scheduled_service === "yes" && IATA.test(row.iata_code),
+      (row) =>
+        row.type in SIZES &&
+        row.scheduled_service === "yes" &&
+        IATA.test(row.iata_code) &&
+        coordinates(row).every(Number.isFinite),
     )
     .map((row): AirportFeature => ({
       type: "Feature",
       id: row.iata_code,
       geometry: {
         type: "Point",
-        coordinates: [round(Number(row.longitude_deg)), round(Number(row.latitude_deg))],
+        coordinates: coordinates(row),
       },
       properties: {
         iata: row.iata_code,
@@ -120,6 +130,7 @@ function toAirportsGeoJson(rows: Record<string, string>[], retrieved: string): A
       },
     }))
     .sort((a, b) => a.id.localeCompare(b.id));
+  if (!features.length) throw new Error("OurAirports CSV has no airports to keep");
 
   return { type: "FeatureCollection", source: SOURCE, retrieved, features };
 }

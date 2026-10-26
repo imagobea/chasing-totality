@@ -79,8 +79,11 @@ describe("generate-airports", () => {
     ["airports without scheduled service", { scheduled_service: "no" }],
     ["airports without an IATA code", { iata_code: "" }],
     ["malformed IATA codes", { iata_code: "0A" }],
+    ["airports without a latitude", { latitude_deg: "" }],
+    ["airports with a malformed longitude", { longitude_deg: "west" }],
   ])("leaves out %s", async (_, overrides) => {
-    expect(await iataCodes(row(overrides))).toEqual([]);
+    // Next to an airport it keeps, since a snapshot with none fails
+    expect(await iataCodes(row({ iata_code: "XRY" }), row(overrides))).toEqual(["XRY"]);
   });
 
   it("sorts by IATA code", async () => {
@@ -130,8 +133,13 @@ describe("generate-airports", () => {
     );
   });
 
-  it("writes no airports for an empty file", async () => {
-    expect((await generate("")).features).toEqual([]);
+  it.each([
+    ["an empty file", ""],
+    ["a header only", csv()],
+    ["no airports to keep", csv(row({ scheduled_service: "no" }))],
+  ])("fails and writes nothing for %s", async (_, body) => {
+    await expect(generate(body)).rejects.toThrow(/no airports/);
+    expect(writeFileSync).not.toHaveBeenCalled();
   });
 
   it("fails when a column it needs is missing", async () => {
