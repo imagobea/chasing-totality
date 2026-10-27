@@ -3,7 +3,7 @@ import { describe, expect, it } from "vitest";
 import { eclipse2027Aug02 } from "../../../src/engine/eclipse/elements/2027-08-02.js";
 import { localCircumstances } from "../../../src/engine/eclipse/localCircumstances.js";
 import { along, pastLimit } from "../../geo.js";
-import { parseNasaPath, type LatLon } from "../../nasaPath.js";
+import { parseNasaPath, type LatLon } from "../../../src/engine/eclipse/nasaPath.js";
 
 const rows = parseNasaPath(
   readFileSync(new URL("../../../data/nasa-paths/2027-08-02.txt", import.meta.url), "utf8"),

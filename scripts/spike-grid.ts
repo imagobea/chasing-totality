@@ -8,7 +8,7 @@ import { mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { eclipse2027Aug02 } from "../src/engine/eclipse/elements/2027-08-02.js";
 import { durationContours } from "../src/engine/isolines/contours.js";
 import { durationGrid } from "../src/engine/isolines/grid.js";
-import { parseNasaPath, type LatLon } from "../test/nasaPath.js";
+import { parseNasaPath, type LatLon } from "../src/engine/eclipse/nasaPath.js";
 
 const AREA = { west: -10, south: 15, east: 45, north: 40 }; // Spain to the Red Sea
 const STEP_DEGREES = 0.05; // ~5 km

@@ -11,7 +11,7 @@
 import { readFileSync, writeFileSync } from "node:fs";
 import { createContext, runInContext } from "node:vm";
 import { along, pastLimit } from "../test/geo.js";
-import { parseNasaPath, type LatLon } from "../test/nasaPath.js";
+import { parseNasaPath, type LatLon } from "../src/engine/eclipse/nasaPath.js";
 
 const JSEX_COMMIT = "dbbd677c00e215c33d3d47a1aa920a6fbc2ff982";
 const JSEX_URL = `https://raw.githubusercontent.com/ebradyjobory/eclipse-explorer/${JSEX_COMMIT}/JSEX`;

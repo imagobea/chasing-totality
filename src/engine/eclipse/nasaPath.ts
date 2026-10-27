@@ -1,4 +1,4 @@
-// Parser for NASA's eclipse path tables (data/nasa-paths/<date>.txt), used as a test oracle.
+// Parser for NASA's eclipse path tables (data/nasa-paths/<date>.txt), our oracle for each eclipse.
 // Each row is one instant: where the northern limit, southern limit and central line of the
 // shadow's path are at that time, plus how long totality lasts on the central line.
 

@@ -1,9 +1,9 @@
 import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
-import { parseNasaPath } from "./nasaPath.js";
+import { parseNasaPath } from "../../../src/engine/eclipse/nasaPath.js";
 
 const rows = parseNasaPath(
-  readFileSync(new URL("../data/nasa-paths/2027-08-02.txt", import.meta.url), "utf8"),
+  readFileSync(new URL("../../../data/nasa-paths/2027-08-02.txt", import.meta.url), "utf8"),
 );
 
 describe("parseNasaPath", () => {
