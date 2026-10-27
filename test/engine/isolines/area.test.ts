@@ -45,7 +45,12 @@ describe("pathArea", () => {
     expect(() => pathArea([], 1)).toThrow(RangeError);
   });
 
-  it("rejects a path across the 180° meridian", () => {
-    expect(() => pathArea([row([-40, 170]), row([-45, -170])], 1)).toThrow(/180°/);
+  it("carries a path across the 180° meridian on past 180", () => {
+    expect(pathArea([row([-40, 170]), row([-45, -170])], 1)).toEqual({
+      west: 169,
+      south: -47,
+      east: 191,
+      north: -38,
+    });
   });
 });

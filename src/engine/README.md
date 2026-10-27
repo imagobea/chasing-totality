@@ -164,7 +164,7 @@ graph LR
 
 ### area.ts
 
-`pathArea()` picks where the grid goes: the box around NASA's limits and central line, plus a margin, so the isolines are never cut short. The limits come from NASA's path table for the eclipse, `data/nasa-paths/<date>.txt`, read by [`eclipse/nasaPath.ts`](eclipse/nasaPath.ts). Paths that cross the 180° meridian (in the Pacific) aren't supported yet: the command stops with an error.
+`pathArea()` picks where the grid goes: the box around NASA's limits and central line, plus a margin, so the isolines are never cut short. The limits come from NASA's path table for the eclipse, `data/nasa-paths/<date>.txt`, read by [`eclipse/nasaPath.ts`](eclipse/nasaPath.ts). For a path that crosses the 180° meridian (in the Pacific), the box carries on past 180° (179°W becomes 181°E) instead of wrapping around the Earth.
 
 ### grid.ts
 

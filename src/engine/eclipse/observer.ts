@@ -27,8 +27,10 @@ export function geocentricObserver({
   if (!(Math.abs(latitude) <= 90)) {
     throw new RangeError(`Latitude must be within ±90°, got ${latitude}`);
   }
-  if (!(Math.abs(longitude) <= 180)) {
-    throw new RangeError(`Longitude must be within ±180°, got ${longitude}`);
+  // Any longitude: 181° is -179°, as the maths only takes its sine and cosine. Paths across the
+  // 180° meridian count on this
+  if (!Number.isFinite(longitude)) {
+    throw new RangeError(`Longitude must be a finite number of degrees, got ${longitude}`);
   }
   if (!Number.isFinite(altitudeMeters)) {
     throw new RangeError(`Altitude must be a finite number of meters, got ${altitudeMeters}`);

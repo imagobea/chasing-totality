@@ -55,7 +55,14 @@ describe("geocentricObserver", () => {
     );
   });
 
-  it.each([181, -181, Number.NaN])("rejects longitude %s", (longitude) => {
+  it("treats a longitude past 180° as the same place: 181° is -179°", () => {
+    const at = (longitude: number) =>
+      geocentricObserver({ latitude: 0, longitude, altitudeMeters: 0 }).longitude;
+    expect(Math.cos(at(181))).toBeCloseTo(Math.cos(at(-179)), 12);
+    expect(Math.sin(at(181))).toBeCloseTo(Math.sin(at(-179)), 12);
+  });
+
+  it.each([Number.NaN, Number.POSITIVE_INFINITY])("rejects longitude %s", (longitude) => {
     expect(() => geocentricObserver({ latitude: 0, longitude, altitudeMeters: 0 })).toThrow(
       RangeError,
     );
