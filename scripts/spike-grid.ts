@@ -35,7 +35,7 @@ console.log(
 // NASA's northern limit, southern limit and central line as GeoJSON lines.
 function nasaPath() {
   const rows = parseNasaPath(
-    readFileSync(new URL("../test/fixtures/SE2027Aug02Tpath.txt", import.meta.url), "utf8"),
+    readFileSync(new URL("../data/nasa-paths/2027-08-02.txt", import.meta.url), "utf8"),
   );
   const line = (name: string, points: (LatLon | null)[]) => ({
     type: "Feature",

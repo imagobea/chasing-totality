@@ -6,7 +6,7 @@ import { along, pastLimit } from "../../geo.js";
 import { parseNasaPath, type LatLon } from "../../nasaPath.js";
 
 const rows = parseNasaPath(
-  readFileSync(new URL("../../fixtures/SE2027Aug02Tpath.txt", import.meta.url), "utf8"),
+  readFileSync(new URL("../../../data/nasa-paths/2027-08-02.txt", import.meta.url), "utf8"),
 );
 // NASA's path table was computed with ΔT = 71.7 s; use the same, so only the geometry is compared.
 const elements = { ...eclipse2027Aug02, deltaT: 71.7 };

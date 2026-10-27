@@ -60,7 +60,7 @@ function cities(): Point[] {
 // sensitive.
 function pointsAroundThePath(): Point[] {
   const rows = parseNasaPath(
-    readFileSync(new URL("../test/fixtures/SE2027Aug02Tpath.txt", import.meta.url), "utf8"),
+    readFileSync(new URL("../data/nasa-paths/2027-08-02.txt", import.meta.url), "utf8"),
   );
   return ["08:48", "09:04", "09:28", "10:00", "10:24"].flatMap((time) => {
     const row = rows.find((r) => r.time === time);

@@ -3,7 +3,7 @@ import { describe, expect, it } from "vitest";
 import { parseNasaPath } from "./nasaPath.js";
 
 const rows = parseNasaPath(
-  readFileSync(new URL("./fixtures/SE2027Aug02Tpath.txt", import.meta.url), "utf8"),
+  readFileSync(new URL("../data/nasa-paths/2027-08-02.txt", import.meta.url), "utf8"),
 );
 
 describe("parseNasaPath", () => {
