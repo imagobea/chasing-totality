@@ -19,7 +19,7 @@ A solar eclipse happens when the Moon passes between the Sun and the Earth and c
 
 Besselian elements describe that shadow, and NASA publishes a set for each eclipse. From them we can work out how long totality lasts at any one place: that's the job of [`eclipse/`](eclipse).
 
-Then [`isolines/`](isolines) runs `eclipse/`over a grid of places and joins the places with equal durations into lines. It outputs them as GeoJSON, a standard map format that tools like geojson.io can draw.
+Then [`isolines/`](isolines) runs `eclipse/` over a grid of places and joins the places with equal durations into lines. It outputs them as GeoJSON, a standard map format that tools like geojson.io can draw.
 
 How accurate it is, and what it leaves out: [spike #4 findings and limitations](../../docs/plans/004-local-totality-duration-plan.md#deviations-and-findings).
 
@@ -93,7 +93,7 @@ NASA publishes each eclipse as **Besselian elements**: a handful of short polyno
 - `l1`, `l2`: the radii of the penumbra and umbra circles (`l2` is negative when the umbra reaches the Earth, a total eclipse; positive means annular);
 - `d`, `μ`: how the plane is tilted and turned relative to the Earth.
 
-The published numbers live in `elements/`, one file per eclipse. `evaluate()` takes them and a time, and returns where the shadow is at that moment and how fast it's moving.
+The published numbers live in `elements/`, one file per eclipse, listed by date in `elements/index.ts`. `evaluate()` takes them and a time, and returns where the shadow is at that moment and how fast it's moving.
 
 ### observer.ts
 
@@ -148,17 +148,23 @@ The fundamental plane passes straight through the Earth, so places on the night 
 
 ## Isolines: lines of equal duration
 
-Two files turn durations at single places into lines on a map: `grid.ts` asks `localCircumstances()` for the duration at many places, and `contours.ts` joins the places with equal durations into lines.
+Three files turn durations at single places into lines on a map: `area.ts` picks where to look, `grid.ts` asks `localCircumstances()` for the duration at many places there, and `contours.ts` joins the places with equal durations into lines.
 
 ```mermaid
 graph LR
+    Area["area.ts<br/>where to look"]
     Local["localCircumstances.ts<br/>duration at one place"]
     Grid["grid.ts<br/>a value at every grid point"]
     Contours["contours.ts<br/>lines of equal duration"]
     File[("GeoJSON")]
 
+    Area --> Grid
     Local --> Grid --> Contours --> File
 ```
+
+### area.ts
+
+`pathArea()` picks where the grid goes: the box around NASA's limits and central line, plus a margin, so the isolines are never cut short. The limits come from NASA's path table for the eclipse, `data/nasa-paths/<date>.txt`, read by [`eclipse/nasaPath.ts`](eclipse/nasaPath.ts). Paths that cross the 180° meridian (in the Pacific) aren't supported yet: the command stops with an error.
 
 ### grid.ts
 
@@ -172,7 +178,7 @@ graph LR
        west            east
 ```
 
-**Why not store the duration?*** The contour tracer draws a line between two grid points by assuming the value changes evenly between them. The duration doesn't, at the edge of the path: it's 0 outside, then jumps within a few hundred metres. With points 5 km apart, that drew the edge up to 5.6 km off.
+**Why not store the duration?** The contour tracer draws a line between two grid points by assuming the value changes evenly between them. The duration doesn't, at the edge of the path: it's 0 outside, then jumps within a few hundred metres. With points 5 km apart, that drew the edge up to 5.6 km off.
 
 ```
   duration
@@ -216,37 +222,45 @@ graph LR
 
 ### The script: generate-isolines
 
-[`scripts/generate-isolines.ts`](../../scripts/generate-isolines.ts) chains both steps for the 2027 eclipse:
+[`scripts/generate-isolines.ts`](../../scripts/generate-isolines.ts) chains the steps for one eclipse, given its date:
 
 ```
-  durationGrid()      Spain to the Red Sea, every 0.05°
-        │             (~550k places)
-        ▼
-  durationContours()  every 30 s, from 0 s to 6m00s
+  elements + data/nasa-paths/<date>.txt
         │
         ▼
-  out/2027-durations.geojson   the isolines
-  out/2027-nasa-path.geojson   NASA's path, to compare
+  pathArea()          NASA's limits plus 1°
+        │
+        ▼
+  durationGrid()      every 0.05° (2027: ~2.9M places, ~20 s)
+        │
+        ▼
+  durationContours()  every 30 s, up to the longest totality
+        │
+        ▼
+  data/isolines/<date>.geojson   the isolines the API serves
+  out/<date>-nasa-path.geojson   NASA's path, to compare
 ```
 
 Run it with (refer to main [README](../../README.md) for how to setup the project):
 
 ```bash
-pnpm data:isolines
+pnpm data:isolines 2027-08-02
 ```
+
+A missing or unknown date lists the eclipses it knows.
 
 ## Glossary
 
-| Term               | Meaning                                                                                                                        |
-| ------------------ | ------------------------------------------------------------------------------------------------------------------------------ |
-| Umbra, penumbra    | The Moon's full and partial shadow                                                                                             |
-| Path of totality   | The band on the Earth swept by the umbra                                                                                       |
-| Fundamental plane  | A plane through the Earth's centre, square to the Sun–Moon line, on which the shadow is described                              |
-| Besselian elements | NASA's polynomials describing the shadow on the fundamental plane                                                              |
-| C2, C3             | Start and end of totality (C1 and C4 are the start and end of the partial eclipse)                                             |
-| Mid-eclipse        | The moment the observer is closest to the shadow's axis                                                                        |
-| Isoline            | A line joining places where totality lasts the same time                                                                       |
-| TDT, UT, ΔT        | Two time scales: a uniform one the elements use (TDT), and one that follows the Earth's spin (UT). ΔT is the gap between them. |
+| Term               | Meaning                                                                                                                                                                                       |
+| ------------------ | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Umbra, penumbra    | The Moon's full and partial shadow                                                                                                                                                            |
+| Path of totality   | The band on the Earth swept by the umbra                                                                                                                                                      |
+| Fundamental plane  | A plane through the Earth's centre, square to the Sun–Moon line, on which the shadow is described                                                                                             |
+| Besselian elements | NASA's polynomials describing the shadow on the fundamental plane                                                                                                                             |
+| C2, C3             | Start and end of totality (C1 and C4 are the start and end of the partial eclipse)                                                                                                            |
+| Mid-eclipse        | The moment the observer is closest to the shadow's axis                                                                                                                                       |
+| Isoline            | A line joining places where totality lasts the same time                                                                                                                                      |
+| TDT, UT, ΔT        | Two time scales: a uniform one the elements use (TDT), and one that follows the Earth's spin (UT). ΔT is the gap between them; for a future eclipse it's a prediction, so sources can differ. |
 
 ## References
 

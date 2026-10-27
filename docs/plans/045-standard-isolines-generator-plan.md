@@ -24,7 +24,7 @@ The engine and the isolines script come from spike #4 and are tied to 2027-08-02
 - The maths is proven once, on 2027, against JSEX across the path width
 - NASA's path-table check runs for every eclipse, catching pasted-in mistakes
 - JSEX stays a GitHub copy pinned at a commit: its 2027 elements match NASA's Canon page, and its results agree with our maths and NASA's path table, so no further check
-- Test files reviewed: keep, merge or drop
+- ~~Test files reviewed: keep, merge or drop~~ (see Deviations)
 
 ## Out of scope
 
@@ -38,7 +38,7 @@ The engine and the isolines script come from spike #4 and are tied to 2027-08-02
 2. `refactor:` elements and path tables found by date; NASA's path-table check runs for every eclipse
 3. `refactor:` generic isolines command (area from NASA's limits, automatic thresholds, output to served data), mirroring the airports script; spike commands renamed (`data:isolines`, `fixtures:jsex`)
 4. `feat:` 2027 isolines regenerated over the whole path
-5. `test:` test review outcome
+5. ~~`test:` test review outcome~~ (dropped, see Deviations)
 6. `docs:` engine and main README: the generation pipeline, adding an eclipse, ΔT per source, JSEX provenance
 7. `feat:` second eclipse (2028-07-22), generated and checked by eye; whether to serve it is decided then. Its steps and pitfalls go in "Deviations and findings", for the skill
 
@@ -53,3 +53,6 @@ The engine and the isolines script come from spike #4 and are tied to 2027-08-02
 No MCP needed. `/simplify` and `/code-review` before the PR.
 
 ## Deviations and findings
+
+- Test review moved out of scope: the new behaviour has its own tests and no spike-only tests are left, so a wider review of the suite comes later, on its own
+- 2027 over the whole path: 2756 × 1044 points, ~20 s, 3.1 MB (was 1.16 MB over Spain to the Red Sea); the step stays at 0.05°

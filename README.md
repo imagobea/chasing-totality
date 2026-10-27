@@ -27,7 +27,7 @@ graph LR
 **Key Features:**
 
 - ✅ Totality duration for any lat/lon, from NASA's Besselian elements
-- ✅ Isolines every 30 s, from the path's edge up to 6 minutes, as GeoJSON
+- ✅ Isolines every 30 s, from the path's edge up to the longest totality, as GeoJSON
 - ✅ Tested against NASA's path table and NASA's JSEX calculator
 
 How it works, what was measured and what's left out: [spike #4 plan and findings](docs/plans/004-local-totality-duration-plan.md).
@@ -52,7 +52,7 @@ pnpm typecheck   # type-check without emitting
 pnpm dev         # start the API with reload on port 3000
 pnpm build       # compile src/ to dist/
 pnpm start       # run the compiled API
-pnpm data:isolines  # write the isolines to out/
+pnpm data:isolines 2027-08-02  # regenerate data/isolines/2027-08-02.geojson
 pnpm data:airports  # refresh data/airports.geojson from OurAirports
 ```
 
@@ -63,12 +63,14 @@ The API settings and their defaults are in [`.env.example`](.env.example); copy 
 - `GET /eclipses/:date/isolines`: GeoJSON isolines; 404 if there's no data, 422 for an invalid date
 - `GET /airports?bbox=west,south,east,north`: GeoJSON airports with their source and retrieval date; the optional bbox keeps only those inside it, 422 if it's invalid
 
-`pnpm data:isolines` writes two files:
+`pnpm data:isolines <date>` writes two files:
 
-- `out/2027-durations.geojson`: the isolines.
-- `out/2027-nasa-path.geojson`: NASA's limits and central line, to compare against.
+- `data/isolines/<date>.geojson`: the isolines the API serves, over NASA's whole path; commit the result.
+- `out/<date>-nasa-path.geojson`: NASA's limits and central line, to compare against.
 
-Drop both into [geojson.io](https://geojson.io) to see them on a map. To update the data the API serves, copy `out/2027-durations.geojson` to `data/isolines/2027-08-02.geojson`.
+Drop both into [geojson.io](https://geojson.io) to see them on a map.
+
+To add an eclipse, add its Besselian elements under `src/engine/eclipse/elements/` and to the list there, and NASA's path table as `data/nasa-paths/<date>.txt`, with the ΔT NASA used as a `# ΔT = <seconds> s` line in its header. The tests then check the elements against the table; run `pnpm data:isolines <date>` to generate its isolines.
 
 The airports come from [OurAirports](https://ourairports.com/data/) (public domain): large and medium airports with scheduled service and an IATA code, worldwide. `pnpm data:airports` downloads them again and rewrites `data/airports.geojson`; commit the result.
 
@@ -86,7 +88,7 @@ pnpm --filter web build          # static files in web/dist
 
 The page shows the API status from `GET /api/health` and a map: an [OpenFreeMap](https://openfreemap.org) base map drawn by [MapLibre GL JS](https://maplibre.org), with the 2027-08-02 isolines from `GET /api/eclipses/2027-08-02/isolines` and the airports around the path from `GET /api/airports` on top. The airport icon is [Maki](https://github.com/mapbox/maki)'s (CC0). The tiles come straight from OpenFreeMap: no key, no proxy. The proxy target is `API_PROXY_TARGET` (default `http://localhost:3000`).
 
-`pnpm fixtures:jsex` regenerates `test/fixtures/jsex-2027.json` from NASA's JSEX. Only needed if the test points or the elements change.
+`pnpm fixtures:jsex` regenerates `test/fixtures/jsex-2027.json` from JSEX (a GitHub copy of NASA's calculator, pinned to one commit). Only needed if the test points or the elements change.
 
 ### Docker
 
@@ -103,7 +105,7 @@ In both, the frontend reaches the API through `/api`. In dev, after adding a dep
 ```bash
 # Tests and scripts run in the dev container; out/ shows up on the host
 docker compose -f compose.yaml -f compose.dev.yaml run --rm api pnpm test
-docker compose -f compose.yaml -f compose.dev.yaml run --rm api pnpm data:isolines
+docker compose -f compose.yaml -f compose.dev.yaml run --rm api pnpm data:isolines 2027-08-02
 ```
 
 The frontend's nginx forwards `/api` to a host named `api`, so it only starts where the `api` service exists (as in compose).
@@ -114,11 +116,13 @@ The frontend's nginx forwards `/api` to a host named `api`, so it only starts wh
 src/
 └── engine/                # Everything that computes; a frontend/backend would only consume it
     ├── eclipse/           # Totality duration at one place
-    │   ├── elements/      # Besselian elements per eclipse
+    │   ├── elements/      # Besselian elements per eclipse, listed by date
     │   ├── besselian.ts   # Evaluates the elements at a given time
     │   ├── observer.ts    # Observer's position relative to the Earth's centre
-    │   └── localCircumstances.ts  # Eclipse type, contact times and duration
+    │   ├── localCircumstances.ts  # Eclipse type, contact times and duration
+    │   └── nasaPath.ts    # Reads NASA's path tables
     └── isolines/
+        ├── area.ts        # The grid's area, around NASA's path
         ├── grid.ts        # Engine values on a lat/lon grid
         └── contours.ts    # Grid to GeoJSON isolines
 └── server/                # Fastify API
@@ -132,9 +136,10 @@ web/                   # React + Vite frontend (own package, tests and Dockerfil
 └── test/              # Vitest + Testing Library tests, mirroring src/
 
 data/isolines/         # Pre-generated isolines the API serves, one file per eclipse
+data/nasa-paths/       # NASA's path table per eclipse, to generate and test against
 data/airports.geojson  # Airports snapshot the API serves
 scripts/               # data:isolines, data:airports, fixtures:jsex
-test/                  # Vitest tests and fixtures (NASA path table, JSEX)
+test/                  # Vitest tests and fixtures (JSEX)
 docs/plans/            # Plans, deviations and findings
 ```
 
