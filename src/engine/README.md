@@ -214,9 +214,9 @@ graph LR
 - The 0 s feature is the path of totality itself, named `"Path of totality"`.
 - A duration no place reaches is left out, e.g. 6m30s, when the longest is ~6m23s.
 
-### The script: spike-grid
+### The script: generate-isolines
 
-[`scripts/spike-grid.ts`](../../scripts/spike-grid.ts) chains both steps for the 2027 eclipse:
+[`scripts/generate-isolines.ts`](../../scripts/generate-isolines.ts) chains both steps for the 2027 eclipse:
 
 ```
   durationGrid()      Spain to the Red Sea, every 0.05°
@@ -232,7 +232,7 @@ graph LR
 Run it with (refer to main [README](../../README.md) for how to setup the project):
 
 ```bash
-pnpm spike:grid
+pnpm data:isolines
 ```
 
 ## Glossary

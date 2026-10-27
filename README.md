@@ -52,7 +52,7 @@ pnpm typecheck   # type-check without emitting
 pnpm dev         # start the API with reload on port 3000
 pnpm build       # compile src/ to dist/
 pnpm start       # run the compiled API
-pnpm spike:grid  # write the isolines to out/
+pnpm data:isolines  # write the isolines to out/
 pnpm data:airports  # refresh data/airports.geojson from OurAirports
 ```
 
@@ -63,7 +63,7 @@ The API settings and their defaults are in [`.env.example`](.env.example); copy 
 - `GET /eclipses/:date/isolines`: GeoJSON isolines; 404 if there's no data, 422 for an invalid date
 - `GET /airports?bbox=west,south,east,north`: GeoJSON airports with their source and retrieval date; the optional bbox keeps only those inside it, 422 if it's invalid
 
-`pnpm spike:grid` writes two files:
+`pnpm data:isolines` writes two files:
 
 - `out/2027-durations.geojson`: the isolines.
 - `out/2027-nasa-path.geojson`: NASA's limits and central line, to compare against.
@@ -86,7 +86,7 @@ pnpm --filter web build          # static files in web/dist
 
 The page shows the API status from `GET /api/health` and a map: an [OpenFreeMap](https://openfreemap.org) base map drawn by [MapLibre GL JS](https://maplibre.org), with the 2027-08-02 isolines from `GET /api/eclipses/2027-08-02/isolines` and the airports around the path from `GET /api/airports` on top. The airport icon is [Maki](https://github.com/mapbox/maki)'s (CC0). The tiles come straight from OpenFreeMap: no key, no proxy. The proxy target is `API_PROXY_TARGET` (default `http://localhost:3000`).
 
-`pnpm spike:fixtures` regenerates `test/fixtures/jsex-2027.json` from NASA's JSEX. Only needed if the test points or the elements change.
+`pnpm fixtures:jsex` regenerates `test/fixtures/jsex-2027.json` from NASA's JSEX. Only needed if the test points or the elements change.
 
 ### Docker
 
@@ -103,7 +103,7 @@ In both, the frontend reaches the API through `/api`. In dev, after adding a dep
 ```bash
 # Tests and scripts run in the dev container; out/ shows up on the host
 docker compose -f compose.yaml -f compose.dev.yaml run --rm api pnpm test
-docker compose -f compose.yaml -f compose.dev.yaml run --rm api pnpm spike:grid
+docker compose -f compose.yaml -f compose.dev.yaml run --rm api pnpm data:isolines
 ```
 
 The frontend's nginx forwards `/api` to a host named `api`, so it only starts where the `api` service exists (as in compose).
@@ -133,7 +133,7 @@ web/                   # React + Vite frontend (own package, tests and Dockerfil
 
 data/isolines/         # Pre-generated isolines the API serves, one file per eclipse
 data/airports.geojson  # Airports snapshot the API serves
-scripts/               # spike:grid, spike:fixtures, data:airports
+scripts/               # data:isolines, data:airports, fixtures:jsex
 test/                  # Vitest tests and fixtures (NASA path table, JSEX)
 docs/plans/            # Plans, deviations and findings
 ```

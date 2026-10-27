@@ -2,7 +2,7 @@
 // isolines every 30 s and writes them as GeoJSON, next to NASA's path for comparison.
 // Open both files in geojson.io (or any GIS tool) to compare.
 //
-// Run: pnpm spike:grid
+// Run: pnpm data:isolines
 
 import { mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { eclipse2027Aug02 } from "../src/engine/eclipse/elements/2027-08-02.js";

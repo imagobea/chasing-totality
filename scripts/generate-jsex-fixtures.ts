@@ -6,7 +6,7 @@
 // commit, runs it in an isolated node:vm context, and only its output is committed. JSEX is
 // written for a browser form, so the form is stubbed with each point's coordinates.
 //
-// Run: pnpm spike:fixtures
+// Run: pnpm fixtures:jsex
 
 import { readFileSync, writeFileSync } from "node:fs";
 import { createContext, runInContext } from "node:vm";
