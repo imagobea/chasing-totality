@@ -49,11 +49,13 @@ describe.each(nasaPaths)("localCircumstances vs NASA's $date path table", ({ ele
   });
 
   // The duration rises steeply just inside a limit (0 s at the edge, ~20 s at 200 m), so the
-  // limit is checked by position instead: it must lie between 2 km inside and 2 km outside.
-  it("places every limit within 2 km of NASA's", () => {
+  // limit is checked by position instead: it must lie between 3 km inside and 3 km outside. The
+  // distance is measured from the central line, so where the Sun is low and the path's edge
+  // slants (2028-07-22 at 04:18, Sun 6° up) a limit within 1 km reads as up to 3 km
+  it("places every limit within 3 km of NASA's", () => {
     for (const { row, limit } of limits) {
-      expect(at(pastLimit(row.central, limit, -2)).type).toBe("total");
-      const outside = at(pastLimit(row.central, limit, 2));
+      expect(at(pastLimit(row.central, limit, -3)).type).toBe("total");
+      const outside = at(pastLimit(row.central, limit, 3));
       expect(outside.type).not.toBe("total");
       expect(outside.durationSeconds).toBe(0);
     }
@@ -61,12 +63,12 @@ describe.each(nasaPaths)("localCircumstances vs NASA's $date path table", ({ ele
 
   it("gives a signed squared duration: duration² inside, more negative the further outside", () => {
     for (const { row, limit } of limits) {
-      const inside = at(pastLimit(row.central, limit, -2));
+      const inside = at(pastLimit(row.central, limit, -3));
       expect(inside.signedDurationSquared).toBe(inside.durationSeconds ** 2);
-      const outside2km = at(pastLimit(row.central, limit, 2)).signedDurationSquared;
-      const outside4km = at(pastLimit(row.central, limit, 4)).signedDurationSquared;
-      expect(outside2km).toBeLessThan(0);
-      expect(outside4km).toBeLessThan(outside2km);
+      const outside3km = at(pastLimit(row.central, limit, 3)).signedDurationSquared;
+      const outside6km = at(pastLimit(row.central, limit, 6)).signedDurationSquared;
+      expect(outside3km).toBeLessThan(0);
+      expect(outside6km).toBeLessThan(outside3km);
     }
   });
 

@@ -56,3 +56,6 @@ No MCP needed. `/simplify` and `/code-review` before the PR.
 
 - Test review moved out of scope: the new behaviour has its own tests and no spike-only tests are left, so a wider review of the suite comes later, on its own
 - 2027 over the whole path: 2756 × 1044 points, ~20 s, 3.1 MB (was 1.16 MB over Spain to the Red Sea); the step stays at 0.05°
+- 2028 crosses the 180° meridian, so that's now supported; its limit check needed 3 km, not 2, where the Sun is low
+- 2028 over the whole path: 2150 × 869 points, ~15 s, 2.0 MB
+- For the skill: NASA's elements are rounded, so take JSEX's; copy NASA's rows verbatim, with its ΔT

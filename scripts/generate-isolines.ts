@@ -7,7 +7,7 @@
 import { mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { eclipses } from "../src/engine/eclipse/elements/index.js";
 import { parseNasaPath, type LatLon, type PathRow } from "../src/engine/eclipse/nasaPath.js";
-import { pathArea } from "../src/engine/isolines/area.js";
+import { pathArea, unwrapLongitudes } from "../src/engine/isolines/area.js";
 import { durationContours, durationThresholds } from "../src/engine/isolines/contours.js";
 import { durationGrid } from "../src/engine/isolines/grid.js";
 
@@ -19,14 +19,18 @@ const COMPARE_DIR = new URL("../out/", import.meta.url);
 
 // NASA's northern limit, southern limit and central line as GeoJSON lines
 function nasaLines(rows: PathRow[]) {
-  const line = (name: string, points: (LatLon | null)[]) => ({
-    type: "Feature",
-    properties: { name },
-    geometry: {
-      type: "LineString",
-      coordinates: points.flatMap((point) => (point ? [[point.lon, point.lat]] : [])),
-    },
-  });
+  const line = (name: string, points: (LatLon | null)[]) => {
+    const onEarth = points.filter((point) => !!point);
+    const lons = unwrapLongitudes(onEarth.map((point) => point.lon));
+    return {
+      type: "Feature",
+      properties: { name },
+      geometry: {
+        type: "LineString",
+        coordinates: onEarth.map((point, i) => [lons[i], point.lat]),
+      },
+    };
+  };
   return {
     type: "FeatureCollection",
     features: [
