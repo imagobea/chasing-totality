@@ -1,6 +1,6 @@
-// Generates the isolines of one total eclipse: how long totality lasts across NASA's path,
-// every 30 s, as GeoJSON. NASA's limits are written beside them, to compare by eye in
-// geojson.io or any GIS tool. The steps are explained in src/engine/README.md
+// Generates data/isolines/<date>.geojson, the isolines the API serves for one total eclipse: how
+// long totality lasts across NASA's path, every 30 s. NASA's limits go to out/, to compare by
+// eye in geojson.io or any GIS tool. The steps are explained in src/engine/README.md
 //
 // Run: pnpm data:isolines <date>, e.g. pnpm data:isolines 2027-08-02
 
@@ -14,7 +14,8 @@ import { durationGrid } from "../src/engine/isolines/grid.js";
 const STEP_DEGREES = 0.05; // grid spacing, ~5 km
 const MARGIN_DEGREES = 1; // around NASA's path, so its edges and ends aren't cut
 const THRESHOLD_STEP_SECONDS = 30;
-const OUT = new URL("../out/", import.meta.url);
+const DATA_DIR = new URL("../data/isolines/", import.meta.url);
+const COMPARE_DIR = new URL("../out/", import.meta.url);
 
 // NASA's northern limit, southern limit and central line as GeoJSON lines
 function nasaLines(rows: PathRow[]) {
@@ -60,21 +61,25 @@ function main() {
   // Step 1: totality at every grid point around the path
   const started = performance.now();
   const grid = durationGrid(elements, pathArea(rows, MARGIN_DEGREES), STEP_DEGREES);
-  const computed = performance.now();
 
   // Step 2: isolines through the grid, every 30 s up to the longest totality
   const isolines = durationContours(grid, durationThresholds(grid, THRESHOLD_STEP_SECONDS));
-  const traced = performance.now();
+  const seconds = (performance.now() - started) / 1000;
 
-  mkdirSync(OUT, { recursive: true });
-  writeFileSync(new URL(`${date}-isolines.geojson`, OUT), JSON.stringify(isolines));
-  writeFileSync(new URL(`${date}-nasa-path.geojson`, OUT), JSON.stringify(nasaLines(rows)));
+  const output = new URL(`${date}.geojson`, DATA_DIR);
+  const comparison = new URL(`${date}-nasa-path.geojson`, COMPARE_DIR);
+  const json = `${JSON.stringify(isolines)}\n`;
+  writeFileSync(output, json);
+  mkdirSync(COMPARE_DIR, { recursive: true });
+  writeFileSync(comparison, JSON.stringify(nasaLines(rows)));
 
+  // Numbers to watch as eclipses are added: the grid's size drives the run time
   const points = grid.width * grid.height;
+  const megabytes = Buffer.byteLength(json) / 1e6;
   console.log(
-    `${points} points in ${((computed - started) / 1000).toFixed(1)} s ` +
-      `(${(((computed - started) * 1000) / points).toFixed(1)} µs each); ` +
-      `isolines in ${((traced - computed) / 1000).toFixed(1)} s. Written to ${OUT.pathname}`,
+    `${date}: ${grid.width} × ${grid.height} points in ${seconds.toFixed(1)} s ` +
+      `(${((seconds * 1e6) / points).toFixed(1)} µs each), ${isolines.features.length} isolines, ` +
+      `${megabytes.toFixed(1)} MB\nWrote ${output.pathname}\nNASA's limits: ${comparison.pathname}`,
   );
 }
 
