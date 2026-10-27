@@ -1,25 +1,36 @@
 import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
-import { eclipse2027Aug02 } from "../../../src/engine/eclipse/elements/2027-08-02.js";
+import type { BesselianElements } from "../../../src/engine/eclipse/besselian.js";
+import { eclipses } from "../../../src/engine/eclipse/elements/index.js";
 import { localCircumstances } from "../../../src/engine/eclipse/localCircumstances.js";
-import { along, pastLimit } from "../../geo.js";
 import { parseNasaPath, type LatLon } from "../../../src/engine/eclipse/nasaPath.js";
+import { along, pastLimit } from "../../geo.js";
 
-const { deltaT, rows } = parseNasaPath(
-  readFileSync(new URL("../../../data/nasa-paths/2027-08-02.txt", import.meta.url), "utf8"),
-);
-// Use the ΔT NASA computed the table with, so only the geometry is compared
-const elements = { ...eclipse2027Aug02, deltaT };
+// Every known eclipse against its NASA path table, with the table's ΔT so only the geometry
+// is compared. This catches a mistyped element or a table from another eclipse
+const nasaPaths = Object.entries(eclipses).map(([date, elements]) => {
+  const { deltaT, rows } = parseNasaPath(
+    readFileSync(new URL(`../../../data/nasa-paths/${date}.txt`, import.meta.url), "utf8"),
+  );
+  return { date, elements: { ...elements, deltaT }, rows };
+});
 
-const at = ({ lat, lon }: LatLon) =>
-  localCircumstances(elements, { latitude: lat, longitude: lon, altitudeMeters: 0 });
+const atWith =
+  (elements: BesselianElements) =>
+  ({ lat, lon }: LatLon) =>
+    localCircumstances(elements, { latitude: lat, longitude: lon, altitudeMeters: 0 });
 
-const timedRows = rows.filter((row) => row.time !== "Limits");
-const limits = rows.flatMap((row) =>
-  [row.north, row.south].flatMap((limit) => (limit ? [{ row, limit }] : [])),
-);
+function fail(): never {
+  throw new Error("2027-08-02 is missing from the known eclipses");
+}
 
-describe("localCircumstances vs NASA's 2027 path table", () => {
+describe.each(nasaPaths)("localCircumstances vs NASA's $date path table", ({ elements, rows }) => {
+  const at = atWith(elements);
+  const timedRows = rows.filter((row) => row.time !== "Limits");
+  const limits = rows.flatMap((row) =>
+    [row.north, row.south].flatMap((limit) => (limit ? [{ row, limit }] : [])),
+  );
+
   // NASA rounds to 0.1 s and positions to 0.1′ (~185 m); we measured ≤ 0.25 s.
   it.each(rows.map((row) => [row.time, row] as const))(
     "matches the central-line duration at %s within 0.5 s",
@@ -71,13 +82,15 @@ describe("localCircumstances vs NASA's 2027 path table", () => {
     for (const row of rows.filter((r) => r.time === "Limits")) {
       expect(at(row.central).sunBelowHorizon).toBe(true);
     }
-    const midPath = at(rows.find((r) => r.time === "10:00")?.central ?? { lat: 0, lon: 0 });
-    expect(midPath.sunBelowHorizon).toBe(false);
-    expect(midPath.sunAltitude).toBeGreaterThan(80);
+    for (const row of timedRows) expect(at(row.central).sunBelowHorizon).toBe(false);
   });
 });
 
+// Engine behaviour, on 2027
 describe("localCircumstances", () => {
+  const { elements, rows } = nasaPaths.find((path) => path.date === "2027-08-02") ?? fail();
+  const at = atWith(elements);
+
   it("reports no eclipse far from the shadow (Honolulu)", () => {
     const result = at({ lat: 21.3, lon: -157.9 });
     expect(result.type).toBe("none");
@@ -92,6 +105,11 @@ describe("localCircumstances", () => {
     expect(result.durationSeconds).toBe(0);
   });
 
+  it("puts the Sun high over the middle of the path (10:00, NASA: 81°)", () => {
+    const central = rows.find((r) => r.time === "10:00")?.central ?? { lat: 0, lon: 0 };
+    expect(at(central).sunAltitude).toBeGreaterThan(80);
+  });
+
   it("puts C2 before mid-eclipse and C3 after, c3 − c2 apart", () => {
     const result = at({ lat: 25.7, lon: 32.6 }); // Luxor
     expect(result.c2).toBeLessThan(result.mid);
@@ -102,7 +120,11 @@ describe("localCircumstances", () => {
   // There, C2 and C3 are milliseconds apart and the contact iteration alone can fail to settle.
   it("gives a near-zero totality within a millimetre of a limit", () => {
     const at = (latitude: number) =>
-      localCircumstances(eclipse2027Aug02, { latitude, longitude: 31, altitudeMeters: 0 });
+      localCircumstances(eclipses["2027-08-02"] ?? fail(), {
+        latitude,
+        longitude: 31,
+        altitudeMeters: 0,
+      });
     // Northern limit at longitude 31° (Egypt), by bisection on the mid-eclipse geometry.
     let inside = 26;
     let outside = 31;
