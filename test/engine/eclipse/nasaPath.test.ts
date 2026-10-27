@@ -2,11 +2,17 @@ import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
 import { parseNasaPath } from "../../../src/engine/eclipse/nasaPath.js";
 
-const rows = parseNasaPath(
-  readFileSync(new URL("../../../data/nasa-paths/2027-08-02.txt", import.meta.url), "utf8"),
+const text = readFileSync(
+  new URL("../../../data/nasa-paths/2027-08-02.txt", import.meta.url),
+  "utf8",
 );
+const { deltaT, rows } = parseNasaPath(text);
 
 describe("parseNasaPath", () => {
+  it("reads the ΔT NASA used from the header", () => {
+    expect(deltaT).toBe(71.7);
+  });
+
   it("reads both path ends and every 2-minute row (08:26–11:48 UT)", () => {
     expect(rows).toHaveLength(104);
     expect(rows.map((r) => r.time)).toEqual([
@@ -43,25 +49,30 @@ describe("parseNasaPath", () => {
   });
 
   describe("with malformed input", () => {
+    const header = "# ΔT = 71.7 s\n";
     const row =
       " 10:00   27 51.4N 031 44.0E  25 55.3N 030 18.2E  26 53.3N 031 00.8E  1.079  81 177  257  06m23.2s";
 
     it("ignores lines that are not table rows", () => {
-      expect(parseNasaPath("# comment\n  Time   Latitude Longitude\n\n")).toEqual([]);
+      expect(parseNasaPath(`${header}# comment\n  Time   Latitude Longitude\n\n`).rows).toEqual([]);
+    });
+
+    it("throws when the header has no ΔT", () => {
+      expect(() => parseNasaPath(row)).toThrow(/ΔT/);
     });
 
     it("throws on bad limit coordinates", () => {
-      expect(() => parseNasaPath(row.replace("27 51.4N", "27 51.4X"))).toThrow(/27 51.4X/);
+      expect(() => parseNasaPath(header + row.replace("27 51.4N", "27 51.4X"))).toThrow(/27 51.4X/);
     });
 
     it("throws when the central line is missing", () => {
-      expect(() => parseNasaPath(row.replace("26 53.3N 031 00.8E", "   -         -     "))).toThrow(
-        /Cannot parse/,
-      );
+      expect(() =>
+        parseNasaPath(header + row.replace("26 53.3N 031 00.8E", "   -         -     ")),
+      ).toThrow(/Cannot parse/);
     });
 
     it("throws on bad duration", () => {
-      expect(() => parseNasaPath(row.replace("06m23.2s", "6:23.2"))).toThrow(/6:23.2/);
+      expect(() => parseNasaPath(header + row.replace("06m23.2s", "6:23.2"))).toThrow(/6:23.2/);
     });
   });
 });

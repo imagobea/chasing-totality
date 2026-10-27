@@ -5,11 +5,11 @@ import { localCircumstances } from "../../../src/engine/eclipse/localCircumstanc
 import { along, pastLimit } from "../../geo.js";
 import { parseNasaPath, type LatLon } from "../../../src/engine/eclipse/nasaPath.js";
 
-const rows = parseNasaPath(
+const { deltaT, rows } = parseNasaPath(
   readFileSync(new URL("../../../data/nasa-paths/2027-08-02.txt", import.meta.url), "utf8"),
 );
-// NASA's path table was computed with ΔT = 71.7 s; use the same, so only the geometry is compared.
-const elements = { ...eclipse2027Aug02, deltaT: 71.7 };
+// Use the ΔT NASA computed the table with, so only the geometry is compared
+const elements = { ...eclipse2027Aug02, deltaT };
 
 const at = ({ lat, lon }: LatLon) =>
   localCircumstances(elements, { latitude: lat, longitude: lon, altitudeMeters: 0 });

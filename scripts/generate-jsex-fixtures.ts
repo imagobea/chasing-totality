@@ -59,7 +59,7 @@ function cities(): Point[] {
 // line, halfway to each limit, and 1 km either side of each limit, where duration is most
 // sensitive.
 function pointsAroundThePath(): Point[] {
-  const rows = parseNasaPath(
+  const { rows } = parseNasaPath(
     readFileSync(new URL("../data/nasa-paths/2027-08-02.txt", import.meta.url), "utf8"),
   );
   return ["08:48", "09:04", "09:28", "10:00", "10:24"].flatMap((time) => {

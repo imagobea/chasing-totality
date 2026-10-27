@@ -12,10 +12,17 @@ export type PathRow = {
   durationSeconds: number; // on the central line
 };
 
-const ROW = /^ (Limits|\d\d:\d\d) /;
+export type NasaPath = {
+  deltaT: number; // seconds, the ΔT NASA used for this table: it may differ from the elements'
+  rows: PathRow[];
+};
 
-export function parseNasaPath(text: string): PathRow[] {
-  return text
+const ROW = /^ (Limits|\d\d:\d\d) /;
+const DELTA_T = /ΔT = (\d+(?:\.\d+)?) s/;
+
+export function parseNasaPath(text: string): NasaPath {
+  const [, deltaT] = text.match(DELTA_T) ?? fail("no 'ΔT = … s' in the header");
+  const rows = text
     .split("\n")
     .filter((line) => ROW.test(line))
     .map((line) => ({
@@ -26,6 +33,7 @@ export function parseNasaPath(text: string): PathRow[] {
       central: parseLatLon(line.slice(49, 67)) ?? fail(line),
       durationSeconds: parseDuration(line.trim().split(/\s+/).at(-1) ?? ""),
     }));
+  return { deltaT: Number(deltaT), rows };
 }
 
 // "28 48.0N 044 56.6W" (degrees, decimal minutes) -> { lat: 28.8, lon: -44.943 }
