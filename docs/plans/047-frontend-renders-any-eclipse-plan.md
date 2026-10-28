@@ -35,3 +35,5 @@ The API serves any generated eclipse, but the frontend's map view and airports b
 No MCP needed. `/simplify` and `/code-review` before the PR.
 
 ## Deviations and findings
+
+- The airports endpoint takes boxes past 180° but returns airports at their own longitude (TBU at -175°, not 185°). Fine while MapLibre draws world copies; a client that doesn't would need to shift them itself
