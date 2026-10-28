@@ -1,6 +1,7 @@
 import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
 import type { BesselianElements } from "../../../src/engine/eclipse/besselian.js";
+import { eclipse2027Aug02 } from "../../../src/engine/eclipse/elements/2027-08-02.js";
 import { eclipses } from "../../../src/engine/eclipse/elements/index.js";
 import { localCircumstances } from "../../../src/engine/eclipse/localCircumstances.js";
 import { parseNasaPath, type LatLon } from "../../../src/engine/eclipse/nasaPath.js";
@@ -122,11 +123,7 @@ describe("localCircumstances", () => {
   // There, C2 and C3 are milliseconds apart and the contact iteration alone can fail to settle.
   it("gives a near-zero totality within a millimetre of a limit", () => {
     const at = (latitude: number) =>
-      localCircumstances(eclipses["2027-08-02"] ?? fail(), {
-        latitude,
-        longitude: 31,
-        altitudeMeters: 0,
-      });
+      localCircumstances(eclipse2027Aug02, { latitude, longitude: 31, altitudeMeters: 0 });
     // Northern limit at longitude 31° (Egypt), by bisection on the mid-eclipse geometry.
     let inside = 26;
     let outside = 31;
