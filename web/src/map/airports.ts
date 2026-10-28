@@ -15,9 +15,8 @@ export const AIRPORTS_SOURCE_ID = "airports";
 // the sprite's and ignores ours
 export const AIRPORT_ICON_ID = "maki-airport";
 
-// The 2027 isolines' extent plus ~3° each way: S Spain and the Balearics to Saudi Arabia and Yemen
-// TODO: suits 2027-08-02 only; another eclipse needs its own box, e.g. from its isolines
-const AIRPORTS_BBOX: Bbox = [-13, 12, 48, 40];
+// How far beyond the eclipse's path to look for airports, each way
+const MARGIN_DEGREES = 3;
 
 // Maki icons are drawn on a 15 px grid
 const ICON_SIZE = 15;
@@ -57,9 +56,18 @@ export const AIRPORTS_LAYERS: LayerSpecification[] = [
   },
 ];
 
-// The airports around the path, served by the API
-export function airportsSource(): GeoJSONSourceSpecification & { data: string } {
-  return { type: "geojson", data: airportsUrl(AIRPORTS_BBOX) };
+// The airports around the eclipse's path, served by the API. The bbox stops at the poles, and
+// across 180° it carries on past it like the path's.
+export function airportsSource([west, south, east, north]: Bbox): GeoJSONSourceSpecification & {
+  data: string;
+} {
+  const bbox: Bbox = [
+    west - MARGIN_DEGREES,
+    Math.max(-90, south - MARGIN_DEGREES),
+    east + MARGIN_DEGREES,
+    Math.min(90, north + MARGIN_DEGREES),
+  ];
+  return { type: "geojson", data: airportsUrl(bbox) };
 }
 
 // The plane as an image MapLibre can take, once the browser has drawn the SVG

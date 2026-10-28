@@ -37,14 +37,26 @@ function showIsolines(map: MapLibreMap, isolines: Isolines) {
     return;
   }
 
-  // Fills and outlines go under the base map's labels; our labels go on top, but under the
-  // airports if those are already there
+  // Fills and outlines go under the base map's labels; our labels go on top
   const firstSymbolId = map.getStyle().layers.find((layer) => layer.type === "symbol")?.id;
-  const airportsId = AIRPORTS_LAYERS.find((layer) => map.getLayer(layer.id))?.id;
   map.addSource(ISOLINES_SOURCE_ID, isolinesSource(isolines));
   for (const layer of ISOLINES_LAYERS) {
-    map.addLayer(layer, layer.type === "symbol" ? airportsId : firstSymbolId);
+    map.addLayer(layer, layer.type === "symbol" ? undefined : firstSymbolId);
   }
+}
+
+// Added the first time, after the isolines, so on top of everything, the base map's labels
+// included. Swapped in place afterwards.
+function showAirports(map: MapLibreMap, pathBbox: Isolines["bbox"]) {
+  const source = airportsSource(pathBbox);
+  const existing = map.getSource<GeoJSONSource>(AIRPORTS_SOURCE_ID);
+  if (existing) {
+    existing.setData(source.data);
+    return;
+  }
+
+  map.addSource(AIRPORTS_SOURCE_ID, source);
+  for (const layer of AIRPORTS_LAYERS) map.addLayer(layer);
 }
 
 export function EclipseMap({ date, onCursorMove, attributionRef }: EclipseMapProps) {
@@ -97,8 +109,8 @@ export function EclipseMap({ date, onCursorMove, attributionRef }: EclipseMapPro
     // A ref object stays the same across renders, so the map is still created once
   }, [attributionRef]);
 
-  // The selected eclipse's isolines, with the map fitted to its whole path; the user is then free
-  // to pan and zoom
+  // The selected eclipse's isolines and the airports around them, with the map fitted to its
+  // whole path; the user is then free to pan and zoom
   useEffect(() => {
     if (!map || date === null) return;
 
@@ -108,6 +120,7 @@ export function EclipseMap({ date, onCursorMove, attributionRef }: EclipseMapPro
       .then((isolines) => {
         if (!active) return;
         showIsolines(map, isolines);
+        showAirports(map, isolines.bbox);
         map.fitBounds(isolines.bbox);
       })
       // The map keeps whatever it was showing
@@ -116,14 +129,6 @@ export function EclipseMap({ date, onCursorMove, attributionRef }: EclipseMapPro
       active = false;
     };
   }, [map, date]);
-
-  // The airports, whatever the date, on top of everything, the base map's labels included
-  useEffect(() => {
-    if (!map) return;
-
-    map.addSource(AIRPORTS_SOURCE_ID, airportsSource());
-    for (const layer of AIRPORTS_LAYERS) map.addLayer(layer);
-  }, [map]);
 
   return (
     <div

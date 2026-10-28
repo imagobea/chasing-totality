@@ -20,13 +20,12 @@ const map = vi.hoisted(() => ({
   addLayer: vi.fn(),
   addImage: vi.fn(),
   getSource: vi.fn(),
-  getLayer: vi.fn(),
   getStyle: vi.fn(() => ({ layers: [] })),
   fitBounds: vi.fn(),
   remove: vi.fn(),
 }));
 
-// The isolines source once it has been added
+// A source once it has been added, the isolines or the airports
 const source = vi.hoisted(() => ({ setData: vi.fn() }));
 
 // The attribution control, whose element stands in for MapLibre's credits
@@ -101,7 +100,6 @@ describe("EclipseMap", () => {
     vi.clearAllMocks();
     vi.restoreAllMocks();
     map.getSource.mockReset();
-    map.getLayer.mockReset();
   });
 
   it("creates one map in its container", () => {
@@ -118,11 +116,11 @@ describe("EclipseMap", () => {
     expect(map.addLayer).not.toHaveBeenCalled();
   });
 
-  it("adds no isolines without a date", async () => {
+  it("adds no isolines and no airports without a date", async () => {
     render(<EclipseMap {...mapProps(null)} />);
     await loadStyle();
-    expect(map.addSource).not.toHaveBeenCalledWith(ISOLINES_SOURCE_ID, expect.anything());
-    expect(layersFrom(ISOLINES_SOURCE_ID)).toEqual([]);
+    expect(map.addSource).not.toHaveBeenCalled();
+    expect(map.addLayer).not.toHaveBeenCalled();
   });
 
   it("opens with no view of its own", () => {
@@ -197,6 +195,10 @@ describe("EclipseMap", () => {
       ISOLINES_SOURCE_ID,
       isolinesSource(ISOLINES["2027-08-02"]!),
     );
+    expect(map.addSource).not.toHaveBeenCalledWith(
+      AIRPORTS_SOURCE_ID,
+      airportsSource(ISOLINES["2027-08-02"]!.bbox),
+    );
     expect(map.fitBounds.mock.calls.map(([bbox]) => bbox)).toEqual([ISOLINES["2028-07-22"]!.bbox]);
   });
 
@@ -207,7 +209,7 @@ describe("EclipseMap", () => {
     render(<EclipseMap {...mapProps("2027-08-02")} />);
     await loadStyle();
     expect(warn).toHaveBeenCalledWith(expect.any(String), error);
-    expect(layersFrom(ISOLINES_SOURCE_ID)).toEqual([]);
+    expect(map.addLayer).not.toHaveBeenCalled();
     expect(map.fitBounds).not.toHaveBeenCalled();
   });
 
@@ -222,35 +224,26 @@ describe("EclipseMap", () => {
     );
   });
 
-  it("adds the airports on top once the style has loaded, even without a date", async () => {
-    render(<EclipseMap {...mapProps(null)} />);
+  it("adds the airports around the path on top of everything once the isolines arrive", async () => {
+    render(<EclipseMap {...mapProps("2027-08-02")} />);
     await loadStyle();
-    expect(map.addSource).toHaveBeenCalledWith(AIRPORTS_SOURCE_ID, airportsSource());
-    // No beforeId, so they go above the base map's labels
-    expect(map.addLayer.mock.calls).toEqual(AIRPORTS_LAYERS.map((layer) => [layer]));
+    expect(map.addSource).toHaveBeenCalledWith(
+      AIRPORTS_SOURCE_ID,
+      airportsSource(ISOLINES["2027-08-02"]!.bbox),
+    );
+    // Last and with no beforeId, so they go above the isolines and the base map's labels
+    const added = map.addLayer.mock.calls.slice(-AIRPORTS_LAYERS.length);
+    expect(added).toEqual(AIRPORTS_LAYERS.map((layer) => [layer]));
   });
 
-  it("puts the isolines labels under the airports when the date arrives after them", async () => {
-    const props = mapProps(null);
-    const { rerender } = render(<EclipseMap {...props} />);
-    await loadStyle();
-    const [airports] = AIRPORTS_LAYERS;
-    map.getLayer.mockImplementation((id: string) => (id === airports!.id ? airports : undefined));
-    rerender(<EclipseMap {...props} date="2027-08-02" />);
-    await settle();
-    const labels = ISOLINES_LAYERS.filter((layer) => layer.type === "symbol");
-    for (const label of labels) {
-      expect(map.addLayer).toHaveBeenCalledWith(label, airports!.id);
-    }
-  });
-
-  it("adds the airports once, whatever the date", async () => {
+  it("moves the airports with the date, on the same layers", async () => {
     const props = mapProps("2027-08-02");
     const { rerender } = render(<EclipseMap {...props} />);
     await loadStyle();
     map.getSource.mockReturnValue(source);
     rerender(<EclipseMap {...props} date="2028-07-22" />);
     await settle();
+    expect(source.setData).toHaveBeenCalledWith(airportsSource(ISOLINES["2028-07-22"]!.bbox).data);
     expect(map.addImage).toHaveBeenCalledOnce();
     expect(layersFrom(AIRPORTS_SOURCE_ID)).toEqual(AIRPORTS_LAYERS);
   });
@@ -276,7 +269,10 @@ describe("EclipseMap", () => {
       ISOLINES_SOURCE_ID,
       isolinesSource(ISOLINES["2027-08-02"]!),
     );
-    expect(map.addSource).toHaveBeenCalledWith(AIRPORTS_SOURCE_ID, airportsSource());
+    expect(map.addSource).toHaveBeenCalledWith(
+      AIRPORTS_SOURCE_ID,
+      airportsSource(ISOLINES["2027-08-02"]!.bbox),
+    );
   });
 
   it("reports the wrapped cursor position, and null when it leaves the map", () => {
