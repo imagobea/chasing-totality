@@ -74,6 +74,19 @@ describe("durationContours", () => {
     ]);
   });
 
+  // d3-contour closes polygons half a step beyond the outer points, so the bbox goes there too
+  it("gives a bbox around the grid that holds every isoline", () => {
+    const half = STEP / 2;
+    const [west = 0, south = 0, east = 0, north = 0] = isolines.bbox;
+    expect(west).toBeCloseTo(AREA.west - half, 9);
+    expect(south).toBeCloseTo(AREA.south - half, 9);
+    expect(east).toBeCloseTo(AREA.east + half, 9);
+    expect(north).toBeCloseTo(AREA.north + half, 9);
+    for (const [lon, lat] of isolines.features.flatMap((f) => f.geometry.coordinates.flat(2))) {
+      expect(lon >= west && lon <= east && lat >= south && lat <= north).toBe(true);
+    }
+  });
+
   it("leaves out durations no point reaches", () => {
     // The longest totality of this eclipse is ~6m23s.
     const durations = durationContours(grid, [360, 390]).features.map(
