@@ -56,16 +56,17 @@ export const AIRPORTS_LAYERS: LayerSpecification[] = [
   },
 ];
 
-// The airports around the eclipse's path, served by the API. The bbox stops at the poles, and
-// across 180° it carries on past it like the path's.
+// The airports around the eclipse's path, served by the API. The bbox is rounded outwards to
+// whole degrees, which keeps float noise out of the URL. It stops at the poles, and across 180°
+// it carries on past it like the path's.
 export function airportsSource([west, south, east, north]: Bbox): GeoJSONSourceSpecification & {
   data: string;
 } {
   const bbox: Bbox = [
-    west - MARGIN_DEGREES,
-    Math.max(-90, south - MARGIN_DEGREES),
-    east + MARGIN_DEGREES,
-    Math.min(90, north + MARGIN_DEGREES),
+    Math.floor(west - MARGIN_DEGREES),
+    Math.max(-90, Math.floor(south - MARGIN_DEGREES)),
+    Math.ceil(east + MARGIN_DEGREES),
+    Math.min(90, Math.ceil(north + MARGIN_DEGREES)),
   ];
   return { type: "geojson", data: airportsUrl(bbox) };
 }

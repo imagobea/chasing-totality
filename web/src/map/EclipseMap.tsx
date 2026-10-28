@@ -129,7 +129,7 @@ export function EclipseMap({ date, onCursorMove, attributionRef }: EclipseMapPro
         map.fitBounds(isolines.bbox);
       })
       // The map keeps whatever it was showing
-      .catch((error) => console.warn(`Isolines for ${date} not loaded`, error));
+      .catch((error) => console.warn(`Eclipse ${date} not shown`, error));
     return () => {
       active = false;
     };
