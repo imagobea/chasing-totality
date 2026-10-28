@@ -50,8 +50,12 @@ describe("GET /airports", () => {
     expect(codes).not.toContain("JFK");
   });
 
-  it("reads a bbox whose west edge is east of its east edge as crossing the antimeridian", async () => {
-    const codes = await iataCodes("/airports?bbox=170,-30,-170,-10");
+  // Fiji's NAN is at 177°E and Tonga's TBU at 175°W, either side of the 180° meridian
+  it.each([
+    ["past 180°", "170,-30,190,-10"],
+    ["past -180°", "-190,-30,-170,-10"],
+  ])("serves the airports across the 180° meridian for a bbox carrying on %s", async (_, bbox) => {
+    const codes = await iataCodes(`/airports?bbox=${bbox}`);
     expect(codes).toEqual(expect.arrayContaining(["NAN", "TBU"]));
     expect(codes).not.toContain("AGP");
   });
@@ -59,7 +63,9 @@ describe("GET /airports", () => {
   it.each([
     ["three numbers", "-10,25,45"],
     ["text", "west,south,east,north"],
-    ["a longitude out of range", "-181,25,45,40"],
+    ["a longitude out of range", "-361,25,45,40"],
+    ["west east of east", "170,-30,-170,-10"],
+    ["more than 360° wide", "-180,25,181,40"],
     ["a latitude out of range", "-10,25,45,91"],
     ["south above north", "-10,40,45,25"],
   ])("answers 422 for a bbox with %s", async (_, bbox) => {
