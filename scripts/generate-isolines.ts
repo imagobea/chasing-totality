@@ -16,8 +16,15 @@ const MARGIN_DEGREES = 1; // around NASA's path, so its edges and ends aren't cu
 const THRESHOLD_STEP_SECONDS = 30;
 const DATA_DIR = new URL("../data/isolines/", import.meta.url);
 const COMPARE_DIR = new URL("../out/", import.meta.url);
+const NASA_LINES = [
+  ["NASA northern limit", "north"],
+  ["NASA southern limit", "south"],
+  ["NASA central line", "central"],
+] as const;
 
-// NASA's northern limit, southern limit and central line as GeoJSON lines
+// Formats NASA's path table as GeoJSON lines, to draw its northern limit, southern limit and
+// central line over the isolines. Points where a limit is off the Earth are skipped, and
+// longitudes carry on past 180° like the isolines' do.
 function nasaLines(rows: PathRow[]) {
   const line = (name: string, points: (LatLon | null)[]) => {
     const onEarth = points.filter((point) => !!point);
@@ -33,20 +40,12 @@ function nasaLines(rows: PathRow[]) {
   };
   return {
     type: "FeatureCollection",
-    features: [
+    features: NASA_LINES.map(([name, key]) =>
       line(
-        "NASA northern limit",
-        rows.map((row) => row.north),
+        name,
+        rows.map((row) => row[key]),
       ),
-      line(
-        "NASA southern limit",
-        rows.map((row) => row.south),
-      ),
-      line(
-        "NASA central line",
-        rows.map((row) => row.central),
-      ),
-    ],
+    ),
   };
 }
 
