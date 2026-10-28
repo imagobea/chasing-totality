@@ -233,7 +233,7 @@ describe("EclipseMap", () => {
     );
     // Last and with no beforeId, so they go above the isolines and the base map's labels
     const added = map.addLayer.mock.calls.slice(-AIRPORTS_LAYERS.length);
-    expect(added).toEqual(AIRPORTS_LAYERS.map((layer) => [layer]));
+    expect(added).toEqual(AIRPORTS_LAYERS.map((layer) => [layer, undefined]));
   });
 
   it("moves the airports with the date, on the same layers", async () => {

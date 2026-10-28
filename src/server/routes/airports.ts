@@ -36,9 +36,10 @@ function parseBbox(text: string): Bbox {
   return { west, south, east, north };
 }
 
-// The airport's longitude is moved a whole turn if needed, so 175°W is found in a box up to 190°
+// The airport's longitude as it is or a turn either way, so 175°W is found in a box up to 190°
 function contains({ west, south, east, north }: Bbox, [lon, lat]: [number, number]): boolean {
-  const inLongitude = west + ((((lon - west) % FULL_TURN) + FULL_TURN) % FULL_TURN) <= east;
+  const turns = [lon - FULL_TURN, lon, lon + FULL_TURN];
+  const inLongitude = turns.some((turn) => turn >= west && turn <= east);
   return inLongitude && lat >= south && lat <= north;
 }
 

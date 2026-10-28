@@ -1,8 +1,15 @@
 import { type RefObject, useEffect, useEffectEvent, useRef, useState } from "react";
-import { AttributionControl, type GeoJSONSource, MapLibreMap, setWorkerUrl } from "maplibre-gl";
+import {
+  AttributionControl,
+  type GeoJSONSource,
+  type GeoJSONSourceSpecification,
+  type LayerSpecification,
+  MapLibreMap,
+  setWorkerUrl,
+} from "maplibre-gl";
 import "maplibre-gl/dist/maplibre-gl.css";
 import workerUrl from "maplibre-gl/dist/maplibre-gl-worker.mjs?worker&url";
-import { fetchIsolines, type Isolines } from "../api/eclipses.js";
+import { fetchIsolines } from "../api/eclipses.js";
 import type { Coordinates } from "../utils.js";
 import {
   AIRPORT_ICON_ID,
@@ -29,34 +36,28 @@ setWorkerUrl(workerUrl);
 // TODO: careful - map style is chosen here, not by the theme!!
 const MAP_STYLE = "https://tiles.openfreemap.org/styles/fiord";
 
-// Added the first time, swapped in place afterwards
-function showIsolines(map: MapLibreMap, isolines: Isolines) {
-  const existing = map.getSource<GeoJSONSource>(ISOLINES_SOURCE_ID);
-  if (existing) {
-    existing.setData(isolines);
-    return;
-  }
-
-  // Fills and outlines go under the base map's labels; our labels go on top
-  const firstSymbolId = map.getStyle().layers.find((layer) => layer.type === "symbol")?.id;
-  map.addSource(ISOLINES_SOURCE_ID, isolinesSource(isolines));
-  for (const layer of ISOLINES_LAYERS) {
-    map.addLayer(layer, layer.type === "symbol" ? undefined : firstSymbolId);
-  }
-}
-
-// Added the first time, after the isolines, so on top of everything, the base map's labels
-// included. Swapped in place afterwards.
-function showAirports(map: MapLibreMap, pathBbox: Isolines["bbox"]) {
-  const source = airportsSource(pathBbox);
-  const existing = map.getSource<GeoJSONSource>(AIRPORTS_SOURCE_ID);
+// Added the first time with its layers, on top or under the layer beforeId picks; swapped in
+// place afterwards
+function showSource(
+  map: MapLibreMap,
+  id: string,
+  source: GeoJSONSourceSpecification,
+  layers: LayerSpecification[],
+  beforeId: (layer: LayerSpecification) => string | undefined = () => undefined,
+) {
+  const existing = map.getSource<GeoJSONSource>(id);
   if (existing) {
     existing.setData(source.data);
     return;
   }
 
-  map.addSource(AIRPORTS_SOURCE_ID, source);
-  for (const layer of AIRPORTS_LAYERS) map.addLayer(layer);
+  map.addSource(id, source);
+  for (const layer of layers) map.addLayer(layer, beforeId(layer));
+}
+
+// The base map's first label layer
+function firstSymbolId(map: MapLibreMap): string | undefined {
+  return map.getStyle().layers.find((layer) => layer.type === "symbol")?.id;
 }
 
 export function EclipseMap({ date, onCursorMove, attributionRef }: EclipseMapProps) {
@@ -119,8 +120,12 @@ export function EclipseMap({ date, onCursorMove, attributionRef }: EclipseMapPro
     fetchIsolines(date)
       .then((isolines) => {
         if (!active) return;
-        showIsolines(map, isolines);
-        showAirports(map, isolines.bbox);
+        // Fills and outlines go under the base map's labels; our labels go on top
+        showSource(map, ISOLINES_SOURCE_ID, isolinesSource(isolines), ISOLINES_LAYERS, (layer) =>
+          layer.type === "symbol" ? undefined : firstSymbolId(map),
+        );
+        // Last, so on top of everything, the base map's labels included
+        showSource(map, AIRPORTS_SOURCE_ID, airportsSource(isolines.bbox), AIRPORTS_LAYERS);
         map.fitBounds(isolines.bbox);
       })
       // The map keeps whatever it was showing
