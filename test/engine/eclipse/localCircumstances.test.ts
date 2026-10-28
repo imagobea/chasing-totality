@@ -5,15 +5,17 @@ import { eclipse2027Aug02 } from "../../../src/engine/eclipse/elements/2027-08-0
 import { eclipses } from "../../../src/engine/eclipse/elements/index.js";
 import { localCircumstances } from "../../../src/engine/eclipse/localCircumstances.js";
 import { parseNasaPath, type LatLon } from "../../../src/engine/eclipse/nasaPath.js";
-import { along, pastLimit } from "../../geo.js";
+import { unwrapPath } from "../../../src/engine/isolines/area.js";
+import { acrossLimit, along } from "../../geo.js";
 
 // Every known eclipse against its NASA path table, with the table's ΔT so only the geometry
-// is compared. This catches a mistyped element or a table from another eclipse
+// is compared. This catches a mistyped element or a table from another eclipse. The rows carry
+// on past 180° where the path crosses it, so points between them don't wrap around the Earth.
 const nasaPaths = Object.entries(eclipses).map(([date, elements]) => {
   const { deltaT, rows } = parseNasaPath(
     readFileSync(new URL(`../../../data/nasa-paths/${date}.txt`, import.meta.url), "utf8"),
   );
-  return { date, elements: { ...elements, deltaT }, rows };
+  return { date, elements: { ...elements, deltaT }, rows: unwrapPath(rows) };
 });
 
 const atWith =
@@ -28,8 +30,13 @@ function fail(): never {
 describe.each(nasaPaths)("localCircumstances vs NASA's $date path table", ({ elements, rows }) => {
   const at = atWith(elements);
   const timedRows = rows.filter((row) => row.time !== "Limits");
-  const limits = rows.flatMap((row) =>
-    [row.north, row.south].flatMap((limit) => (limit ? [{ row, limit }] : [])),
+  const limits = rows.flatMap((row, i) =>
+    (["north", "south"] as const).flatMap((side) => {
+      const limit = row[side];
+      if (!limit) return [];
+      const edge = [rows[i - 1]?.[side] ?? limit, rows[i + 1]?.[side] ?? limit] as const;
+      return [{ row, limit, past: (km: number) => acrossLimit(row.central, limit, km, ...edge) }];
+    }),
   );
 
   // NASA rounds to 0.1 s and positions to 0.1′ (~185 m); we measured ≤ 0.25 s.
@@ -50,26 +57,25 @@ describe.each(nasaPaths)("localCircumstances vs NASA's $date path table", ({ ele
   });
 
   // The duration rises steeply just inside a limit (0 s at the edge, ~20 s at 200 m), so the
-  // limit is checked by position instead: it must lie between 3 km inside and 3 km outside. The
-  // distance is measured from the central line, so where the Sun is low and the path's edge
-  // slants (2028-07-22 at 04:18, Sun 6° up) a limit within 1 km reads as up to 3 km
-  it("places every limit within 3 km of NASA's", () => {
-    for (const { row, limit } of limits) {
-      expect(at(pastLimit(row.central, limit, -3)).type).toBe("total");
-      const outside = at(pastLimit(row.central, limit, 3));
+  // limit is checked by position instead: it must lie between 2 km inside and 2 km outside,
+  // measured square to the path's edge. We measured ≤ 1.7 km.
+  it("places every limit within 2 km of NASA's", () => {
+    for (const { past } of limits) {
+      expect(at(past(-2)).type).toBe("total");
+      const outside = at(past(2));
       expect(outside.type).not.toBe("total");
       expect(outside.durationSeconds).toBe(0);
     }
   });
 
   it("gives a signed squared duration: duration² inside, more negative the further outside", () => {
-    for (const { row, limit } of limits) {
-      const inside = at(pastLimit(row.central, limit, -3));
+    for (const { past } of limits) {
+      const inside = at(past(-2));
       expect(inside.signedDurationSquared).toBe(inside.durationSeconds ** 2);
-      const outside3km = at(pastLimit(row.central, limit, 3)).signedDurationSquared;
-      const outside6km = at(pastLimit(row.central, limit, 6)).signedDurationSquared;
-      expect(outside3km).toBeLessThan(0);
-      expect(outside6km).toBeLessThan(outside3km);
+      const outside2km = at(past(2)).signedDurationSquared;
+      const outside4km = at(past(4)).signedDurationSquared;
+      expect(outside2km).toBeLessThan(0);
+      expect(outside4km).toBeLessThan(outside2km);
     }
   });
 
