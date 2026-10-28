@@ -86,7 +86,7 @@ pnpm --filter web typecheck
 pnpm --filter web build          # static files in web/dist
 ```
 
-The page shows the API status from `GET /api/health` and a map: an [OpenFreeMap](https://openfreemap.org) base map drawn by [MapLibre GL JS](https://maplibre.org), with the 2027-08-02 isolines from `GET /api/eclipses/2027-08-02/isolines` and the airports around the path from `GET /api/airports` on top. The airport icon is [Maki](https://github.com/mapbox/maki)'s (CC0). The tiles come straight from OpenFreeMap: no key, no proxy. The proxy target is `API_PROXY_TARGET` (default `http://localhost:3000`).
+The page shows the API status from `GET /api/health` and a map: an [OpenFreeMap](https://openfreemap.org) base map drawn by [MapLibre GL JS](https://maplibre.org), with the picked eclipse's isolines from `GET /api/eclipses/:date/isolines` and the airports around the path from `GET /api/airports` on top. The airport icon is [Maki](https://github.com/mapbox/maki)'s (CC0). The tiles come straight from OpenFreeMap: no key, no proxy. The proxy target is `API_PROXY_TARGET` (default `http://localhost:3000`).
 
 `pnpm fixtures:jsex` regenerates `test/fixtures/jsex-2027.json` from JSEX (a GitHub copy of NASA's calculator, pinned to one commit). Only needed if the test points or the elements change.
 
