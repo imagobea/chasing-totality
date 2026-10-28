@@ -6,12 +6,12 @@
 // commit, runs it in an isolated node:vm context, and only its output is committed. JSEX is
 // written for a browser form, so the form is stubbed with each point's coordinates.
 //
-// Run: pnpm spike:fixtures
+// Run: pnpm fixtures:jsex
 
 import { readFileSync, writeFileSync } from "node:fs";
 import { createContext, runInContext } from "node:vm";
 import { along, pastLimit } from "../test/geo.js";
-import { parseNasaPath, type LatLon } from "../test/nasaPath.js";
+import { parseNasaPath, type LatLon } from "../src/engine/eclipse/nasaPath.js";
 
 const JSEX_COMMIT = "dbbd677c00e215c33d3d47a1aa920a6fbc2ff982";
 const JSEX_URL = `https://raw.githubusercontent.com/ebradyjobory/eclipse-explorer/${JSEX_COMMIT}/JSEX`;
@@ -59,8 +59,8 @@ function cities(): Point[] {
 // line, halfway to each limit, and 1 km either side of each limit, where duration is most
 // sensitive.
 function pointsAroundThePath(): Point[] {
-  const rows = parseNasaPath(
-    readFileSync(new URL("../test/fixtures/SE2027Aug02Tpath.txt", import.meta.url), "utf8"),
+  const { rows } = parseNasaPath(
+    readFileSync(new URL("../data/nasa-paths/2027-08-02.txt", import.meta.url), "utf8"),
   );
   return ["08:48", "09:04", "09:28", "10:00", "10:24"].flatMap((time) => {
     const row = rows.find((r) => r.time === time);

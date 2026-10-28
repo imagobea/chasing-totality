@@ -1,25 +1,37 @@
 import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
+import type { BesselianElements } from "../../../src/engine/eclipse/besselian.js";
 import { eclipse2027Aug02 } from "../../../src/engine/eclipse/elements/2027-08-02.js";
+import { eclipses } from "../../../src/engine/eclipse/elements/index.js";
 import { localCircumstances } from "../../../src/engine/eclipse/localCircumstances.js";
+import { parseNasaPath, type LatLon } from "../../../src/engine/eclipse/nasaPath.js";
 import { along, pastLimit } from "../../geo.js";
-import { parseNasaPath, type LatLon } from "../../nasaPath.js";
 
-const rows = parseNasaPath(
-  readFileSync(new URL("../../fixtures/SE2027Aug02Tpath.txt", import.meta.url), "utf8"),
-);
-// NASA's path table was computed with ΔT = 71.7 s; use the same, so only the geometry is compared.
-const elements = { ...eclipse2027Aug02, deltaT: 71.7 };
+// Every known eclipse against its NASA path table, with the table's ΔT so only the geometry
+// is compared. This catches a mistyped element or a table from another eclipse
+const nasaPaths = Object.entries(eclipses).map(([date, elements]) => {
+  const { deltaT, rows } = parseNasaPath(
+    readFileSync(new URL(`../../../data/nasa-paths/${date}.txt`, import.meta.url), "utf8"),
+  );
+  return { date, elements: { ...elements, deltaT }, rows };
+});
 
-const at = ({ lat, lon }: LatLon) =>
-  localCircumstances(elements, { latitude: lat, longitude: lon, altitudeMeters: 0 });
+const atWith =
+  (elements: BesselianElements) =>
+  ({ lat, lon }: LatLon) =>
+    localCircumstances(elements, { latitude: lat, longitude: lon, altitudeMeters: 0 });
 
-const timedRows = rows.filter((row) => row.time !== "Limits");
-const limits = rows.flatMap((row) =>
-  [row.north, row.south].flatMap((limit) => (limit ? [{ row, limit }] : [])),
-);
+function fail(): never {
+  throw new Error("2027-08-02 is missing from the known eclipses");
+}
 
-describe("localCircumstances vs NASA's 2027 path table", () => {
+describe.each(nasaPaths)("localCircumstances vs NASA's $date path table", ({ elements, rows }) => {
+  const at = atWith(elements);
+  const timedRows = rows.filter((row) => row.time !== "Limits");
+  const limits = rows.flatMap((row) =>
+    [row.north, row.south].flatMap((limit) => (limit ? [{ row, limit }] : [])),
+  );
+
   // NASA rounds to 0.1 s and positions to 0.1′ (~185 m); we measured ≤ 0.25 s.
   it.each(rows.map((row) => [row.time, row] as const))(
     "matches the central-line duration at %s within 0.5 s",
@@ -38,11 +50,13 @@ describe("localCircumstances vs NASA's 2027 path table", () => {
   });
 
   // The duration rises steeply just inside a limit (0 s at the edge, ~20 s at 200 m), so the
-  // limit is checked by position instead: it must lie between 2 km inside and 2 km outside.
-  it("places every limit within 2 km of NASA's", () => {
+  // limit is checked by position instead: it must lie between 3 km inside and 3 km outside. The
+  // distance is measured from the central line, so where the Sun is low and the path's edge
+  // slants (2028-07-22 at 04:18, Sun 6° up) a limit within 1 km reads as up to 3 km
+  it("places every limit within 3 km of NASA's", () => {
     for (const { row, limit } of limits) {
-      expect(at(pastLimit(row.central, limit, -2)).type).toBe("total");
-      const outside = at(pastLimit(row.central, limit, 2));
+      expect(at(pastLimit(row.central, limit, -3)).type).toBe("total");
+      const outside = at(pastLimit(row.central, limit, 3));
       expect(outside.type).not.toBe("total");
       expect(outside.durationSeconds).toBe(0);
     }
@@ -50,12 +64,12 @@ describe("localCircumstances vs NASA's 2027 path table", () => {
 
   it("gives a signed squared duration: duration² inside, more negative the further outside", () => {
     for (const { row, limit } of limits) {
-      const inside = at(pastLimit(row.central, limit, -2));
+      const inside = at(pastLimit(row.central, limit, -3));
       expect(inside.signedDurationSquared).toBe(inside.durationSeconds ** 2);
-      const outside2km = at(pastLimit(row.central, limit, 2)).signedDurationSquared;
-      const outside4km = at(pastLimit(row.central, limit, 4)).signedDurationSquared;
-      expect(outside2km).toBeLessThan(0);
-      expect(outside4km).toBeLessThan(outside2km);
+      const outside3km = at(pastLimit(row.central, limit, 3)).signedDurationSquared;
+      const outside6km = at(pastLimit(row.central, limit, 6)).signedDurationSquared;
+      expect(outside3km).toBeLessThan(0);
+      expect(outside6km).toBeLessThan(outside3km);
     }
   });
 
@@ -71,13 +85,15 @@ describe("localCircumstances vs NASA's 2027 path table", () => {
     for (const row of rows.filter((r) => r.time === "Limits")) {
       expect(at(row.central).sunBelowHorizon).toBe(true);
     }
-    const midPath = at(rows.find((r) => r.time === "10:00")?.central ?? { lat: 0, lon: 0 });
-    expect(midPath.sunBelowHorizon).toBe(false);
-    expect(midPath.sunAltitude).toBeGreaterThan(80);
+    for (const row of timedRows) expect(at(row.central).sunBelowHorizon).toBe(false);
   });
 });
 
+// Engine behaviour, on 2027
 describe("localCircumstances", () => {
+  const { elements, rows } = nasaPaths.find((path) => path.date === "2027-08-02") ?? fail();
+  const at = atWith(elements);
+
   it("reports no eclipse far from the shadow (Honolulu)", () => {
     const result = at({ lat: 21.3, lon: -157.9 });
     expect(result.type).toBe("none");
@@ -90,6 +106,11 @@ describe("localCircumstances", () => {
     const result = at({ lat: -central.lat, lon: central.lon - 180 });
     expect(result.type).toBe("none");
     expect(result.durationSeconds).toBe(0);
+  });
+
+  it("puts the Sun high over the middle of the path (10:00, NASA: 81°)", () => {
+    const central = rows.find((r) => r.time === "10:00")?.central ?? { lat: 0, lon: 0 };
+    expect(at(central).sunAltitude).toBeGreaterThan(80);
   });
 
   it("puts C2 before mid-eclipse and C3 after, c3 − c2 apart", () => {

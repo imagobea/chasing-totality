@@ -1,4 +1,4 @@
-import type { LatLon } from "./nasaPath.js";
+import type { LatLon } from "../src/engine/eclipse/nasaPath.js";
 
 // Test helpers for placing points around the path. Flat-Earth approximations: fine over the
 // ~100 km between the central line and a limit.

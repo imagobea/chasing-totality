@@ -22,6 +22,13 @@ function isolineName(durationSeconds: number): string {
   return `${minutes}m${String(seconds).padStart(2, "0")}s`;
 }
 
+// Every `stepSeconds` from 0 (the path of totality) up to the longest duration in the grid
+export function durationThresholds(grid: DurationGrid, stepSeconds: number): number[] {
+  if (!(stepSeconds > 0)) throw new RangeError("Thresholds need a positive step");
+  const longest = Math.sqrt(grid.values.reduce((max, value) => Math.max(max, value), 0));
+  return Array.from({ length: Math.floor(longest / stepSeconds) + 1 }, (_, i) => i * stepSeconds);
+}
+
 export function durationContours(
   grid: DurationGrid,
   thresholdsSeconds: number[],
