@@ -11,6 +11,9 @@ import { acrossLimit, along } from "../../geo.js";
 // Every known eclipse against its NASA path table, with the table's ΔT so only the geometry
 // is compared. This catches a mistyped element or a table from another eclipse. The rows carry
 // on past 180° where the path crosses it, so points between them don't wrap around the Earth.
+// The tolerances are the same for every eclipse and never widen to let one pass. "Worst
+// measured" is over the 61 central total eclipses of 2001–2100 that pass these checks
+// (docs/plans/051-checks-for-any-total-eclipse-plan.md).
 const nasaPaths = Object.entries(eclipses).map(([date, elements]) => {
   const { deltaT, rows } = parseNasaPath(
     readFileSync(new URL(`../../../data/nasa-paths/${date}.txt`, import.meta.url), "utf8"),
@@ -42,7 +45,7 @@ describe.each(nasaPaths)("localCircumstances vs NASA's $date path table", ({ ele
     }),
   );
 
-  // NASA rounds to 0.1 s and positions to 0.1′ (~185 m); we measured ≤ 0.25 s.
+  // NASA rounds to 0.1 s and positions to 0.1′ (~185 m). Worst measured: 0.21 s.
   it.each(timedRows.map((row) => [row.time, row] as const))(
     "matches the central-line duration at %s within 0.5 s",
     (_, row) => {
@@ -52,6 +55,7 @@ describe.each(nasaPaths)("localCircumstances vs NASA's $date path table", ({ ele
     },
   );
 
+  // Worst measured: 1.35 s
   it("puts mid-eclipse on the central line at the table's time, within 5 s", () => {
     for (const row of timedRows) {
       const [hours = 0, minutes = 0] = row.time.split(":").map(Number);
@@ -63,7 +67,8 @@ describe.each(nasaPaths)("localCircumstances vs NASA's $date path table", ({ ele
 
   // The duration rises steeply just inside a limit (0 s at the edge, ~20 s at 200 m), so the
   // limit is checked by position instead: it must lie between 2 km inside and 2 km outside,
-  // measured square to the path's edge. We measured ≤ 1.7 km.
+  // measured square to the path's edge. Worst measured: 1.61 km (2044-08-23, Sun 2° up); 0.8 km
+  // for the eclipses here.
   it("places every limit within 2 km of NASA's", () => {
     for (const { past } of limits) {
       expect(at(past(-2)).type).toBe("total");
@@ -97,7 +102,8 @@ describe.each(nasaPaths)("localCircumstances vs NASA's $date path table", ({ ele
   });
 
   // NASA ends the path where the Sun's altitude is 0° at mid-eclipse. The altitude changes by 1°
-  // every ~111 km, so 2 km of ground, like the limits, is 2 / 111.2 degrees
+  // every ~111 km, so 2 km of ground, like the limits, is 2 / 111.2 degrees. Worst measured:
+  // 0.015°.
   it("puts NASA's sunrise and sunset ends of the path on the horizon, within 2 km", () => {
     for (const row of ends) {
       for (const point of [row.central, row.north, row.south]) {
