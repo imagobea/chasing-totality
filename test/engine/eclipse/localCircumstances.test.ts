@@ -29,18 +29,21 @@ function fail(): never {
 
 describe.each(nasaPaths)("localCircumstances vs NASA's $date path table", ({ elements, rows }) => {
   const at = atWith(elements);
+  // The `Limits` rows are the sunrise and sunset ends of the path, on the horizon: whether a point
+  // there sees totality is a coin toss, so they are checked by the Sun's altitude only
+  const ends = rows.filter((row) => row.time === "Limits");
   const timedRows = rows.filter((row) => row.time !== "Limits");
   const limits = rows.flatMap((row, i) =>
     (["north", "south"] as const).flatMap((side) => {
       const limit = row[side];
-      if (!limit) return [];
+      if (!limit || row.time === "Limits") return [];
       const edge = [rows[i - 1]?.[side] ?? limit, rows[i + 1]?.[side] ?? limit] as const;
       return [{ row, limit, past: (km: number) => acrossLimit(row.central, limit, km, ...edge) }];
     }),
   );
 
   // NASA rounds to 0.1 s and positions to 0.1′ (~185 m); we measured ≤ 0.25 s.
-  it.each(rows.map((row) => [row.time, row] as const))(
+  it.each(timedRows.map((row) => [row.time, row] as const))(
     "matches the central-line duration at %s within 0.5 s",
     (_, row) => {
       const result = at(row.central);
@@ -87,17 +90,14 @@ describe.each(nasaPaths)("localCircumstances vs NASA's $date path table", ({ ele
     }
   });
 
-  it("flags the sunrise and sunset ends of the path, where the Sun is on the horizon", () => {
-    for (const row of rows.filter((r) => r.time === "Limits")) {
-      expect(at(row.central).sunBelowHorizon).toBe(true);
-    }
+  it("keeps the Sun above the horizon along the central line, between the ends", () => {
     for (const row of timedRows) expect(at(row.central).sunBelowHorizon).toBe(false);
   });
 
   // NASA ends the path where the Sun's altitude is 0° at mid-eclipse. The altitude changes by 1°
   // every ~111 km, so 2 km of ground, like the limits, is 2 / 111.2 degrees
   it("puts NASA's sunrise and sunset ends of the path on the horizon, within 2 km", () => {
-    for (const row of rows.filter((r) => r.time === "Limits")) {
+    for (const row of ends) {
       for (const point of [row.central, row.north, row.south]) {
         if (point) expect(Math.abs(at(point).sunAltitude)).toBeLessThan(2 / 111.2);
       }
