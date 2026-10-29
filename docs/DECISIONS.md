@@ -50,3 +50,20 @@ We serve the computed isolines as static GeoJSON and have no database.
 Nothing in the app needs persistence or spatial queries yet, so a
 database would only add infrastructure. We can add PostGIS later if
 that changes.
+
+---
+
+## 004 — Longitudes carry on past 180°
+
+Date: 2026-10-28
+
+Across the 180° meridian, longitudes carry on past it instead of wrapping
+(179°W becomes 181°E), so a box's west edge is always west of its east
+edge. This holds for the isolines, their bounding box and the airports
+endpoint's bbox, which no longer takes a west edge east of its east edge.
+
+### Why
+
+MapLibre draws a path across 180° in one piece only if its longitudes
+carry on, so the isolines need it. One convention everywhere means a
+path's box can go straight to the map and the API, with no conversion.

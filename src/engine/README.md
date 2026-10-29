@@ -219,6 +219,7 @@ graph LR
 - Each feature is the **area** where totality lasts at least that long, and its outline is the isoline. So the features nest, like the layers of an onion.
 - The 0 s feature is the path of totality itself, named `"Path of totality"`.
 - A duration no place reaches is left out, e.g. 6m30s, when the longest is ~6m23s.
+- The collection's `bbox` is the grid's footprint, so it holds every isoline. Across the 180° meridian its east edge carries on past 180°, like the isolines.
 
 ### The script: generate-isolines
 

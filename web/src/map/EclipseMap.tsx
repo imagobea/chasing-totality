@@ -1,7 +1,15 @@
 import { type RefObject, useEffect, useEffectEvent, useRef, useState } from "react";
-import { AttributionControl, type GeoJSONSource, MapLibreMap, setWorkerUrl } from "maplibre-gl";
+import {
+  AttributionControl,
+  type GeoJSONSource,
+  type GeoJSONSourceSpecification,
+  type LayerSpecification,
+  MapLibreMap,
+  setWorkerUrl,
+} from "maplibre-gl";
 import "maplibre-gl/dist/maplibre-gl.css";
 import workerUrl from "maplibre-gl/dist/maplibre-gl-worker.mjs?worker&url";
+import { fetchIsolines } from "../api/eclipses.js";
 import type { Coordinates } from "../utils.js";
 import {
   AIRPORT_ICON_ID,
@@ -27,9 +35,30 @@ setWorkerUrl(workerUrl);
 // Styles as per OpenFreeMap documentation at https://openfreemap.org/quick_start/
 // TODO: careful - map style is chosen here, not by the theme!!
 const MAP_STYLE = "https://tiles.openfreemap.org/styles/fiord";
-// TODO: centre and zoom suit 2027-08-02 only; another eclipse needs its own view (e.g. fitBounds)
-const MAP_CENTER: [number, number] = [5, 36.5];
-const MAP_ZOOM = 5;
+
+// Added the first time with its layers, on top or under the layer beforeId picks; swapped in
+// place afterwards
+function showSource(
+  map: MapLibreMap,
+  id: string,
+  source: GeoJSONSourceSpecification,
+  layers: LayerSpecification[],
+  beforeId: (layer: LayerSpecification) => string | undefined = () => undefined,
+) {
+  const existing = map.getSource<GeoJSONSource>(id);
+  if (existing) {
+    existing.setData(source.data);
+    return;
+  }
+
+  map.addSource(id, source);
+  for (const layer of layers) map.addLayer(layer, beforeId(layer));
+}
+
+// The base map's first label layer
+function firstSymbolId(map: MapLibreMap): string | undefined {
+  return map.getStyle().layers.find((layer) => layer.type === "symbol")?.id;
+}
 
 export function EclipseMap({ date, onCursorMove, attributionRef }: EclipseMapProps) {
   // Set once the style has loaded and our images are in, since sources and layers can only be
@@ -44,8 +73,6 @@ export function EclipseMap({ date, onCursorMove, attributionRef }: EclipseMapPro
     const map = new MapLibreMap({
       container: mapContainerRef.current!,
       style: MAP_STYLE,
-      center: MAP_CENTER,
-      zoom: MAP_ZOOM,
       attributionControl: false,
     });
     // Ignore the icon if the map goes away before it loads
@@ -83,34 +110,30 @@ export function EclipseMap({ date, onCursorMove, attributionRef }: EclipseMapPro
     // A ref object stays the same across renders, so the map is still created once
   }, [attributionRef]);
 
-  // The selected eclipse's isolines: added the first time, swapped in place afterwards
+  // The selected eclipse's isolines and the airports around them, with the map fitted to its
+  // whole path; the user is then free to pan and zoom
   useEffect(() => {
     if (!map || date === null) return;
 
-    const source = isolinesSource(date);
-    const existing = map.getSource<GeoJSONSource>(ISOLINES_SOURCE_ID);
-    if (existing) {
-      existing.setData(source.data);
-      return;
-    }
-
-    // Fills and outlines go under the base map's labels; our labels go on top, but under the
-    // airports if those are already there
-    const firstSymbolId = map.getStyle().layers.find((layer) => layer.type === "symbol")?.id;
-    const airportsId = AIRPORTS_LAYERS.find((layer) => map.getLayer(layer.id))?.id;
-    map.addSource(ISOLINES_SOURCE_ID, source);
-    for (const layer of ISOLINES_LAYERS) {
-      map.addLayer(layer, layer.type === "symbol" ? airportsId : firstSymbolId);
-    }
+    // Ignore the isolines if another date is picked or the map goes away before they arrive
+    let active = true;
+    fetchIsolines(date)
+      .then((isolines) => {
+        if (!active) return;
+        // Fills and outlines go under the base map's labels; our labels go on top
+        showSource(map, ISOLINES_SOURCE_ID, isolinesSource(isolines), ISOLINES_LAYERS, (layer) =>
+          layer.type === "symbol" ? undefined : firstSymbolId(map),
+        );
+        // Last, so on top of everything, the base map's labels included
+        showSource(map, AIRPORTS_SOURCE_ID, airportsSource(isolines.bbox), AIRPORTS_LAYERS);
+        map.fitBounds(isolines.bbox);
+      })
+      // The map keeps whatever it was showing
+      .catch((error) => console.warn(`Eclipse ${date} not shown`, error));
+    return () => {
+      active = false;
+    };
   }, [map, date]);
-
-  // The airports, whatever the date, on top of everything, the base map's labels included
-  useEffect(() => {
-    if (!map) return;
-
-    map.addSource(AIRPORTS_SOURCE_ID, airportsSource());
-    for (const layer of AIRPORTS_LAYERS) map.addLayer(layer);
-  }, [map]);
 
   return (
     <div

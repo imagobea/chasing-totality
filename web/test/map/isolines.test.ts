@@ -1,10 +1,16 @@
 import type { SymbolLayerSpecification } from "maplibre-gl";
 import { describe, expect, it } from "vitest";
+import type { Isolines } from "../../src/api/eclipses.js";
 import { ISOLINES_LAYERS, ISOLINES_SOURCE_ID, isolinesSource } from "../../src/map/isolines.js";
 
 describe("isolines", () => {
-  it("reads the eclipse's isolines from the API", () => {
-    expect(isolinesSource("2027-08-02").data).toBe("/api/eclipses/2027-08-02/isolines");
+  it("draws the isolines it is given", () => {
+    const isolines: Isolines = {
+      type: "FeatureCollection",
+      bbox: [-46, -14, 92, 38],
+      features: [],
+    };
+    expect(isolinesSource(isolines).data).toBe(isolines);
   });
 
   it("gives every layer its own id", () => {

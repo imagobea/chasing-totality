@@ -5,7 +5,7 @@ import type {
   GeoJSONSourceSpecification,
   LayerSpecification,
 } from "maplibre-gl";
-import { isolinesUrl } from "../api/eclipses.js";
+import type { Isolines } from "../api/eclipses.js";
 import { MAP_FONT, theme, toNumber } from "../theme.js";
 
 export const ISOLINES_SOURCE_ID = "isolines";
@@ -61,7 +61,9 @@ export const ISOLINES_LAYERS: LayerSpecification[] = [
   },
 ];
 
-// One eclipse's isolines, served by the API
-export function isolinesSource(date: string): GeoJSONSourceSpecification & { data: string } {
-  return { type: "geojson", data: isolinesUrl(date) };
+// One eclipse's isolines, as fetched from the API
+export function isolinesSource(
+  isolines: Isolines,
+): GeoJSONSourceSpecification & { data: Isolines } {
+  return { type: "geojson", data: isolines };
 }

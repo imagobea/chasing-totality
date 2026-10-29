@@ -13,17 +13,22 @@ type AirportsSnapshot = {
 type Bbox = { west: number; south: number; east: number; north: number };
 
 // A bounding box: the rectangle between the west, south, east and north edges, in degrees and in
-// that order, as in GeoJSON's bbox. For example -10,25,45,40 covers S Spain to Saudi Arabia
+// that order, as in GeoJSON's bbox. For example -10,25,45,40 covers S Spain to Saudi Arabia.
+// Across the 180° meridian the edges carry on past it, like the isolines: 170,-30,190,-10.
 const BBOX_QUERY = {
   type: "object",
   properties: {
     bbox: { type: "string", pattern: "^-?\\d+(\\.\\d+)?(,-?\\d+(\\.\\d+)?){3}$" },
   },
 } as const;
+const FULL_TURN = 360;
 
 function parseBbox(text: string): Bbox {
   const [west = 0, south = 0, east = 0, north = 0] = text.split(",").map(Number);
-  const longitudes = [west, east].every((lon) => lon >= -180 && lon <= 180);
+  const longitudes =
+    [west, east].every((lon) => lon >= -FULL_TURN && lon <= FULL_TURN) &&
+    west <= east &&
+    east - west <= FULL_TURN;
   const latitudes = south >= -90 && north <= 90 && south <= north;
   if (!longitudes || !latitudes) {
     throw Object.assign(new Error(`Invalid bbox ${text}`), { statusCode: 422 });
@@ -31,9 +36,10 @@ function parseBbox(text: string): Bbox {
   return { west, south, east, north };
 }
 
-// A west edge east of the east edge means the box crosses the antimeridian
+// The airport's longitude as it is or a turn either way, so 175°W is found in a box up to 190°
 function contains({ west, south, east, north }: Bbox, [lon, lat]: [number, number]): boolean {
-  const inLongitude = west <= east ? lon >= west && lon <= east : lon >= west || lon <= east;
+  const turns = [lon - FULL_TURN, lon, lon + FULL_TURN];
+  const inLongitude = turns.some((turn) => turn >= west && turn <= east);
   return inLongitude && lat >= south && lat <= north;
 }
 

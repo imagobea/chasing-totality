@@ -12,7 +12,12 @@ export type IsolineFeature = {
   geometry: { type: "MultiPolygon"; coordinates: Position[][][] };
 };
 
-export type IsolineCollection = { type: "FeatureCollection"; features: IsolineFeature[] };
+export type IsolineCollection = {
+  type: "FeatureCollection";
+  // West, south, east and north edges; across the 180° meridian east carries on past 180
+  bbox: [west: number, south: number, east: number, north: number];
+  features: IsolineFeature[];
+};
 
 // "4m00s", as in NASA's path table; the 0 s isoline is the path of totality
 function isolineName(durationSeconds: number): string {
@@ -48,8 +53,13 @@ export function durationContours(
     grid.south + (y - 0.5) * grid.step,
   ];
 
+  // The grid's footprint, as far as d3-contour closes polygons: half a step past its outer points
+  const [west, south] = toLonLat([0, 0]);
+  const [east, north] = toLonLat([grid.width, grid.height]);
+
   return {
     type: "FeatureCollection",
+    bbox: [west, south, east, north],
     features: polygons
       .map((polygon, i): IsolineFeature => {
         const durationSeconds = thresholdsSeconds[i] ?? polygon.value;
