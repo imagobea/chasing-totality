@@ -12,8 +12,8 @@ import { acrossLimit, along } from "../../geo.js";
 // is compared. This catches a mistyped element or a table from another eclipse. The rows carry
 // on past 180° where the path crosses it, so points between them don't wrap around the Earth.
 // The tolerances are the same for every eclipse and never widen to let one pass. "Worst
-// measured" is over the 61 central total eclipses of 2001–2100 that pass these checks
-// (docs/plans/051-checks-for-any-total-eclipse-plan.md).
+// measured" is over the 61 central total eclipses of 2001–2100 that pass these checks, measured
+// once on 2026-10-29 (docs/plans/051-checks-for-any-total-eclipse-plan.md).
 const nasaPaths = Object.entries(eclipses).map(([date, elements]) => {
   const { deltaT, rows } = parseNasaPath(
     readFileSync(new URL(`../../../data/nasa-paths/${date}.txt`, import.meta.url), "utf8"),
@@ -136,6 +136,15 @@ describe("localCircumstances", () => {
   it("puts the Sun high over the middle of the path (10:00, NASA: 81°)", () => {
     const central = rows.find((r) => r.time === "10:00")?.central ?? { lat: 0, lon: 0 };
     expect(at(central).sunAltitude).toBeGreaterThan(80);
+  });
+
+  // At the sunrise end the Sun is on the horizon at mid-eclipse, ~0.3° below it at C2 and above
+  // it at C3.
+  it("flags a Sun rising during totality at the sunrise end of the path", () => {
+    const sunrise = rows.find((r) => r.time === "Limits")?.central ?? { lat: 0, lon: 0 };
+    const result = at(sunrise);
+    expect(result.type).toBe("total");
+    expect(result.sunBelowHorizon).toBe(true);
   });
 
   it("puts C2 before mid-eclipse and C3 after, c3 − c2 apart", () => {
