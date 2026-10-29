@@ -55,7 +55,9 @@ describe.each(nasaPaths)("localCircumstances vs NASA's $date path table", ({ ele
   it("puts mid-eclipse on the central line at the table's time, within 5 s", () => {
     for (const row of timedRows) {
       const [hours = 0, minutes = 0] = row.time.split(":").map(Number);
-      expect(Math.abs(at(row.central).mid - (hours + minutes / 60)) * 3600).toBeLessThan(5);
+      // Across midnight UT, 23:59 and 00:01 are 2 minutes apart, not 24 hours
+      const hoursApart = at(row.central).mid - (hours + minutes / 60);
+      expect(Math.abs(hoursApart - 24 * Math.round(hoursApart / 24)) * 3600).toBeLessThan(5);
     }
   });
 
