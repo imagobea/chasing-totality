@@ -54,3 +54,5 @@ Since #45, #47 and #50, adding a total eclipse needs only its data: Besselian el
 No MCP needed. `/simplify` and `/code-review` before the PR.
 
 ## Deviations and findings
+
+- Non-central total eclipses (one limit, no central line) stop at the catalogue gate too: the path table and its checks need a central line. None is due before 2043
