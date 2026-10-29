@@ -93,6 +93,16 @@ describe.each(nasaPaths)("localCircumstances vs NASA's $date path table", ({ ele
     }
     for (const row of timedRows) expect(at(row.central).sunBelowHorizon).toBe(false);
   });
+
+  // NASA ends the path where the Sun's altitude is 0° at mid-eclipse. The altitude changes by 1°
+  // every ~111 km, so 2 km of ground, like the limits, is 2 / 111.2 degrees
+  it("puts NASA's sunrise and sunset ends of the path on the horizon, within 2 km", () => {
+    for (const row of rows.filter((r) => r.time === "Limits")) {
+      for (const point of [row.central, row.north, row.south]) {
+        if (point) expect(Math.abs(at(point).sunAltitude)).toBeLessThan(2 / 111.2);
+      }
+    }
+  });
 });
 
 // Engine behaviour, on 2027
