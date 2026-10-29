@@ -67,3 +67,28 @@ endpoint's bbox, which no longer takes a west edge east of its east edge.
 MapLibre draws a path across 180° in one piece only if its longitudes
 carry on, so the isolines need it. One convention everywhere means a
 path's box can go straight to the map and the API, with no conversion.
+
+---
+
+## 005 — NASA's path tables check every eclipse, with fixed tolerances
+
+Date: 2026-10-29
+
+Each eclipse is checked against NASA's path table with the same
+tolerances: limits within 2 km, central-line durations within 0.5 s,
+mid-eclipse within 5 s, and the sunrise and sunset ends of the path on
+the horizon within 2 km. They never widen to let an eclipse pass. An
+eclipse that fails is not added: today that's 6 of the 67 central total
+eclipses of 2001–2100 (paths over a pole, two Antarctic paths, and two
+NASA typos). See [#51](plans/051-checks-for-any-total-eclipse-plan.md).
+
+The Sun's altitude is measured from the observer's horizon, square to
+the local vertical, as NASA does.
+
+### Why
+
+Our main error is systematic, from the source of our elements: the path
+sits up to ~0.8 km south of NASA's and mid-eclipse ~1 s later. A
+tolerance set per eclipse would absorb that and any typo with it; a
+fixed one still catches them. Covering the failing eclipses would need
+special-case code for places nobody travels to.

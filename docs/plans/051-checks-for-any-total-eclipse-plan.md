@@ -51,6 +51,8 @@ No MCP needed. `/simplify` and `/code-review` before the PR.
 
 ## Deviations and findings
 
-- Worst measured on timed rows: limits 0.80 km (2028), durations 0.19 s, mid-eclipse 1.17 s. The old "1.7 km" and "0.25 s" came from 2027's sunrise `Limits` row, a horizon artefact
+- Our largest gaps from NASA's path tables for 2026–2028, on the timed rows: a limit 0.80 km from NASA's (2028), a central-line duration 0.19 s off, a mid-eclipse time 1.17 s off. The old "1.7 km" and "0.25 s" came from 2027's sunrise `Limits` row, a horizon artefact
+- Our largest gaps from NASA's path tables over the 61 eclipses of 2001–2100 that pass: a limit 1.61 km from NASA's (2044-08-23, Sun 2° up), a central-line duration 0.21 s off, a mid-eclipse time 1.35 s off, and a path end 0.015° off the horizon (2071-09-23). That last one comes closest to its tolerance, 0.018°
+- The path-end altitude check came with the engine fix (2a), as its failing test; 3a only made the other checks skip the ends
 - All 67 central total eclipses of 2001–2100 run through the checks: 61 pass. The 6 that stop are paths over a pole (2072, 2094), Antarctic paths with one limit 2.0–2.5 km off (2003, 2021), and NASA typos (2009, 2034)
 - Our path sits 0.2–0.8 km south of NASA's and mid-eclipse ~1 s later in all three eclipses: the elements' source, systematic, not something a tolerance can be derived from

@@ -21,7 +21,7 @@ Besselian elements describe that shadow, and NASA publishes a set for each eclip
 
 Then [`isolines/`](isolines) runs `eclipse/` over a grid of places and joins the places with equal durations into lines. It outputs them as GeoJSON, a standard map format that tools like geojson.io can draw.
 
-How accurate it is, and what it leaves out: [spike #4 findings and limitations](../../docs/plans/004-local-totality-duration-plan.md#deviations-and-findings).
+How accurate it is, checked against NASA for every eclipse: [decision 005](../../docs/DECISIONS.md#005--nasas-path-tables-check-every-eclipse-with-fixed-tolerances). What it leaves out (the Moon's ragged edge, ΔT, high ground, the air bending sunlight): [spike #4 limitations](../../docs/plans/004-local-totality-duration-plan.md#limitations).
 
 ## Eclipse: totality at one place
 
@@ -82,9 +82,9 @@ Rather than tracking the shadow in 3D, astronomers slice it with a flat plane, t
   ───●──────────────────┼────────────────── x (east)
      Earth's centre     x
 
-  + shadow axis, at (x, y)
-  l1  penumbra radius
-  l2  umbra radius
+  +  shadow axis, at (x, y)
+  l2 umbra radius
+  l1 penumbra radius
 ```
 
 NASA publishes each eclipse as **Besselian elements**: a handful of short polynomials in time that give, on that plane:
@@ -109,15 +109,18 @@ The Earth is slightly flattened, so the direction from its centre to the observe
         centre
            └──────┘
            ρ·cosφ′: distance from the Earth's axis
+
+  ρ  distance from the Earth's centre to the observer
+  φ′ angle at the centre, between the equator and the observer
 ```
 
-`geocentricObserver()` returns these two lengths, ρ·sinφ′ and ρ·cosφ′, based on the observer's latitude, longitude and altitude.
+`geocentricObserver()` returns these two lengths, ρ·sinφ′ and ρ·cosφ′, based on the observer's latitude and altitude.
 
 ### localCircumstances.ts
 
 `localCircumstances()` puts the observer on the same plane as the shadow, by combining the results of `evaluate()` (the shadow) and `geocentricObserver()` (the observer).
 
-Both move: the shadow sweeps east, and the Earth's spin carries the observer along more slowly. It's easier to picture from the shadow's point of view. Hold the shadow still, and the observer slides across it in a line:
+Both move: the shadow sweeps east, and the Earth's spin carries the observer along more slowly. It's easier to picture from the shadow's point of view. Hold the shadow still, and the observer slides across it in a (nearly) straight line:
 
 ```
   the plane, as seen riding on the shadow
@@ -134,17 +137,21 @@ Both move: the shadow sweeps east, and the Earth's spin carries the observer alo
                                     misses the umbra, no totality
 
   + centre of the shadow
-  m your closest distance to it
+  m the observer's closest distance to it
 ```
 
-1. **Mid-eclipse (●)**: when the observer is closest to the centre.
+1. **Mid-eclipse (●)**: when the observer is closest to the shadow's centre.
 2. **C2** and **C3**: when the observer enters and leaves the umbra. The duration is C3 − C2.
 
 Remember an observer outside the umbra will miss totality, but may still pass through the penumbra (partial) or miss the shadow entirely.
 
 `localCircumstances()` finds mid-eclipse, C2 and C3 by Newton iteration. The shadow and the observer both move with time, the observer along a curve as the Earth turns, so the moment they meet has no direct formula. Each time is estimated, then refined until it changes by less than ~4 ms. Within ~0.1 mm of the path's edge, C2 and C3 are milliseconds apart and Newton iteration can bounce between values without settling. There, the engine falls back to bisection, halving the interval until it's small enough, which always settles.
 
-The fundamental plane passes straight through the Earth, so places on the night side also fall inside the shadow circle. If the Sun is below the observer's horizon for the whole of totality, the result is `none`; if only for part of it, `sunBelowHorizon` is set.
+The fundamental plane passes straight through the Earth, so places on the night side also fall inside the shadow circle. The engine checks the Sun's altitude at C2, mid-eclipse and C3:
+
+- If the Sun is below the horizon at all three, the result is `none` (night, nothing to see).
+- If the Sun is below at one or two of them, the result is `total` with `sunBelowHorizon` set (Sun rises or sets during totality, so the visible part is shorter than the duration reported).
+- If the Sun is above at all three, the result is `total`.
 
 ## Isolines: lines of equal duration
 
