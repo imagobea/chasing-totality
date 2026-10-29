@@ -12,6 +12,7 @@ export type GeographicPosition = {
 export type GeocentricObserver = {
   rhoSinPhi: number; // height above the equatorial plane, equatorial Earth radii
   rhoCosPhi: number; // distance from the Earth's axis, equatorial Earth radii
+  latitude: number; // geodetic, north positive, radians: the local vertical, for the horizon
   longitude: number; // east positive, radians
 };
 
@@ -46,6 +47,7 @@ export function geocentricObserver({
   return {
     rhoSinPhi: POLAR_TO_EQUATORIAL * Math.sin(reducedLatitude) + altitude * Math.sin(phi),
     rhoCosPhi: Math.cos(reducedLatitude) + altitude * Math.cos(phi),
+    latitude: phi,
     longitude: longitude * RAD,
   };
 }

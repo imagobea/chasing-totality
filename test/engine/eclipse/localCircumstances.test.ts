@@ -4,13 +4,16 @@ import type { BesselianElements } from "../../../src/engine/eclipse/besselian.js
 import { eclipse2027Aug02 } from "../../../src/engine/eclipse/elements/2027-08-02.js";
 import { eclipses } from "../../../src/engine/eclipse/elements/index.js";
 import { localCircumstances } from "../../../src/engine/eclipse/localCircumstances.js";
-import { parseNasaPath, type LatLon } from "../../../src/engine/eclipse/nasaPath.js";
+import { parseNasaPath, type LatLon, type PathRow } from "../../../src/engine/eclipse/nasaPath.js";
 import { unwrapPath } from "../../../src/engine/isolines/area.js";
 import { acrossLimit, along } from "../../geo.js";
 
 // Every known eclipse against its NASA path table, with the table's ΔT so only the geometry
 // is compared. This catches a mistyped element or a table from another eclipse. The rows carry
 // on past 180° where the path crosses it, so points between them don't wrap around the Earth.
+// The tolerances are the same for every eclipse and never widen to let one pass. "Worst
+// measured" is over the 61 central total eclipses of 2001–2100 that pass these checks, measured
+// once on 2026-10-29 (docs/plans/051-checks-for-any-total-eclipse-plan.md).
 const nasaPaths = Object.entries(eclipses).map(([date, elements]) => {
   const { deltaT, rows } = parseNasaPath(
     readFileSync(new URL(`../../../data/nasa-paths/${date}.txt`, import.meta.url), "utf8"),
@@ -29,18 +32,22 @@ function fail(): never {
 
 describe.each(nasaPaths)("localCircumstances vs NASA's $date path table", ({ elements, rows }) => {
   const at = atWith(elements);
-  const timedRows = rows.filter((row) => row.time !== "Limits");
+  // The `Limits` rows are the sunrise and sunset ends of the path, on the horizon: whether a point
+  // there sees totality is a coin toss, so they are checked by the Sun's altitude only
+  const isEnd = (row: PathRow) => row.time === "Limits";
+  const ends = rows.filter(isEnd);
+  const timedRows = rows.filter((row) => !isEnd(row));
   const limits = rows.flatMap((row, i) =>
     (["north", "south"] as const).flatMap((side) => {
       const limit = row[side];
-      if (!limit) return [];
+      if (!limit || isEnd(row)) return [];
       const edge = [rows[i - 1]?.[side] ?? limit, rows[i + 1]?.[side] ?? limit] as const;
       return [{ row, limit, past: (km: number) => acrossLimit(row.central, limit, km, ...edge) }];
     }),
   );
 
-  // NASA rounds to 0.1 s and positions to 0.1′ (~185 m); we measured ≤ 0.25 s.
-  it.each(rows.map((row) => [row.time, row] as const))(
+  // NASA rounds to 0.1 s and positions to 0.1′ (~185 m). Worst measured: 0.21 s.
+  it.each(timedRows.map((row) => [row.time, row] as const))(
     "matches the central-line duration at %s within 0.5 s",
     (_, row) => {
       const result = at(row.central);
@@ -49,16 +56,20 @@ describe.each(nasaPaths)("localCircumstances vs NASA's $date path table", ({ ele
     },
   );
 
+  // Worst measured: 1.35 s
   it("puts mid-eclipse on the central line at the table's time, within 5 s", () => {
     for (const row of timedRows) {
       const [hours = 0, minutes = 0] = row.time.split(":").map(Number);
-      expect(Math.abs(at(row.central).mid - (hours + minutes / 60)) * 3600).toBeLessThan(5);
+      // Across midnight UT, 23:59 and 00:01 are 2 minutes apart, not 24 hours
+      const hoursApart = at(row.central).mid - (hours + minutes / 60);
+      expect(Math.abs(hoursApart - 24 * Math.round(hoursApart / 24)) * 3600).toBeLessThan(5);
     }
   });
 
   // The duration rises steeply just inside a limit (0 s at the edge, ~20 s at 200 m), so the
   // limit is checked by position instead: it must lie between 2 km inside and 2 km outside,
-  // measured square to the path's edge. We measured ≤ 1.7 km.
+  // measured square to the path's edge. Worst measured: 1.61 km (2044-08-23, Sun 2° up); 0.8 km
+  // for the eclipses here.
   it("places every limit within 2 km of NASA's", () => {
     for (const { past } of limits) {
       expect(at(past(-2)).type).toBe("total");
@@ -79,19 +90,27 @@ describe.each(nasaPaths)("localCircumstances vs NASA's $date path table", ({ ele
     }
   });
 
-  it("gives a shorter, non-zero totality halfway between the central line and a limit", () => {
+  // Not necessarily shorter than on the central line: with the Sun a few degrees up, the longest
+  // totality lies off to one side (2–5 s longer halfway, e.g. 2033-03-30)
+  it("gives some totality halfway between the central line and a limit", () => {
     for (const { row, limit } of limits) {
-      const halfway = at(along(row.central, limit, 0.5)).durationSeconds;
-      expect(halfway).toBeGreaterThan(0);
-      expect(halfway).toBeLessThan(at(row.central).durationSeconds);
+      expect(at(along(row.central, limit, 0.5)).durationSeconds).toBeGreaterThan(0);
     }
   });
 
-  it("flags the sunrise and sunset ends of the path, where the Sun is on the horizon", () => {
-    for (const row of rows.filter((r) => r.time === "Limits")) {
-      expect(at(row.central).sunBelowHorizon).toBe(true);
-    }
+  it("keeps the Sun above the horizon along the central line, between the ends", () => {
     for (const row of timedRows) expect(at(row.central).sunBelowHorizon).toBe(false);
+  });
+
+  // NASA ends the path where the Sun's altitude is 0° at mid-eclipse. The altitude changes by 1°
+  // every ~111 km, so 2 km of ground, like the limits, is 2 / 111.2 degrees. Worst measured:
+  // 0.015°.
+  it("puts NASA's sunrise and sunset ends of the path on the horizon, within 2 km", () => {
+    for (const row of ends) {
+      for (const point of [row.central, row.north, row.south]) {
+        if (point) expect(Math.abs(at(point).sunAltitude)).toBeLessThan(2 / 111.2);
+      }
+    }
   });
 });
 
@@ -117,6 +136,15 @@ describe("localCircumstances", () => {
   it("puts the Sun high over the middle of the path (10:00, NASA: 81°)", () => {
     const central = rows.find((r) => r.time === "10:00")?.central ?? { lat: 0, lon: 0 };
     expect(at(central).sunAltitude).toBeGreaterThan(80);
+  });
+
+  // At the sunrise end the Sun is on the horizon at mid-eclipse, ~0.3° below it at C2 and above
+  // it at C3.
+  it("flags a Sun rising during totality at the sunrise end of the path", () => {
+    const sunrise = rows.find((r) => r.time === "Limits")?.central ?? { lat: 0, lon: 0 };
+    const result = at(sunrise);
+    expect(result.type).toBe("total");
+    expect(result.sunBelowHorizon).toBe(true);
   });
 
   it("puts C2 before mid-eclipse and C3 after, c3 − c2 apart", () => {

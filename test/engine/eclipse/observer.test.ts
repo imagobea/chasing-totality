@@ -40,7 +40,10 @@ describe("geocentricObserver", () => {
     },
   );
 
-  it("returns the longitude in radians, east positive", () => {
+  it("returns the latitude and longitude in radians, north and east positive", () => {
+    expect(
+      geocentricObserver({ latitude: -30, longitude: 0, altitudeMeters: 0 }).latitude,
+    ).toBeCloseTo(-Math.PI / 6, 12);
     expect(
       geocentricObserver({ latitude: 0, longitude: 30, altitudeMeters: 0 }).longitude,
     ).toBeCloseTo(Math.PI / 6, 12);
