@@ -4,7 +4,7 @@ import type { BesselianElements } from "../../../src/engine/eclipse/besselian.js
 import { eclipse2027Aug02 } from "../../../src/engine/eclipse/elements/2027-08-02.js";
 import { eclipses } from "../../../src/engine/eclipse/elements/index.js";
 import { localCircumstances } from "../../../src/engine/eclipse/localCircumstances.js";
-import { parseNasaPath, type LatLon } from "../../../src/engine/eclipse/nasaPath.js";
+import { parseNasaPath, type LatLon, type PathRow } from "../../../src/engine/eclipse/nasaPath.js";
 import { unwrapPath } from "../../../src/engine/isolines/area.js";
 import { acrossLimit, along } from "../../geo.js";
 
@@ -34,12 +34,13 @@ describe.each(nasaPaths)("localCircumstances vs NASA's $date path table", ({ ele
   const at = atWith(elements);
   // The `Limits` rows are the sunrise and sunset ends of the path, on the horizon: whether a point
   // there sees totality is a coin toss, so they are checked by the Sun's altitude only
-  const ends = rows.filter((row) => row.time === "Limits");
-  const timedRows = rows.filter((row) => row.time !== "Limits");
+  const isEnd = (row: PathRow) => row.time === "Limits";
+  const ends = rows.filter(isEnd);
+  const timedRows = rows.filter((row) => !isEnd(row));
   const limits = rows.flatMap((row, i) =>
     (["north", "south"] as const).flatMap((side) => {
       const limit = row[side];
-      if (!limit || row.time === "Limits") return [];
+      if (!limit || isEnd(row)) return [];
       const edge = [rows[i - 1]?.[side] ?? limit, rows[i + 1]?.[side] ?? limit] as const;
       return [{ row, limit, past: (km: number) => acrossLimit(row.central, limit, km, ...edge) }];
     }),

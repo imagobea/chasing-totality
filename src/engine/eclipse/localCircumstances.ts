@@ -29,7 +29,6 @@ type ShadowSeenFrom = {
   a: number; // rate of u, Earth radii per hour
   b: number; // rate of v, Earth radii per hour
   n2: number; // a² + b²
-  zeta: number; // observer's height above the fundamental plane, towards the Sun, Earth radii
   L1: number; // penumbra radius at the observer's height, Earth radii
   L2: number; // umbra radius at the observer's height (negative: total), Earth radii
   sunAltitude: number; // above the observer's horizon, degrees
@@ -69,7 +68,6 @@ function shadowSeenFrom(
     a,
     b,
     n2: a * a + b * b,
-    zeta,
     // The shadow cones widen (or narrow) with height above the plane
     L1: l1 - zeta * elements.tanF1,
     L2: l2 - zeta * elements.tanF2,
