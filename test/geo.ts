@@ -17,3 +17,33 @@ export const distanceKm = (p: LatLon, q: LatLon) =>
 // The point `km` beyond the limit (negative: inside the path), on the line from the central line.
 export const pastLimit = (central: LatLon, limit: LatLon, km: number): LatLon =>
   along(central, limit, 1 + km / distanceKm(central, limit));
+
+// The point `km` beyond a limit (negative: inside the path), square to the path's edge there.
+// The edge runs from `before` to `after`, NASA's limit points either side. Where both are the
+// limit itself, the point falls back to the line from the central line.
+export const acrossLimit = (
+  central: LatLon,
+  limit: LatLon,
+  km: number,
+  before: LatLon,
+  after: LatLon,
+): LatLon => {
+  const kmPerLon = KM_PER_DEGREE * Math.cos((limit.lat * Math.PI) / 180);
+  const edge = {
+    x: (after.lon - before.lon) * kmPerLon,
+    y: (after.lat - before.lat) * KM_PER_DEGREE,
+  };
+  const length = Math.hypot(edge.x, edge.y);
+  if (!length) return pastLimit(central, limit, km);
+  // Square to the edge, turned to point away from the central line
+  const outward = {
+    x: (limit.lon - central.lon) * kmPerLon,
+    y: (limit.lat - central.lat) * KM_PER_DEGREE,
+  };
+  const normal = { x: edge.y / length, y: -edge.x / length };
+  const sign = normal.x * outward.x + normal.y * outward.y < 0 ? -1 : 1;
+  return {
+    lat: limit.lat + (sign * normal.y * km) / KM_PER_DEGREE,
+    lon: limit.lon + (sign * normal.x * km) / kmPerLon,
+  };
+};
