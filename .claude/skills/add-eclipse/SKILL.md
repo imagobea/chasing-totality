@@ -99,13 +99,13 @@ Expect the date in the list, 200 and four numbers, with south and north within â
 Nothing is committed. Report:
 
 1. **Summary**: the date and where it's visible, sources (catalogue row, JSEX commit, NASA path page) with both Î”Ts, the generator line, each gate passed, and the files added or changed
-2. **Run it**: the production stack (non-root images, no live mounts, the data baked in):
+2. **Run it**: the dev stack, which builds from the working tree, uncommitted files included:
 
    ```bash
-   docker compose up --build
+   docker compose -f compose.yaml -f compose.dev.yaml up --build
    ```
 
-   Then open http://localhost:8080, pick the new date and check the map fits its path. `docker compose down` when done
+   Then open http://localhost:5173, pick the new date and check the map fits its path. Without Docker, `pnpm dev` and `pnpm --dir web dev` serve the same page
 
 3. **Optional check**: drop `data/isolines/<date>.geojson` and `out/<date>-nasa-path.geojson` into https://geojson.io; the isolines should follow NASA's limits along the whole path
 4. **Commit message** to suggest: `feat: add the <date> eclipse`

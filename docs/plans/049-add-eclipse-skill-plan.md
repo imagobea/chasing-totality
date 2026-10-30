@@ -28,7 +28,7 @@ Since #45, #47 and #50, adding a total eclipse needs only its data: Besselian el
 **Handover, nothing committed**
 
 - Summary of the run: sources, ΔTs, generator output, gates passed
-- Docker command for the production stack (non-root images, no live mounts), to pick the new date in the browser
+- Docker command for the ~~production~~ dev stack, to pick the new date in the browser
 - NASA's limits and the isolines, for an optional check in geojson.io
 - A suggested commit message
 
@@ -47,7 +47,7 @@ Since #45, #47 and #50, adding a total eclipse needs only its data: Besselian el
 
 - The skill adds 2026-08-12 end to end, all gates pass at 2 km
 - A non-total date (2026-02-17, annular) stops at the catalogue gate
-- Docker stack: 2026-08-12 in the picker, the map fits its path; its isolines follow NASA's limits in geojson.io
+- Docker dev stack: 2026-08-12 in the picker, the map fits its path; its isolines follow NASA's limits in geojson.io
 
 ## Optional tooling
 
@@ -59,3 +59,4 @@ No MCP needed. `/simplify` and `/code-review` before the PR.
 - 2026-08-12 first failed the checks at the path's two ends: the engine's Sun altitude was geocentric, NASA's is geodetic. Fixed in #51/#52, not in the skill
 - The path table is taken from the catalogue row's link, not a URL built by year: NASA keeps 2051–2100 in another folder
 - The smoke gate also checks the bbox stays within ±90° latitude: a path near a pole (2026-08-12) gave a bbox north of 90°, which the map can't fit
+- The handover suggests the dev stack, not the production one: a developer reviews the run before committing, and the dev stack builds from the working tree too
