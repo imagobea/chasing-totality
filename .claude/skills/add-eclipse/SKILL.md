@@ -1,6 +1,6 @@
 ---
 name: add-eclipse
-description: Add a total solar eclipse end to end (Besselian elements, NASA path table, isolines) so the API and map serve it with no code changes. Use when asked to add, host or serve an eclipse for a date.
+description: Add a total solar eclipse end to end (Besselian elements, NASA path table, isolines) so the API and map serve it with no code changes. Only run by the user, with /add-eclipse <date>.
 argument-hint: <date, e.g. 2026-08-12 or "12 August 2026">
 disable-model-invocation: true
 ---
