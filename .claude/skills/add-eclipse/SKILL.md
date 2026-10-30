@@ -24,7 +24,7 @@ The limit check (each limit within 2 km of NASA's, measured square to the path's
 
 ## Gate 2: NASA's catalogue
 
-Download https://eclipse.gsfc.nasa.gov/SEcat5/SE2001-2100.html into a new, empty folder in the scratchpad and find the row for the date (`2026 Aug 12` style). Its Type column must be exactly `T`, a central total eclipse.
+Download https://eclipse.gsfc.nasa.gov/SEcat5/SE2001-2100.html into a new, empty folder in the scratchpad and find the row for the date (`2026 Aug 12` style). Its Type column must be exactly `T`, a central total eclipse. Keep the row's link to its path page (`../SEpath/SEpath20xx/SE<YYYY><Mon><DD>Tpath.html`) for gate 4.
 
 Anything else stops the run, saying what it is: `A` annular, `H` hybrid, `P` partial, no row (no eclipse that day), or `T+`/`T-` (total but non-central: there is no central line, which the path table and its checks need).
 
@@ -52,7 +52,7 @@ Check the mapping on 2028-07-22 against `src/engine/eclipse/elements/2028-07-22.
 
 ## Gate 4: NASA's path table
 
-Download `https://eclipse.gsfc.nasa.gov/SEpath/SEpath2001/SE<YYYY><Mon><DD>Tpath.html` (e.g. `SE2026Aug12Tpath.html`) into a scratch folder.
+Open the link from the catalogue row (it's relative to `https://eclipse.gsfc.nasa.gov/SEcat5/`) and download the page into a scratch folder. Don't build the URL yourself: NASA keeps 2001–2050 under `SEpath2001/` and 2051–2100 under `SEpath2051/`.
 
 - Write `data/nasa-paths/<date>.txt` shaped like `data/nasa-paths/2028-07-22.txt`: three `#` lines (title, source URL with today's retrieval date, "Table rows copied verbatim; ΔT = <NASA's ΔT> s. '-' means the limit is off the Earth at that time."), a `#` line, then the table's five header lines and every row, from the first `Limits` row to the last
 - Rows verbatim: the parser reads fixed-width columns. Turn HTML entities in the header into characters (`&#176;` → `°`, `&#180;` → `'`); never touch the rows
@@ -92,7 +92,7 @@ console.log(dates, res.statusCode, res.json().bbox);
 await app.close();'
 ```
 
-Expect the date in the list, 200 and four numbers. The frontend needs nothing else: its picker lists what the API lists and the map fits that bbox.
+Expect the date in the list, 200 and four numbers, with south and north within −90 to 90 (the map can't fit a bbox past a pole). The frontend needs nothing else: its picker lists what the API lists and the map fits that bbox.
 
 ## Handover
 

@@ -56,3 +56,6 @@ No MCP needed. `/simplify` and `/code-review` before the PR.
 ## Deviations and findings
 
 - Non-central total eclipses (one limit, no central line) stop at the catalogue gate too: the path table and its checks need a central line. None is due before 2043
+- 2026-08-12 first failed the checks at the path's two ends: the engine's Sun altitude was geocentric, NASA's is geodetic. Fixed in #51/#52, not in the skill
+- The path table is taken from the catalogue row's link, not a URL built by year: NASA keeps 2051–2100 in another folder
+- The smoke gate also checks the bbox stays within ±90° latitude: a path near a pole (2026-08-12) gave a bbox north of 90°, which the map can't fit
