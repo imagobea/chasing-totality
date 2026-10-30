@@ -14,7 +14,8 @@ export type IsolineFeature = {
 
 export type IsolineCollection = {
   type: "FeatureCollection";
-  // West, south, east and north edges; across the 180° meridian east carries on past 180
+  // West, south, east and north edges, stopping at the poles; across the 180° meridian east
+  // carries on past 180
   bbox: [west: number, south: number, east: number, north: number];
   features: IsolineFeature[];
 };
@@ -47,13 +48,15 @@ export function durationContours(
     Array.from(grid.values),
   );
 
-  // d3-contour puts value i at the centre of pixel i, i.e. at grid coordinate i + 0.5.
+  // d3-contour puts value i at the centre of pixel i, i.e. at grid coordinate i + 0.5. Half a
+  // step past a grid that reaches a pole is off the Earth, so latitudes stop at ±90.
   const toLonLat = ([x = 0, y = 0]: number[]): Position => [
     grid.west + (x - 0.5) * grid.step,
-    grid.south + (y - 0.5) * grid.step,
+    Math.max(-90, Math.min(90, grid.south + (y - 0.5) * grid.step)),
   ];
 
-  // The grid's footprint, as far as d3-contour closes polygons: half a step past its outer points
+  // The grid's footprint, as far as d3-contour closes polygons: half a step past its outer points,
+  // up to the poles
   const [west, south] = toLonLat([0, 0]);
   const [east, north] = toLonLat([grid.width, grid.height]);
 
