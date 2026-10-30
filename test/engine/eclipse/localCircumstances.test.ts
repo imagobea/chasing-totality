@@ -69,7 +69,7 @@ describe.each(nasaPaths)("localCircumstances vs NASA's $date path table", ({ ele
   // The duration rises steeply just inside a limit (0 s at the edge, ~20 s at 200 m), so the
   // limit is checked by position instead: it must lie between 2 km inside and 2 km outside,
   // measured square to the path's edge. Worst measured: 1.61 km (2044-08-23, Sun 2° up); 0.8 km
-  // for the eclipses here.
+  // for the eclipses here (2028-07-22; 2026-08-12 is 0.57 km).
   it("places every limit within 2 km of NASA's", () => {
     for (const { past } of limits) {
       expect(at(past(-2)).type).toBe("total");
