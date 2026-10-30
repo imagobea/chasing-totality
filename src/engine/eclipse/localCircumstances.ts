@@ -29,9 +29,9 @@ type ShadowSeenFrom = {
   a: number; // rate of u, Earth radii per hour
   b: number; // rate of v, Earth radii per hour
   n2: number; // a² + b²
-  zeta: number; // observer's height above the fundamental plane, towards the Sun, Earth radii
   L1: number; // penumbra radius at the observer's height, Earth radii
   L2: number; // umbra radius at the observer's height (negative: total), Earth radii
+  sunAltitude: number; // above the observer's horizon, degrees
 };
 
 // Besselian μ is measured against a meridian that turns with ephemeris time; an observer's
@@ -47,7 +47,7 @@ function shadowSeenFrom(
   t: number,
 ): ShadowSeenFrom {
   const { x, y, d, mu, l1, l2, xRate, yRate, dRate, muRate } = evaluate(elements, t);
-  const { rhoSinPhi, rhoCosPhi, longitude } = observer;
+  const { rhoSinPhi, rhoCosPhi, latitude, longitude } = observer;
 
   // Observer's hour angle from the shadow axis
   const H = mu + longitude - EARTH_ROTATION_DEGREES_PER_SECOND * elements.deltaT * RAD;
@@ -68,10 +68,14 @@ function shadowSeenFrom(
     a,
     b,
     n2: a * a + b * b,
-    zeta,
     // The shadow cones widen (or narrow) with height above the plane
     L1: l1 - zeta * elements.tanF1,
     L2: l2 - zeta * elements.tanF2,
+    // The Sun lies along the plane's normal. Its altitude is measured from the horizon, square to
+    // the local vertical: the same rotation as ζ, with the geodetic latitude, as NASA does.
+    sunAltitude:
+      Math.asin(Math.sin(latitude) * Math.sin(d) + Math.cos(latitude) * Math.cos(H) * Math.cos(d)) /
+      RAD,
   };
 }
 
@@ -121,16 +125,12 @@ export function localCircumstances(
   // hours inside it; squared, that is negative when the track misses the umbra.
   const passSquared = ((4 * (umbraRadius ** 2 - distance ** 2)) / atMid.n2) * 3600 ** 2;
   const toUT = (t: number) => elements.t0 + t - elements.deltaT / 3600;
-  // ζ is the observer's height towards the Sun, so ζ / (distance from the Earth's centre) is
-  // the sine of the Sun's altitude.
-  const observerDistance = Math.hypot(observer.rhoSinPhi, observer.rhoCosPhi);
-  const sunAltitude = (s: ShadowSeenFrom) => Math.asin(s.zeta / observerDistance) / RAD;
 
   const result = {
     mid: toUT(mid),
     durationSeconds: 0,
-    sunAltitude: sunAltitude(atMid),
-    sunBelowHorizon: sunAltitude(atMid) < 0,
+    sunAltitude: atMid.sunAltitude,
+    sunBelowHorizon: atMid.sunAltitude < 0,
     signedDurationSquared: Math.min(0, passSquared),
   };
   // The projection goes straight through the Earth, so a point on the night side can fall
@@ -167,7 +167,7 @@ export function localCircumstances(
     }) ?? bisectContact(sign);
   const c2 = contact(-1);
   const c3 = contact(1);
-  const belowHorizon = [atMid, at(c2), at(c3)].map((s) => sunAltitude(s) < 0);
+  const belowHorizon = [atMid, at(c2), at(c3)].map((s) => s.sunAltitude < 0);
   if (belowHorizon.every(Boolean)) return notVisible;
 
   return {
