@@ -19,7 +19,7 @@ The limit check (each limit within 2 km of NASA's, measured square to the path's
 
 - Any wording works ("12 August 2026", "Aug 12 2026", "2026-08-12"): turn it into a real calendar date as `YYYY-MM-DD` and say which date you read before going on
 - Ask instead of guessing when it's missing, has no year, or could be two dates (`08/12/2026`: 12 August or 8 December?)
-- Not already added: it isn't a key in `src/engine/eclipse/elements/index.ts`
+- Not already added: it isn't a key in `src/engine/eclipse/elements/index.ts`. If it is but `git status` shows its files uncommitted, it's a run that stopped earlier: say so and run every gate again, rewriting those files
 - Within 2001–2100: the range of JSEX's `SE2001.js` and NASA's `SEpath2001` pages. Outside it, stop: the sources differ and the skill hasn't been tried there
 
 ## Gate 2: NASA's catalogue
