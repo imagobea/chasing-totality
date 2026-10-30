@@ -47,7 +47,7 @@ Each eclipse is a `// YYYY M D` comment (month and day space-padded, e.g. `// 20
 
 Check the mapping on 2028-07-22 against `src/engine/eclipse/elements/2028-07-22.ts` before writing the new file.
 
-- New file `src/engine/eclipse/elements/<date>.ts`, shaped like 2028's: the header comment names the eclipse, the source (Canon via JSEX's `SE2001.js`), the Canon's ΔT and NASA's path-page ΔT (from gate 4). Export `eclipse<YYYY><Mon><DD>`, e.g. `eclipse2026Aug12`
+- New file `src/engine/eclipse/elements/<date>.ts`, shaped like 2028's: the header comment names the eclipse, the source (Canon via JSEX's `SE2001.js`), the Canon's ΔT and NASA's path-page ΔT (gate 4 fills it in). Export `eclipse<YYYY><Mon><DD>`, e.g. `eclipse2026Aug12`
 - Add it to the list in `src/engine/eclipse/elements/index.ts`, in date order
 
 ## Gate 4: NASA's path table
@@ -56,7 +56,7 @@ Open the link from the catalogue row (it's relative to `https://eclipse.gsfc.nas
 
 - Write `data/nasa-paths/<date>.txt` shaped like `data/nasa-paths/2028-07-22.txt`: three `#` lines (title, source URL with today's retrieval date, "Table rows copied verbatim; ΔT = <NASA's ΔT> s. '-' means the limit is off the Earth at that time."), a `#` line, then the table's five header lines and every row, from the first `Limits` row to the last
 - Rows verbatim: the parser reads fixed-width columns. Turn HTML entities in the header into characters (`&#176;` → `°`, `&#180;` → `'`); never touch the rows
-- NASA's ΔT is on the page ("a value of ΔT = 71.4 seconds"); it usually differs from the Canon's
+- NASA's ΔT is on the page ("a value of ΔT = 71.4 seconds"); it usually differs from the Canon's. Add it to the elements file's header comment too
 
 ## Gate 5: generate
 
