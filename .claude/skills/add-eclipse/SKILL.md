@@ -30,7 +30,7 @@ Anything else stops the run, saying what it is: `A` annular, `H` hybrid, `P` par
 
 ## Gate 3: Besselian elements
 
-Take them from JSEX, not NASA's elements page (which rounds them). Download `SE2001.js` from the commit pinned in `scripts/generate-jsex-fixtures.ts` (`JSEX_URL`) into the same kind of scratch folder. JSEX is GPL: copy only the numbers (NASA's, public domain), never its code.
+Take them from JSEX, not NASA's elements page (which rounds them). Download `<JSEX_URL>/SE2001.js` into the same kind of scratch folder, with `JSEX_URL` and its `JSEX_COMMIT` filled in from `scripts/generate-jsex-fixtures.ts`. JSEX is GPL: copy only the numbers (NASA's, public domain), never its code.
 
 Each eclipse is a `// YYYY M D` comment (month and day space-padded, e.g. `// 2026  8 12`) followed by 28 numbers:
 
