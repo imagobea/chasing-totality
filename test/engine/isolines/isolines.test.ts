@@ -87,6 +87,24 @@ describe("durationContours", () => {
     }
   });
 
+  // A grid can reach a pole (2026-08-12's reaches 90°N), where half a step past is off the Earth
+  it("stops the bbox and the isolines at the poles", () => {
+    const poleToPole = {
+      west: 0,
+      south: -90,
+      step: 90,
+      width: 2,
+      height: 3,
+      values: new Float64Array(6).fill(1),
+    };
+    const { bbox, features } = durationContours(poleToPole, [0]);
+    expect(bbox[1]).toBe(-90);
+    expect(bbox[3]).toBe(90);
+    for (const [, lat] of features.flatMap((f) => f.geometry.coordinates.flat(2))) {
+      expect(Math.abs(lat)).toBeLessThanOrEqual(90);
+    }
+  });
+
   it("leaves out durations no point reaches", () => {
     // The longest totality of this eclipse is ~6m23s.
     const durations = durationContours(grid, [360, 390]).features.map(
