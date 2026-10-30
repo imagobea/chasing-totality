@@ -70,7 +70,7 @@ The API settings and their defaults are in [`.env.example`](.env.example); copy 
 
 Drop both into [geojson.io](https://geojson.io) to see them on a map.
 
-To add an eclipse, add its Besselian elements under `src/engine/eclipse/elements/` and to the list there, and NASA's path table as `data/nasa-paths/<date>.txt`, with the ΔT NASA used as a `# ΔT = <seconds> s` line in its header. The tests then check the elements against the table; run `pnpm data:isolines <date>` to generate its isolines. In Claude Code, `/add-eclipse <date>` does all of this, checks it, and stops for review before anything is committed.
+To add an eclipse, add its Besselian elements under `src/engine/eclipse/elements/` and to the list there, and NASA's path table as `data/nasa-paths/<date>.txt`, with a `#` header like the existing tables' that gives the ΔT NASA used (`ΔT = <seconds> s`). The tests then check the elements against the table; run `pnpm data:isolines <date>` to generate its isolines. In Claude Code, `/add-eclipse <date>` does all of this, checks it, and stops for review before anything is committed.
 
 The airports come from [OurAirports](https://ourairports.com/data/) (public domain): large and medium airports with scheduled service and an IATA code, worldwide. `pnpm data:airports` downloads them again and rewrites `data/airports.geojson`; commit the result.
 
