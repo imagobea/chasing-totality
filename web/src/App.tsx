@@ -3,7 +3,7 @@ import { fetchEclipseDates } from "./api/eclipses.js";
 import { AppHeader } from "./components/AppHeader.js";
 import { StatusBar } from "./components/StatusBar.js";
 import { EclipseMap } from "./map/EclipseMap.js";
-import type { Coordinates } from "./utils.js";
+import { firstUpcomingEclipse, type Coordinates } from "./utils.js";
 
 export function App() {
   const [dates, setDates] = useState<string[]>([]);
@@ -21,7 +21,7 @@ export function App() {
       .then((result) => {
         if (!active) return;
         setDates(result);
-        setDate(result[0] ?? null);
+        setDate(firstUpcomingEclipse(result));
       })
       // On failure the picker stays empty and shows —
       .catch(() => {});
