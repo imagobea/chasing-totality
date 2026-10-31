@@ -29,3 +29,12 @@ export function daysUntil(date: string, now = new Date()): number {
 export function formatCoordinates({ lng, lat }: Coordinates): string {
   return `${formatDegrees(lat, "N", "S")} · ${formatDegrees(lng, "E", "W")}`;
 }
+
+// Given a list of eclipse dates, return the first one that is today or in the future, or null if none
+export function firstUpcomingEclipse(dates: string[]): string | null {
+  const todayMs = Date.UTC(new Date().getFullYear(), new Date().getMonth(), new Date().getDate());
+  for (const date of dates) {
+    if (Date.parse(date) >= todayMs) return date;
+  }
+  return null;
+}
