@@ -98,11 +98,11 @@ describe("isolines", () => {
     expect(layer("isolines-limit")).toHaveProperty("filter", ["has", "limit"]);
   });
 
-  it("labels whole-minute isolines only, the limit included", () => {
+  it("labels the limit and whole-minute isolines only", () => {
     expect(layer("isolines-label")).toHaveProperty("filter", [
-      "==",
-      ["%", ["get", "durationSeconds"], 60],
-      0,
+      "any",
+      ["has", "limit"],
+      ["==", ["%", ["get", "durationSeconds"], 60], 0],
     ]);
   });
 

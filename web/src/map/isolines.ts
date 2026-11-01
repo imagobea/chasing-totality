@@ -43,11 +43,11 @@ const DURATION_COLOR = [
 
 const IS_LIMIT: FilterSpecification = ["has", "limit"];
 const IS_INNER_ISOLINE: FilterSpecification = ["!", ["has", "limit"]];
-// Half-minute labels would crowd the map
-const IS_WHOLE_MINUTE: FilterSpecification = [
-  "==",
-  ["%", ["get", "durationSeconds"], CLASS_SECONDS],
-  0,
+// Half-minute labels would crowd the map, but the limit always gets one
+const IS_LABELLED: FilterSpecification = [
+  "any",
+  IS_LIMIT,
+  ["==", ["%", ["get", "durationSeconds"], CLASS_SECONDS], 0],
 ];
 
 // Under the isolines: the bands don't overlap, so each shows its class colour as it is
@@ -90,7 +90,7 @@ export const ISOLINES_LAYERS: LayerSpecification[] = [
     id: "isolines-label",
     type: "symbol",
     source: ISOLINES_SOURCE_ID,
-    filter: IS_WHOLE_MINUTE,
+    filter: IS_LABELLED,
     layout: {
       "symbol-placement": "line",
       "symbol-spacing": 800,
