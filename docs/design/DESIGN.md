@@ -245,7 +245,7 @@ Sections in this exact order: will I see it → will the sky be clear → can I 
 
 **Duration ramp:** colour by absolute minutes (not % of max); longest = lightest; only the outer limit line is strong. The ramp is set for Fiord only so far (— = not yet chosen).
 
-On the light theme (Positron) the accent and path colours are darker, to keep 4.5:1 text contrast on white.
+On the light theme (Positron) the accent is darker, to keep 4.5:1 text contrast on white; its path colours are not chosen yet.
 
 #### Map-layer paint (provisional, same for all themes)
 
