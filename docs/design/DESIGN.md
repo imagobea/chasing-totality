@@ -98,13 +98,13 @@ Map layer stack (bottom → top):
 
 1. Basemap fills (land, water, roads), from the style.
 2. **Advisories:** hatched `fill-pattern` (image added via `map.addImage`) plus a dashed outline.
-3. **Isoline fills:** translucent. Stacked bands get stronger toward the centre line.
-4. **Isoline lines:** crisp edges, plus a dashed centre line.
+3. **Isoline fills:** one band per whole minute of totality, non-overlapping, each a flat colour from the duration ramp (longest = lightest).
+4. **Isoline lines:** faint inner isolines every 30 s, and one strong line for the limit of totality.
 5. Basemap labels, kept readable maybe with halos.
 6. **Our symbols:** duration labels, airport icons, etc.
 7. Spot markers and the selection highlight.
 
-Our fills and lines are inserted **before the first basemap symbol layer**. Our symbols go on top. Only one layer may ever be near-opaque; everything else stays translucent so labels stay readable.
+Our fills and lines are inserted **before the first basemap symbol layer**. Our symbols go on top. Only one layer may ever be near-opaque (the duration bands); everything else stays translucent, and basemap labels sit above the bands so they stay readable.
 
 📦 Travel advisories and airport data need to be integrated.
 
@@ -115,7 +115,7 @@ Our fills and lines are inserted **before the first basemap symbol layer**. Our 
   2. Airports
   3. Travel advisories
 - **Each toggle:** a real button with `aria-pressed`, a checkbox mark, a label and a small swatch matching the layer.
-- **Legend: "Totality duration".** A 5-step ramp - CHECK - from edge to centre, with end labels `EDGE · 0s` and `CENTRE · <max>`. `<max>` comes from the eclipse data (6m 23s for 2027).
+- **Legend: "Totality duration".** One swatch per whole-minute class shown on the map, from `< 1 min` at the limit to the longest class, with end labels `LIMIT · 0s` and `CENTRE · <max>`. `<max>` comes from the eclipse data (6m 23s for 2027).
 
 🧪 Toggles are a nice to have and can come later. Consider the design description for the legend/totality duration as tentative.
 📦 Travel advisories and airport data need to be integrated.

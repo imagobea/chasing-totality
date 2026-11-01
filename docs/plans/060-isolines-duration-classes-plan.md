@@ -22,7 +22,7 @@ Totality duration is drawn as a linear gradient over nested 30 s polygons, each 
 
 1. `docs:` this plan
 2. `feat:` isolines drawn as non-overlapping bands coloured by duration class
-3. `docs:` DESIGN palette tokens updated
+3. ~~`docs:` DESIGN palette tokens updated~~ folded into 2, together with the restyle
 
 ## Verification
 
