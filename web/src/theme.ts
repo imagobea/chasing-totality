@@ -13,7 +13,7 @@ export const theme = {
   "--color-text-faint": "#aab4c8",
   "--color-accent": "#ffb547",
   "--color-on-accent": "#1e2433",
-  // Duration ramp: <1, 1–2, 2–3, 3–4, 4–5, 5–6, ≥6 min. Longest = lightest
+  // Duration ramp: <1, 1–2, 2–3, 3–4, 4–5, 5–6, ≥6 min. Longest = lightest.
   "--color-path-fill-0": "#6b3a4e",
   "--color-path-fill-1": "#8a3f3f",
   "--color-path-fill-2": "#ad4e34",
