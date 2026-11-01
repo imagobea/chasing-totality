@@ -1,4 +1,4 @@
-// The eclipse's isolines as MapLibre data: the source and the layers that draw it
+// The eclipse's isolines as MapLibre data: their sources and the layers that draw them
 
 import type { Feature, FeatureCollection, MultiPolygon } from "geojson";
 import type {
@@ -11,13 +11,16 @@ import polygonClipping from "polygon-clipping";
 import type { Isolines } from "../api/eclipses.js";
 import { MAP_FONT, theme, toNumber } from "../theme.js";
 
-// The area from one band edge (the limit or a whole minute) to the next, tagged so the layers can
-// tell it apart
-type DurationBand = Feature<MultiPolygon, { kind: "band"; durationSeconds: number }>;
+// The area from one class edge (the limit or a whole minute) to the next
+type DurationBand = Feature<MultiPolygon, { durationSeconds: number }>;
 
+export const DURATION_BANDS_SOURCE_ID = "duration-bands";
 export const ISOLINES_SOURCE_ID = "isolines";
 
-// One colour per whole minute of totality, from under 1 min to 6 min and over
+// Each class of totality spans a whole minute
+const CLASS_SECONDS = 60;
+
+// One colour per class, from under 1 min to 6 min and over
 const CLASS_COLORS = [
   theme["--color-path-fill-0"],
   theme["--color-path-fill-1"],
@@ -28,36 +31,40 @@ const CLASS_COLORS = [
   theme["--color-path-fill-6"],
 ];
 
+// Where each class starts: 0 s, 60 s, … up to the last, open-ended class
+const CLASS_STARTS = CLASS_COLORS.map((_, i) => i * CLASS_SECONDS);
+
 const DURATION_COLOR = [
   "step",
   ["get", "durationSeconds"],
   CLASS_COLORS[0],
-  ...CLASS_COLORS.slice(1).flatMap((color, i) => [(i + 1) * 60, color]),
+  ...CLASS_COLORS.slice(1).flatMap((color, i) => [CLASS_STARTS[i + 1], color]),
 ] as ExpressionSpecification;
 
-const IS_BAND: FilterSpecification = ["==", ["get", "kind"], "band"];
-const IS_LIMIT: FilterSpecification = ["==", ["get", "kind"], "limit"];
-const IS_INNER_ISOLINE: FilterSpecification = ["!", ["has", "kind"]];
+const IS_LIMIT: FilterSpecification = ["has", "limit"];
+const IS_INNER_ISOLINE: FilterSpecification = ["!", ["has", "limit"]];
 // Half-minute labels would crowd the map
-const IS_MINUTE_ISOLINE: FilterSpecification = [
-  "all",
-  ["!=", ["get", "kind"], "band"],
-  ["==", ["%", ["get", "durationSeconds"], 60], 0],
+const IS_WHOLE_MINUTE: FilterSpecification = [
+  "==",
+  ["%", ["get", "durationSeconds"], CLASS_SECONDS],
+  0,
 ];
 
-// Drawn in order: fills, then inner isolines, then the limit, then labels on top
-export const ISOLINES_LAYERS: LayerSpecification[] = [
+// Under the isolines: the bands don't overlap, so each shows its class colour as it is
+export const DURATION_BANDS_LAYERS: LayerSpecification[] = [
   {
     id: "isolines-fill",
     type: "fill",
-    source: ISOLINES_SOURCE_ID,
-    filter: IS_BAND,
+    source: DURATION_BANDS_SOURCE_ID,
     paint: {
       "fill-color": DURATION_COLOR,
-      // The bands don't overlap, so each shows its class colour as it is
       "fill-opacity": toNumber(theme["--path-fill-opacity"]),
     },
   },
+];
+
+// Drawn in order: inner isolines, then the limit, then labels on top
+export const ISOLINES_LAYERS: LayerSpecification[] = [
   {
     id: "isolines-line",
     type: "line",
@@ -83,7 +90,7 @@ export const ISOLINES_LAYERS: LayerSpecification[] = [
     id: "isolines-label",
     type: "symbol",
     source: ISOLINES_SOURCE_ID,
-    filter: IS_MINUTE_ISOLINE,
+    filter: IS_WHOLE_MINUTE,
     layout: {
       "symbol-placement": "line",
       "symbol-spacing": 800,
@@ -105,14 +112,14 @@ function limitSeconds(isolines: Isolines): number {
 }
 
 // The isolines are nested, so each band is its isoline minus the next one's; the longest
-// isoline has nothing inside to cut out. Bands start at the limit and at every whole minute, so
-// the path is filled out to its limit.
+// isoline has nothing inside to cut out. Bands start at the limit and where each class starts, so
+// the path is filled out to its limit and the last class is one band.
 export function durationBands(isolines: Isolines): DurationBand[] {
   const limit = limitSeconds(isolines);
   const edges = isolines.features
     .filter(
       ({ properties: { durationSeconds } }) =>
-        durationSeconds % 60 === 0 || durationSeconds === limit,
+        CLASS_STARTS.includes(durationSeconds) || durationSeconds === limit,
     )
     .sort((a, b) => a.properties.durationSeconds - b.properties.durationSeconds);
 
@@ -121,7 +128,7 @@ export function durationBands(isolines: Isolines): DurationBand[] {
     const outer = isoline.geometry.coordinates;
     return {
       type: "Feature",
-      properties: { kind: "band", durationSeconds: isoline.properties.durationSeconds },
+      properties: { durationSeconds: isoline.properties.durationSeconds },
       geometry: {
         type: "MultiPolygon",
         coordinates: inner ? polygonClipping.difference(outer, inner.geometry.coordinates) : outer,
@@ -130,19 +137,30 @@ export function durationBands(isolines: Isolines): DurationBand[] {
   });
 }
 
-// One eclipse's isolines, as fetched from the API, with their bands to fill underneath and the
-// limit tagged so it can be drawn apart
-export function isolinesSource(
+// The bands to fill under one eclipse's isolines
+export function durationBandsSource(
   isolines: Isolines,
-): GeoJSONSourceSpecification & { data: FeatureCollection & Pick<Isolines, "bbox"> } {
-  const limit = limitSeconds(isolines);
-  const tagged = isolines.features.map((feature) =>
-    feature.properties.durationSeconds === limit
-      ? { ...feature, properties: { ...feature.properties, kind: "limit" } }
-      : feature,
-  );
+): GeoJSONSourceSpecification & { data: FeatureCollection<MultiPolygon> } {
   return {
     type: "geojson",
-    data: { ...isolines, features: [...durationBands(isolines), ...tagged] },
+    data: { type: "FeatureCollection", features: durationBands(isolines) },
+  };
+}
+
+// One eclipse's isolines, as fetched from the API, with the limit tagged so it can be drawn apart
+export function isolinesSource(
+  isolines: Isolines,
+): GeoJSONSourceSpecification & { data: Isolines } {
+  const limit = limitSeconds(isolines);
+  return {
+    type: "geojson",
+    data: {
+      ...isolines,
+      features: isolines.features.map((feature) =>
+        feature.properties.durationSeconds === limit
+          ? { ...feature, properties: { ...feature.properties, limit: true } }
+          : feature,
+      ),
+    },
   };
 }

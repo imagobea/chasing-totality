@@ -11,7 +11,14 @@ import {
   loadAirportIcon,
 } from "../../src/map/airports.js";
 import { EclipseMap } from "../../src/map/EclipseMap.js";
-import { ISOLINES_LAYERS, ISOLINES_SOURCE_ID, isolinesSource } from "../../src/map/isolines.js";
+import {
+  DURATION_BANDS_LAYERS,
+  DURATION_BANDS_SOURCE_ID,
+  durationBandsSource,
+  ISOLINES_LAYERS,
+  ISOLINES_SOURCE_ID,
+  isolinesSource,
+} from "../../src/map/isolines.js";
 
 // jsdom has no WebGL, so MapLibre is replaced by a map that only records calls
 const map = vi.hoisted(() => ({
@@ -20,12 +27,13 @@ const map = vi.hoisted(() => ({
   addLayer: vi.fn(),
   addImage: vi.fn(),
   getSource: vi.fn(),
-  getStyle: vi.fn(() => ({ layers: [] })),
+  // The base map's style, down to its first label layer
+  getStyle: vi.fn(() => ({ layers: [{ id: "place", type: "symbol" }] })),
   fitBounds: vi.fn(),
   remove: vi.fn(),
 }));
 
-// A source once it has been added, the isolines or the airports
+// A source once it has been added: the duration bands, the isolines or the airports
 const source = vi.hoisted(() => ({ setData: vi.fn() }));
 
 // The attribution control, whose element stands in for MapLibre's credits
@@ -139,6 +147,21 @@ describe("EclipseMap", () => {
       isolinesSource(ISOLINES["2027-08-02"]!),
     );
     expect(layersFrom(ISOLINES_SOURCE_ID)).toEqual(ISOLINES_LAYERS);
+  });
+
+  it("adds the duration bands under the isolines, and both under the base map's labels", async () => {
+    render(<EclipseMap {...mapProps("2027-08-02")} />);
+    await loadStyle();
+    expect(map.addSource).toHaveBeenCalledWith(
+      DURATION_BANDS_SOURCE_ID,
+      durationBandsSource(ISOLINES["2027-08-02"]!),
+    );
+    const added = map.addLayer.mock.calls.slice(0, DURATION_BANDS_LAYERS.length + 2);
+    expect(added).toEqual([
+      ...DURATION_BANDS_LAYERS.map((layer) => [layer, "place"]),
+      [ISOLINES_LAYERS[0], "place"],
+      [ISOLINES_LAYERS[1], "place"],
+    ]);
   });
 
   it("adds the isolines when the first date arrives after the style", async () => {

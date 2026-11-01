@@ -19,7 +19,14 @@ import {
   airportsSource,
   loadAirportIcon,
 } from "./airports.js";
-import { ISOLINES_LAYERS, ISOLINES_SOURCE_ID, isolinesSource } from "./isolines.js";
+import {
+  DURATION_BANDS_LAYERS,
+  DURATION_BANDS_SOURCE_ID,
+  durationBandsSource,
+  ISOLINES_LAYERS,
+  ISOLINES_SOURCE_ID,
+  isolinesSource,
+} from "./isolines.js";
 
 type EclipseMapProps = {
   date: string | null;
@@ -121,6 +128,13 @@ export function EclipseMap({ date, onCursorMove, attributionRef }: EclipseMapPro
       .then((isolines) => {
         if (!active) return;
         // Fills and outlines go under the base map's labels; our labels go on top
+        showSource(
+          map,
+          DURATION_BANDS_SOURCE_ID,
+          durationBandsSource(isolines),
+          DURATION_BANDS_LAYERS,
+          () => firstSymbolId(map),
+        );
         showSource(map, ISOLINES_SOURCE_ID, isolinesSource(isolines), ISOLINES_LAYERS, (layer) =>
           layer.type === "symbol" ? undefined : firstSymbolId(map),
         );

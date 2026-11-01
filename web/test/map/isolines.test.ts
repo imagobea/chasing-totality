@@ -7,7 +7,10 @@ import type {
 import { describe, expect, it } from "vitest";
 import type { Isolines } from "../../src/api/eclipses.js";
 import {
+  DURATION_BANDS_LAYERS,
+  DURATION_BANDS_SOURCE_ID,
   durationBands,
+  durationBandsSource,
   ISOLINES_LAYERS,
   ISOLINES_SOURCE_ID,
   isolinesSource,
@@ -42,13 +45,16 @@ function isolines(...durationsSeconds: number[]): Isolines {
   };
 }
 
-const fill = ISOLINES_LAYERS.find(
+// Every layer, in the order they're drawn
+const LAYERS = [...DURATION_BANDS_LAYERS, ...ISOLINES_LAYERS];
+
+const fill = DURATION_BANDS_LAYERS.find(
   (layer): layer is FillLayerSpecification => layer.type === "fill",
 );
 
-// One of the isolines layers, by its id
+// One of the layers, by its id
 function layer(id: string): LayerSpecification | undefined {
-  return ISOLINES_LAYERS.find((layer) => layer.id === id);
+  return LAYERS.find((layer) => layer.id === id);
 }
 
 // The fill colour MapLibre picks for a band of this duration, read off the step expression
@@ -63,11 +69,14 @@ function fillColor(durationSeconds: number): unknown {
 
 describe("isolines", () => {
   it("gives every layer its own id", () => {
-    const ids = ISOLINES_LAYERS.map((layer) => layer.id);
+    const ids = LAYERS.map((layer) => layer.id);
     expect(new Set(ids).size).toBe(ids.length);
   });
 
-  it("draws every layer from the isolines source", () => {
+  it("draws the bands from their source and the isolines from theirs", () => {
+    for (const layer of DURATION_BANDS_LAYERS) {
+      expect(layer).toHaveProperty("source", DURATION_BANDS_SOURCE_ID);
+    }
     for (const layer of ISOLINES_LAYERS) {
       expect(layer).toHaveProperty("source", ISOLINES_SOURCE_ID);
     }
@@ -81,7 +90,7 @@ describe("isolines", () => {
   });
 
   it("draws fills, then inner isolines, then the limit, then labels", () => {
-    expect(ISOLINES_LAYERS.map((layer) => layer.id)).toEqual([
+    expect(LAYERS.map((layer) => layer.id)).toEqual([
       "isolines-fill",
       "isolines-line",
       "isolines-limit",
@@ -89,17 +98,16 @@ describe("isolines", () => {
     ]);
   });
 
-  it("fills the bands, and draws the inner isolines and the limit apart", () => {
-    expect(layer("isolines-fill")).toHaveProperty("filter", ["==", ["get", "kind"], "band"]);
-    expect(layer("isolines-line")).toHaveProperty("filter", ["!", ["has", "kind"]]);
-    expect(layer("isolines-limit")).toHaveProperty("filter", ["==", ["get", "kind"], "limit"]);
+  it("draws the inner isolines and the limit apart", () => {
+    expect(layer("isolines-line")).toHaveProperty("filter", ["!", ["has", "limit"]]);
+    expect(layer("isolines-limit")).toHaveProperty("filter", ["has", "limit"]);
   });
 
   it("labels whole-minute isolines only, the limit included", () => {
     expect(layer("isolines-label")).toHaveProperty("filter", [
-      "all",
-      ["!=", ["get", "kind"], "band"],
-      ["==", ["%", ["get", "durationSeconds"], 60], 0],
+      "==",
+      ["%", ["get", "durationSeconds"], 60],
+      0,
     ]);
   });
 
@@ -117,9 +125,9 @@ describe("durationBands", () => {
   it("makes one band per whole minute, skipping the half minutes", () => {
     const bands = durationBands(isolines(0, 30, 60, 90, 120));
     expect(bands.map((band) => band.properties)).toEqual([
-      { kind: "band", durationSeconds: 0 },
-      { kind: "band", durationSeconds: 60 },
-      { kind: "band", durationSeconds: 120 },
+      { durationSeconds: 0 },
+      { durationSeconds: 60 },
+      { durationSeconds: 120 },
     ]);
   });
 
@@ -135,6 +143,12 @@ describe("durationBands", () => {
     expect(bands.at(-1)?.geometry.coordinates).toEqual(square(1));
   });
 
+  it("makes one band for 6 min and over", () => {
+    const bands = durationBands(isolines(300, 360, 420, 480));
+    expect(bands.map((band) => band.properties.durationSeconds)).toEqual([300, 360]);
+    expect(bands.at(-1)?.geometry.coordinates).toEqual(square(3));
+  });
+
   it("starts the first band at the limit when the limit isn't a whole minute", () => {
     const bands = durationBands(isolines(30, 60, 90));
     expect(bands.map((band) => band.properties.durationSeconds)).toEqual([30, 60]);
@@ -146,19 +160,25 @@ describe("durationBands", () => {
   });
 });
 
+describe("durationBandsSource", () => {
+  it("serves the bands of the isolines it is given", () => {
+    const given = isolines(0, 30, 60);
+    expect(durationBandsSource(given).data.features).toEqual(durationBands(given));
+  });
+});
+
 describe("isolinesSource", () => {
-  it("serves the bands under the isolines it is given", () => {
+  it("serves the isolines it is given, with their bbox", () => {
     const given = isolines(0, 30, 60);
     const { data } = isolinesSource(given);
     expect(data.bbox).toEqual(given.bbox);
-    expect(data.features.slice(0, 2)).toEqual(durationBands(given));
-    expect(data.features).toHaveLength(2 + given.features.length);
+    expect(data.features).toHaveLength(given.features.length);
   });
 
   it("tags the limit, the isoline with the shortest duration, and leaves the others as given", () => {
     const given = isolines(30, 60, 90);
-    const [limit, ...inner] = isolinesSource(given).data.features.slice(2);
-    expect(limit?.properties).toEqual({ durationSeconds: 30, name: "30s", kind: "limit" });
+    const [limit, ...inner] = isolinesSource(given).data.features;
+    expect(limit?.properties).toEqual({ durationSeconds: 30, name: "30s", limit: true });
     expect(inner).toEqual(given.features.slice(1));
   });
 });
