@@ -61,7 +61,7 @@ importers:
         specifier: ^6.14.0
         version: 6.14.0
       polygon-clipping:
-        specifier: 0.15.7
+        specifier: ^0.15.7
         version: 0.15.7
       react:
         specifier: ^19.3.0
