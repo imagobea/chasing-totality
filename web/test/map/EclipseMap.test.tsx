@@ -11,7 +11,14 @@ import {
   loadAirportIcon,
 } from "../../src/map/airports.js";
 import { EclipseMap } from "../../src/map/EclipseMap.js";
-import { ISOLINES_LAYERS, ISOLINES_SOURCE_ID, isolinesSource } from "../../src/map/isolines.js";
+import {
+  DURATION_BANDS_LAYERS,
+  DURATION_BANDS_SOURCE_ID,
+  durationBandsSource,
+  ISOLINES_LAYERS,
+  ISOLINES_SOURCE_ID,
+  isolinesSource,
+} from "../../src/map/isolines.js";
 
 // jsdom has no WebGL, so MapLibre is replaced by a map that only records calls
 const map = vi.hoisted(() => ({
@@ -20,12 +27,13 @@ const map = vi.hoisted(() => ({
   addLayer: vi.fn(),
   addImage: vi.fn(),
   getSource: vi.fn(),
-  getStyle: vi.fn(() => ({ layers: [] })),
+  // The base map's style, down to its first label layer
+  getStyle: vi.fn(() => ({ layers: [{ id: "place", type: "symbol" }] })),
   fitBounds: vi.fn(),
   remove: vi.fn(),
 }));
 
-// A source once it has been added, the isolines or the airports
+// A source once it has been added: the duration bands, the isolines or the airports
 const source = vi.hoisted(() => ({ setData: vi.fn() }));
 
 // The attribution control, whose element stands in for MapLibre's credits
@@ -49,6 +57,12 @@ vi.mock("../../src/map/airports.js", async (importOriginal) => ({
   ...(await importOriginal<typeof import("../../src/map/airports.js")>()),
   loadAirportIcon: vi.fn(async () => icon),
 }));
+
+// The real isolines module, with band cutting that a test can make fail
+vi.mock("../../src/map/isolines.js", async (importOriginal) => {
+  const isolines = await importOriginal<typeof import("../../src/map/isolines.js")>();
+  return { ...isolines, durationBandsSource: vi.fn(isolines.durationBandsSource) };
+});
 
 vi.mock("maplibre-gl", () => ({
   // A function, not an arrow, so the component can call it with new
@@ -139,6 +153,37 @@ describe("EclipseMap", () => {
       isolinesSource(ISOLINES["2027-08-02"]!),
     );
     expect(layersFrom(ISOLINES_SOURCE_ID)).toEqual(ISOLINES_LAYERS);
+  });
+
+  it("adds the isolines' outlines under the base map's labels, and the bands under them", async () => {
+    render(<EclipseMap {...mapProps("2027-08-02")} />);
+    await loadStyle();
+    expect(map.addSource).toHaveBeenCalledWith(
+      DURATION_BANDS_SOURCE_ID,
+      durationBandsSource(ISOLINES["2027-08-02"]!),
+    );
+    const added = map.addLayer.mock.calls.slice(0, ISOLINES_LAYERS.length + 1);
+    expect(added).toEqual([
+      [ISOLINES_LAYERS[0], "place"],
+      [ISOLINES_LAYERS[1], "place"],
+      [ISOLINES_LAYERS[2], undefined],
+      ...DURATION_BANDS_LAYERS.map((layer) => [layer, ISOLINES_LAYERS[0]!.id]),
+    ]);
+  });
+
+  it("warns and still shows the isolines and airports when the bands can't be cut", async () => {
+    const error = new Error("Unable to complete output ring");
+    vi.mocked(durationBandsSource).mockImplementationOnce(() => {
+      throw error;
+    });
+    const warn = vi.spyOn(console, "warn").mockImplementation(() => {});
+    render(<EclipseMap {...mapProps("2027-08-02")} />);
+    await loadStyle();
+    expect(warn).toHaveBeenCalledWith(expect.any(String), error);
+    expect(layersFrom(DURATION_BANDS_SOURCE_ID)).toEqual([]);
+    expect(layersFrom(ISOLINES_SOURCE_ID)).toEqual(ISOLINES_LAYERS);
+    expect(layersFrom(AIRPORTS_SOURCE_ID)).toEqual(AIRPORTS_LAYERS);
+    expect(map.fitBounds).toHaveBeenCalledWith(ISOLINES["2027-08-02"]!.bbox);
   });
 
   it("adds the isolines when the first date arrives after the style", async () => {

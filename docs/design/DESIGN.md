@@ -98,13 +98,13 @@ Map layer stack (bottom → top):
 
 1. Basemap fills (land, water, roads), from the style.
 2. **Advisories:** hatched `fill-pattern` (image added via `map.addImage`) plus a dashed outline.
-3. **Isoline fills:** translucent. Stacked bands get stronger toward the centre line.
-4. **Isoline lines:** crisp edges, plus a dashed centre line.
+3. **Isoline fills:** one band per whole minute of totality, non-overlapping, each a flat colour from the duration ramp (longest = lightest).
+4. **Isoline lines:** faint inner isolines every 30 s, and one strong line for the limit of totality.
 5. Basemap labels, kept readable maybe with halos.
 6. **Our symbols:** duration labels, airport icons, etc.
 7. Spot markers and the selection highlight.
 
-Our fills and lines are inserted **before the first basemap symbol layer**. Our symbols go on top. Only one layer may ever be near-opaque; everything else stays translucent so labels stay readable.
+Our fills and lines are inserted **before the first basemap symbol layer**. Our symbols go on top. Only one layer may ever be near-opaque (the duration bands); everything else stays translucent, and basemap labels sit above the bands so they stay readable.
 
 📦 Travel advisories and airport data need to be integrated.
 
@@ -115,7 +115,7 @@ Our fills and lines are inserted **before the first basemap symbol layer**. Our 
   2. Airports
   3. Travel advisories
 - **Each toggle:** a real button with `aria-pressed`, a checkbox mark, a label and a small swatch matching the layer.
-- **Legend: "Totality duration".** A 5-step ramp - CHECK - from edge to centre, with end labels `EDGE · 0s` and `CENTRE · <max>`. `<max>` comes from the eclipse data (6m 23s for 2027).
+- **Legend: "Totality duration".** One swatch per whole-minute class shown on the map, from `< 1 min` at the limit to the longest class, with end labels `LIMIT · 0s` and `CENTRE · <max>`. `<max>` comes from the eclipse data (6m 23s for 2027).
 
 🧪 Toggles are a nice to have and can come later. Consider the design description for the legend/totality duration as tentative.
 📦 Travel advisories and airport data need to be integrated.
@@ -215,39 +215,48 @@ Sections in this exact order: will I see it → will the sky be clear → can I 
 
 #### Colour
 
-| Token                     | Role                                                           | Positron                | Dark                 | Fiord                |
-| ------------------------- | -------------------------------------------------------------- | ----------------------- | -------------------- | -------------------- |
-| `--color-bg`              | app background                                                 | `#F7F7F5`               | `#0C0C0D`            | `#2A3245`            |
-| `--color-surface`         | floating panel background                                      | `rgba(255,255,255,.95)` | `rgba(18,18,20,.94)` | `rgba(36,43,60,.95)` |
-| `--color-surface-raised`  | inputs, selected rows                                          | `#FFFFFF`               | `#17171A`            | `#2F3850`            |
-| `--color-border`          | panel and header borders                                       | `#D3D8DD`               | `#2C2C31`            | `#55617E`            |
-| `--color-divider`         | section dividers inside panels                                 | `#E6E9EC`               | `#202024`            | `#3C4661`            |
-| `--color-control-border`  | buttons, chips, selects                                        | `#BFC6CE`               | `#3A3A40`            | `#5E6A88`            |
-| `--color-text`            | primary text                                                   | `#1D232B`               | `#ECECEE`            | `#EEF1F7`            |
-| `--color-text-muted`      | labels, captions                                               | `#59636F`               | `#9C9CA4`            | `#B3BDD0`            |
-| `--color-text-faint`      | disabled, fine print                                           | `#5F6975`               | `#8E8E96`            | `#AAB4C8`            |
-| `--color-accent`          | primary emphasis: selection, key numbers, focus brackets       | `#B85400`               | `#FFB547`            | `#FFB547`            |
-| `--color-on-accent`       | text/icons on accent                                           | `#FFFFFF`               | `#0C0C0D`            | `#1E2433`            |
-| `--color-path-fill-short` | isoline band fill at the shortest totality (translucent)       | `#FBD9A8`               | `#FFD9A0`            | `#FFD9A0`            |
-| `--color-path-fill-long`  | isoline band fill at the longest totality, 6 min (translucent) | `#B33A00`               | `#F2661F`            | `#F2661F`            |
-| `--color-path-edge`       | isoline band outlines                                          | `#D96400`               | `#FFB547`            | `#FFC46B`            |
-| `--color-path-center`     | centre line                                                    | `#8A3B00`               | `#FFF3DC`            | `#FFF3DC`            |
-| `--color-travel`          | airports, flight links, distance bars                          | `#0B6E86`               | `#63C7DB`            | `#8BE4F2`            |
-| `--color-advisory`        | advisory hatch and outline                                     | `#C62828`               | `#FF6B6B`            | `#FF8A8A`            |
-| `--color-advisory-text`   | advisory text                                                  | `#A51D1D`               | `#FF9A9A`            | `#FFB3B3`            |
-| `--color-status-ok`       | API OK dot                                                     | `#2E8540`               | `#8FD4A0`            | `#9BE0AE`            |
-| `--color-label-halo`      | halo behind map labels                                         | `#FFFFFF`               | `#0C0C0D`            | `#2E3850`            |
+| Token                    | Role                                                     | Positron                | Dark                 | Fiord                |
+| ------------------------ | -------------------------------------------------------- | ----------------------- | -------------------- | -------------------- |
+| `--color-bg`             | app background                                           | `#F7F7F5`               | `#0C0C0D`            | `#2A3245`            |
+| `--color-surface`        | floating panel background                                | `rgba(255,255,255,.95)` | `rgba(18,18,20,.94)` | `rgba(36,43,60,.95)` |
+| `--color-surface-raised` | inputs, selected rows                                    | `#FFFFFF`               | `#17171A`            | `#2F3850`            |
+| `--color-border`         | panel and header borders                                 | `#D3D8DD`               | `#2C2C31`            | `#55617E`            |
+| `--color-divider`        | section dividers inside panels                           | `#E6E9EC`               | `#202024`            | `#3C4661`            |
+| `--color-control-border` | buttons, chips, selects                                  | `#BFC6CE`               | `#3A3A40`            | `#5E6A88`            |
+| `--color-text`           | primary text                                             | `#1D232B`               | `#ECECEE`            | `#EEF1F7`            |
+| `--color-text-muted`     | labels, captions                                         | `#59636F`               | `#9C9CA4`            | `#B3BDD0`            |
+| `--color-text-faint`     | disabled, fine print                                     | `#5F6975`               | `#8E8E96`            | `#AAB4C8`            |
+| `--color-accent`         | primary emphasis: selection, key numbers, focus brackets | `#B85400`               | `#FFB547`            | `#FFB547`            |
+| `--color-on-accent`      | text/icons on accent                                     | `#FFFFFF`               | `#0C0C0D`            | `#1E2433`            |
+| `--color-path-fill-0`    | duration band fill, < 1 min                              | —                       | —                    | `#6B3A4E`            |
+| `--color-path-fill-1`    | duration band fill, 1–2 min                              | —                       | —                    | `#8A3F3F`            |
+| `--color-path-fill-2`    | duration band fill, 2–3 min                              | —                       | —                    | `#AD4E34`            |
+| `--color-path-fill-3`    | duration band fill, 3–4 min                              | —                       | —                    | `#CE6A2C`            |
+| `--color-path-fill-4`    | duration band fill, 4–5 min                              | —                       | —                    | `#E88B2E`            |
+| `--color-path-fill-5`    | duration band fill, 5–6 min                              | —                       | —                    | `#F5AE4F`            |
+| `--color-path-fill-6`    | duration band fill, ≥ 6 min                              | —                       | —                    | `#FFD98A`            |
+| `--color-path-limit`     | outer limit of totality, the only strong line            | —                       | —                    | `#FFC46B`            |
+| `--color-isoline`        | inner isolines, drawn faint                              | —                       | —                    | `#FFF3DC`            |
+| `--color-travel`         | airports, flight links, distance bars                    | `#0B6E86`               | `#63C7DB`            | `#8BE4F2`            |
+| `--color-advisory`       | advisory hatch and outline                               | `#C62828`               | `#FF6B6B`            | `#FF8A8A`            |
+| `--color-advisory-text`  | advisory text                                            | `#A51D1D`               | `#FF9A9A`            | `#FFB3B3`            |
+| `--color-status-ok`      | API OK dot                                               | `#2E8540`               | `#8FD4A0`            | `#9BE0AE`            |
+| `--color-label-halo`     | halo behind map labels                                   | `#FFFFFF`               | `#0C0C0D`            | `#2E3850`            |
 
-On the light theme (Positron) the accent and path colours are darker, to keep 4.5:1 text contrast on white.
+**Duration ramp:** colour by absolute minutes (not % of max); longest = lightest; only the outer limit line is strong. The ramp is set for Fiord only so far (— = not yet chosen).
+
+On the light theme (Positron) the accent is darker, to keep 4.5:1 text contrast on white; its path colours are not chosen yet.
 
 #### Map-layer paint (provisional, same for all themes)
 
-| Token                     | Current value                      |
-| ------------------------- | ---------------------------------- |
-| `--path-fill-opacity`     | `0.3` per band                     |
-| `--path-edge-width`       | `1px`                              |
-| `--advisory-fill-opacity` | `0.55` (hatch)                     |
-| `--label-halo-width`      | `1.5` (MapLibre `text-halo-width`) |
+| Token                     | Current value                         |
+| ------------------------- | ------------------------------------- |
+| `--path-fill-opacity`     | `0.85` per band (bands don't overlap) |
+| `--isoline-opacity`       | `0.35`                                |
+| `--isoline-width`         | `0.75px`                              |
+| `--path-limit-width`      | `1.25px`                              |
+| `--advisory-fill-opacity` | `0.55` (hatch)                        |
+| `--label-halo-width`      | `1.5` (MapLibre `text-halo-width`)    |
 
 MapLibre paint properties can't read CSS variables. Mirror these tokens in a small JS theme object, e.g. `theme.ts`, that both CSS generation and map layers import. That keeps one source of truth.
 
