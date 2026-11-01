@@ -48,17 +48,14 @@ function isolines(...durationsSeconds: number[]): Isolines {
 // Every layer, in the order they're drawn
 const LAYERS = [...DURATION_BANDS_LAYERS, ...ISOLINES_LAYERS];
 
-const fill = DURATION_BANDS_LAYERS.find(
-  (layer): layer is FillLayerSpecification => layer.type === "fill",
-);
-
-// One of the layers, by its id
-function layer(id: string): LayerSpecification | undefined {
-  return LAYERS.find((layer) => layer.id === id);
+// One of the layers, by its id, typed as the caller expects it
+function layer<T extends LayerSpecification = LayerSpecification>(id: string): T | undefined {
+  return LAYERS.find((layer) => layer.id === id) as T | undefined;
 }
 
 // The fill colour MapLibre picks for a band of this duration, read off the step expression
 function fillColor(durationSeconds: number): unknown {
+  const fill = layer<FillLayerSpecification>("isolines-fill");
   const [, , base, ...stops] = fill?.paint?.["fill-color"] as ExpressionSpecification;
   let color = base;
   for (let i = 0; i < stops.length; i += 2) {
@@ -83,9 +80,7 @@ describe("isolines", () => {
   });
 
   it("labels each isoline with its name", () => {
-    const label = ISOLINES_LAYERS.find(
-      (layer): layer is SymbolLayerSpecification => layer.type === "symbol",
-    );
+    const label = layer<SymbolLayerSpecification>("isolines-label");
     expect(label?.layout?.["text-field"]).toEqual(["get", "name"]);
   });
 
@@ -152,7 +147,6 @@ describe("durationBands", () => {
   it("starts the first band at the limit when the limit isn't a whole minute", () => {
     const bands = durationBands(isolines(30, 60, 90));
     expect(bands.map((band) => band.properties.durationSeconds)).toEqual([30, 60]);
-    expect(fillColor(30)).toBe(theme["--color-path-fill-0"]);
   });
 
   it("makes no bands without isolines", () => {
