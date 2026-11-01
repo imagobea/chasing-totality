@@ -15,7 +15,7 @@ import {
 import { theme } from "../../src/theme.js";
 
 // A square centred on 0, 0 reaching `half` degrees each way
-function square(half: number): number[][][][] {
+function square(half: number): [number, number][][][] {
   return [
     [
       [

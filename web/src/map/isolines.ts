@@ -1,6 +1,6 @@
 // The eclipse's isolines as MapLibre data: the source and the layers that draw it
 
-import type { Feature, MultiPolygon } from "geojson";
+import type { Feature, FeatureCollection, MultiPolygon } from "geojson";
 import type {
   ExpressionSpecification,
   FilterSpecification,
@@ -101,7 +101,7 @@ export const ISOLINES_LAYERS: LayerSpecification[] = [
 
 // The limit of totality is the isoline with the shortest duration, which needn't be 0 s
 function limitSeconds(isolines: Isolines): number {
-  return Math.min(...isolines.features.map((feature) => feature.properties?.durationSeconds));
+  return Math.min(...isolines.features.map((feature) => feature.properties.durationSeconds));
 }
 
 // The isolines are nested, so each band is its isoline minus the next one's; the longest
@@ -110,30 +110,21 @@ function limitSeconds(isolines: Isolines): number {
 export function durationBands(isolines: Isolines): DurationBand[] {
   const limit = limitSeconds(isolines);
   const edges = isolines.features
-    .filter((feature): feature is Feature<MultiPolygon> => {
-      const durationSeconds = feature.properties?.durationSeconds;
-      return (
-        feature.geometry.type === "MultiPolygon" &&
-        (durationSeconds % 60 === 0 || durationSeconds === limit)
-      );
-    })
-    .sort((a, b) => a.properties?.durationSeconds - b.properties?.durationSeconds);
+    .filter(
+      ({ properties: { durationSeconds } }) =>
+        durationSeconds % 60 === 0 || durationSeconds === limit,
+    )
+    .sort((a, b) => a.properties.durationSeconds - b.properties.durationSeconds);
 
   return edges.map((isoline, i) => {
     const inner = edges[i + 1];
-    // polygon-clipping types positions as pairs; the engine only ever writes pairs
-    const outer = isoline.geometry.coordinates as polygonClipping.MultiPolygon;
+    const outer = isoline.geometry.coordinates;
     return {
       type: "Feature",
-      properties: { kind: "band", durationSeconds: isoline.properties?.durationSeconds },
+      properties: { kind: "band", durationSeconds: isoline.properties.durationSeconds },
       geometry: {
         type: "MultiPolygon",
-        coordinates: inner
-          ? polygonClipping.difference(
-              outer,
-              inner.geometry.coordinates as polygonClipping.MultiPolygon,
-            )
-          : outer,
+        coordinates: inner ? polygonClipping.difference(outer, inner.geometry.coordinates) : outer,
       },
     };
   });
@@ -143,10 +134,10 @@ export function durationBands(isolines: Isolines): DurationBand[] {
 // limit tagged so it can be drawn apart
 export function isolinesSource(
   isolines: Isolines,
-): GeoJSONSourceSpecification & { data: Isolines } {
+): GeoJSONSourceSpecification & { data: FeatureCollection & Pick<Isolines, "bbox"> } {
   const limit = limitSeconds(isolines);
   const tagged = isolines.features.map((feature) =>
-    feature.properties?.durationSeconds === limit
+    feature.properties.durationSeconds === limit
       ? { ...feature, properties: { ...feature.properties, kind: "limit" } }
       : feature,
   );
