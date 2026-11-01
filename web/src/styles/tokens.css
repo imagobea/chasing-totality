@@ -11,18 +11,26 @@
   --color-text-faint: #aab4c8;
   --color-accent: #ffb547;
   --color-on-accent: #1e2433;
-  --color-path-fill-short: #ffd9a0;
-  --color-path-fill-long: #f2661f;
-  --color-path-edge: #ffc46b;
-  --color-path-center: #fff3dc;
+  /* duration ramp: <1, 1–2, 2–3, 3–4, 4–5, 5–6, ≥6 min. Longest = lightest */
+  --color-path-fill-0: #6b3a4e;
+  --color-path-fill-1: #8a3f3f;
+  --color-path-fill-2: #ad4e34;
+  --color-path-fill-3: #ce6a2c;
+  --color-path-fill-4: #e88b2e;
+  --color-path-fill-5: #f5ae4f;
+  --color-path-fill-6: #ffd98a;
+  --color-path-limit: #ffc46b; /* outer limit of totality only */
+  --color-isoline: #fff3dc; /* inner isolines, drawn faint */
   --color-travel: #8be4f2;
   --color-advisory: #ff8a8a;
   --color-advisory-text: #ffb3b3;
   --color-status-ok: #9be0ae;
   --color-label-halo: #2e3850;
 
-  --path-fill-opacity: 0.3;
-  --path-edge-width: 1px;
+  --path-fill-opacity: 0.85;
+  --isoline-opacity: 0.35;
+  --isoline-width: 0.75px;
+  --path-limit-width: 1.25px;
   --advisory-fill-opacity: 0.55;
   --label-halo-width: 1.5;
 
