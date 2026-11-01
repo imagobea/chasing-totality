@@ -127,17 +127,23 @@ export function EclipseMap({ date, onCursorMove, attributionRef }: EclipseMapPro
     fetchIsolines(date)
       .then((isolines) => {
         if (!active) return;
-        // Fills and outlines go under the base map's labels; our labels go on top
-        showSource(
-          map,
-          DURATION_BANDS_SOURCE_ID,
-          durationBandsSource(isolines),
-          DURATION_BANDS_LAYERS,
-          () => firstSymbolId(map),
-        );
+        // Outlines go under the base map's labels; our labels go on top
         showSource(map, ISOLINES_SOURCE_ID, isolinesSource(isolines), ISOLINES_LAYERS, (layer) =>
           layer.type === "symbol" ? undefined : firstSymbolId(map),
         );
+        // Fills go under the outlines. Cutting the bands can throw on odd geometry, and the
+        // isolines are still worth showing without them.
+        try {
+          showSource(
+            map,
+            DURATION_BANDS_SOURCE_ID,
+            durationBandsSource(isolines),
+            DURATION_BANDS_LAYERS,
+            () => ISOLINES_LAYERS[0]?.id,
+          );
+        } catch (error) {
+          console.warn(`Duration bands for ${date} not shown`, error);
+        }
         // Last, so on top of everything, the base map's labels included
         showSource(map, AIRPORTS_SOURCE_ID, airportsSource(isolines.bbox), AIRPORTS_LAYERS);
         map.fitBounds(isolines.bbox);

@@ -58,6 +58,12 @@ vi.mock("../../src/map/airports.js", async (importOriginal) => ({
   loadAirportIcon: vi.fn(async () => icon),
 }));
 
+// The real isolines module, with band cutting that a test can make fail
+vi.mock("../../src/map/isolines.js", async (importOriginal) => {
+  const isolines = await importOriginal<typeof import("../../src/map/isolines.js")>();
+  return { ...isolines, durationBandsSource: vi.fn(isolines.durationBandsSource) };
+});
+
 vi.mock("maplibre-gl", () => ({
   // A function, not an arrow, so the component can call it with new
   MapLibreMap: vi.fn(function () {
@@ -149,19 +155,35 @@ describe("EclipseMap", () => {
     expect(layersFrom(ISOLINES_SOURCE_ID)).toEqual(ISOLINES_LAYERS);
   });
 
-  it("adds the duration bands under the isolines, and both under the base map's labels", async () => {
+  it("adds the isolines' outlines under the base map's labels, and the bands under them", async () => {
     render(<EclipseMap {...mapProps("2027-08-02")} />);
     await loadStyle();
     expect(map.addSource).toHaveBeenCalledWith(
       DURATION_BANDS_SOURCE_ID,
       durationBandsSource(ISOLINES["2027-08-02"]!),
     );
-    const added = map.addLayer.mock.calls.slice(0, DURATION_BANDS_LAYERS.length + 2);
+    const added = map.addLayer.mock.calls.slice(0, ISOLINES_LAYERS.length + 1);
     expect(added).toEqual([
-      ...DURATION_BANDS_LAYERS.map((layer) => [layer, "place"]),
       [ISOLINES_LAYERS[0], "place"],
       [ISOLINES_LAYERS[1], "place"],
+      [ISOLINES_LAYERS[2], undefined],
+      ...DURATION_BANDS_LAYERS.map((layer) => [layer, ISOLINES_LAYERS[0]!.id]),
     ]);
+  });
+
+  it("warns and still shows the isolines and airports when the bands can't be cut", async () => {
+    const error = new Error("Unable to complete output ring");
+    vi.mocked(durationBandsSource).mockImplementationOnce(() => {
+      throw error;
+    });
+    const warn = vi.spyOn(console, "warn").mockImplementation(() => {});
+    render(<EclipseMap {...mapProps("2027-08-02")} />);
+    await loadStyle();
+    expect(warn).toHaveBeenCalledWith(expect.any(String), error);
+    expect(layersFrom(DURATION_BANDS_SOURCE_ID)).toEqual([]);
+    expect(layersFrom(ISOLINES_SOURCE_ID)).toEqual(ISOLINES_LAYERS);
+    expect(layersFrom(AIRPORTS_SOURCE_ID)).toEqual(AIRPORTS_LAYERS);
+    expect(map.fitBounds).toHaveBeenCalledWith(ISOLINES["2027-08-02"]!.bbox);
   });
 
   it("adds the isolines when the first date arrives after the style", async () => {
