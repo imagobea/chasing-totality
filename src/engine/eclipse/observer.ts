@@ -1,7 +1,7 @@
 // The observer's position as the eclipse maths needs it: ρ·sinφ′ and ρ·cosφ′, from latitude,
 // longitude and altitude. Explained in ../README.md
 
-import { RAD } from "./constants.js";
+import { EQUATORIAL_RADIUS_METERS, POLAR_TO_EQUATORIAL, RAD } from "./constants.js";
 
 // Where the observer stands, as a map or GPS gives it
 export type GeographicPosition = {
@@ -17,10 +17,6 @@ export type GeocentricObserver = {
   latitude: number; // geodetic, north positive, radians: the local vertical, for the horizon
   longitude: number; // east positive, radians
 };
-
-// IAU 1976 ellipsoid, as used by Meeus and the eclipse elements
-const EQUATORIAL_RADIUS_METERS = 6378140;
-const POLAR_TO_EQUATORIAL = 0.99664719; // b/a, from flattening 1/298.257
 
 // Converts a map position into geocentric terms on the IAU 1976 ellipsoid; throws a RangeError
 // for a latitude beyond ±90° or a longitude or altitude that isn't finite

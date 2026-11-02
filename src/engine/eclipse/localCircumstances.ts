@@ -2,7 +2,7 @@
 // limitations in docs/plans/004-local-totality-duration-plan.md
 
 import { evaluate, type BesselianElements } from "./besselian.js";
-import { RAD } from "./constants.js";
+import { EARTH_ROTATION_DEGREES_PER_SECOND, RAD } from "./constants.js";
 import {
   geocentricObserver,
   type GeocentricObserver,
@@ -37,11 +37,9 @@ type ShadowSeenFrom = {
   sunAltitude: number; // above the observer's horizon, degrees
 };
 
-// Besselian μ is measured against a meridian that turns with ephemeris time; an observer's
-// hour angle needs universal time. The Earth turns 1.002738 × 15°/h = 0.00417807° per
-// second of ΔT.
-const EARTH_ROTATION_DEGREES_PER_SECOND = 0.00417807;
-const TOLERANCE_HOURS = 1e-6; // ~4 ms
+// The iterations stop once a step is under ~4 ms, far below NASA's 0.1 s rounding
+const TOLERANCE_HOURS = 1e-6;
+// Steps before giving up: the iterations settle in a few, so 50 means they never will
 const MAX_ITERATIONS = 50;
 
 // Places the observer on the fundamental plane at t hours after t0 and measures the shadow
@@ -54,7 +52,9 @@ function shadowSeenFrom(
   const { x, y, d, mu, l1, l2, xRate, yRate, dRate, muRate } = evaluate(elements, t);
   const { rhoSinPhi, rhoCosPhi, latitude, longitude } = observer;
 
-  // Observer's hour angle from the shadow axis
+  // Observer's hour angle from the shadow axis. Besselian μ is measured against a meridian that
+  // turns with ephemeris time, and the hour angle needs universal time: ΔT seconds of turning
+  // apart.
   const H = mu + longitude - EARTH_ROTATION_DEGREES_PER_SECOND * elements.deltaT * RAD;
 
   // Rotate the observer's geocentric position into the fundamental plane
