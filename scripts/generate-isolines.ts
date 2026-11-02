@@ -1,6 +1,7 @@
 // Generates data/isolines/<date>.geojson, the isolines the API serves for one total eclipse: how
-// long totality lasts across NASA's path, every 30 s. NASA's limits go to out/, to compare by
-// eye in geojson.io or any GIS tool. The steps are explained in src/engine/README.md.
+// long totality lasts across NASA's path, every 30 s. NASA's limits go to out/ (not committed),
+// to compare by eye in geojson.io or any GIS tool. The steps are explained in
+// src/engine/README.md.
 //
 // Run: pnpm data:isolines <date>, e.g. pnpm data:isolines 2027-08-02
 
@@ -50,7 +51,7 @@ function nasaLines(rows: PathRow[]) {
 }
 
 function main() {
-  // The eclipse: its Besselian elements and NASA's path table
+  // Step 1: the eclipse's Besselian elements and NASA's path table, by date
   const date = process.argv[2] ?? "";
   if (!Object.hasOwn(eclipses, date)) {
     console.error(`Usage: pnpm data:isolines <date>. Known: ${Object.keys(eclipses).join(", ")}`);
@@ -61,14 +62,15 @@ function main() {
     readFileSync(new URL(`../data/nasa-paths/${date}.txt`, import.meta.url), "utf8"),
   );
 
-  // Step 1: totality at every grid point around the path
+  // Step 2: totality at every grid point around the path
   const started = performance.now();
   const grid = durationGrid(elements, pathArea(rows, MARGIN_DEGREES), STEP_DEGREES);
 
-  // Step 2: isolines through the grid, every 30 s up to the longest totality
+  // Step 3: isolines through the grid, every 30 s up to the longest totality
   const isolines = durationContours(grid, durationThresholds(grid, THRESHOLD_STEP_SECONDS));
   const seconds = (performance.now() - started) / 1000;
 
+  // Step 4: write the isolines to data/isolines/ and NASA's lines to out/
   const output = new URL(`${date}.geojson`, DATA_DIR);
   const comparison = new URL(`${date}-nasa-path.geojson`, COMPARE_DIR);
   const json = `${JSON.stringify(isolines)}\n`;
@@ -76,7 +78,7 @@ function main() {
   mkdirSync(COMPARE_DIR, { recursive: true });
   writeFileSync(comparison, JSON.stringify(nasaLines(rows)));
 
-  // Numbers to watch as eclipses are added: the grid's size drives the run time
+  // Step 5: report the numbers to watch as eclipses are added: the grid's size drives the run time
   const points = grid.width * grid.height;
   const megabytes = Buffer.byteLength(json) / 1e6;
   console.log(
