@@ -1,6 +1,6 @@
 // Generates data/isolines/<date>.geojson, the isolines the API serves for one total eclipse: how
-// long totality lasts across NASA's path, every 30 s. NASA's limits go to out/ (not committed),
-// to compare by eye in geojson.io or any GIS tool. The steps are explained in
+// long totality lasts across NASA's path, every 30 s. NASA's limits and central line go to out/
+// (not committed), to compare by eye in geojson.io or any GIS tool. The steps are explained in
 // src/engine/README.md.
 //
 // Run: pnpm data:isolines <date>, e.g. pnpm data:isolines 2027-08-02
