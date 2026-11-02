@@ -136,14 +136,14 @@ function toAirportsGeoJson(rows: Record<string, string>[], retrieved: string): A
 }
 
 async function main() {
-  // Step 1: download OurAirports' CSV
+  // Step 1: download OurAirports' CSV, dated in UTC whatever the local time zone
+  const retrieved = new Date().toISOString().slice(0, 10);
   const csvText = await download(OURAIRPORTS_CSV_URL);
 
   // Step 2: parse it into one record per airport, keyed by column name
   const rows = parseCsv(csvText);
 
-  // Step 3: keep the commercial airports as GeoJSON, dated in UTC whatever the local time zone
-  const retrieved = new Date().toISOString().slice(0, 10);
+  // Step 3: keep the commercial airports as GeoJSON
   const snapshot = toAirportsGeoJson(rows, retrieved);
 
   // Step 4: write the snapshot over the committed one
