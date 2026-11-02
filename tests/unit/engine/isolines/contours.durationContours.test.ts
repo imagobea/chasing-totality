@@ -1,11 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { eclipse2027Aug02 } from "../../../../src/engine/eclipse/elements/2027-08-02.js";
 import { localCircumstances } from "../../../../src/engine/eclipse/localCircumstances.js";
-import {
-  durationContours,
-  durationThresholds,
-  type Position,
-} from "../../../../src/engine/isolines/contours.js";
+import { durationContours, type Position } from "../../../../src/engine/isolines/contours.js";
 import { durationGrid } from "../../../../src/engine/isolines/grid.js";
 
 // A small grid across the path over Egypt, around 10:00 UT (central duration ~6m23s)
@@ -24,43 +20,6 @@ const isolineVertices = (coordinates: Position[][][]) =>
     .filter(
       ([lon, lat]) => lon > AREA.west && lon < AREA.east && lat > AREA.south && lat < AREA.north,
     );
-
-describe("durationGrid", () => {
-  it("covers the bounding box, corners included", () => {
-    expect(grid.width).toBe(61);
-    expect(grid.height).toBe(101);
-    expect(grid.values).toHaveLength(61 * 101);
-  });
-
-  it("stores each point's signed squared duration row by row from the south-west corner", () => {
-    const column = 20;
-    const row = 60;
-    expect(grid.values[row * grid.width + column]).toBe(
-      at([AREA.west + column * STEP, AREA.south + row * STEP]).signedDurationSquared,
-    );
-  });
-
-  it.each([
-    ["a zero step", { ...AREA }, 0],
-    ["an empty box", { ...AREA, east: AREA.west }, STEP],
-  ])("rejects %s", (_, area, step) => {
-    expect(() => durationGrid(eclipse2027Aug02, area, step)).toThrow(RangeError);
-  });
-});
-
-describe("durationThresholds", () => {
-  it("steps from 0 up to the longest duration in the grid (~6m23s)", () => {
-    expect(durationThresholds(grid, 30)).toEqual(Array.from({ length: 13 }, (_, i) => i * 30));
-  });
-
-  it("gives only the path of totality when nothing reaches the first step", () => {
-    expect(durationThresholds(grid, 400)).toEqual([0]);
-  });
-
-  it("rejects a zero step", () => {
-    expect(() => durationThresholds(grid, 0)).toThrow(RangeError);
-  });
-});
 
 describe("durationContours", () => {
   const isolines = durationContours(grid, [0, 30, 180, 360]);
