@@ -107,7 +107,7 @@ describe.each(nasaPaths)("localCircumstances vs NASA's $date path table", ({ ele
   });
 
   // Not necessarily shorter than on the central line: with the Sun a few degrees up, the longest
-  // totality lies off to one side (2–5 s longer halfway, e.g. 2033-03-30).
+  // totality lies off to one side (2–5 s longer halfway, e.g. 2033-03-30)
   it("gives some totality halfway between the central line and a limit", () => {
     for (const { row, limit } of limits) {
       expect(at(along(row.central, limit, 0.5)).durationSeconds).toBeGreaterThan(0);
