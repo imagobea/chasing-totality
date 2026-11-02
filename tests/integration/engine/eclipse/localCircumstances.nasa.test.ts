@@ -6,7 +6,7 @@
 // Checked per eclipse:
 // - duration on the central line: within 0.5 s
 // - time of mid-eclipse on the central line: within 5 s
-// - each limit: total 2 km inside, none 2 km outside
+// - each limit: total 2 km inside, no totality 2 km outside
 // - signed squared duration: duration² inside, decreasing outside
 // - halfway between the central line and a limit: duration > 0
 // - Sun along the central line: above the horizon
