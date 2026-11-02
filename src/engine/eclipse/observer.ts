@@ -1,5 +1,5 @@
 // The observer's position as the eclipse maths needs it: ρ·sinφ′ and ρ·cosφ′, from latitude,
-// longitude and altitude. Explained in ../README.md
+// longitude and altitude. Explained in ../README.md.
 
 import { EQUATORIAL_RADIUS_METERS, POLAR_TO_EQUATORIAL, RAD } from "./constants.js";
 
@@ -29,7 +29,7 @@ export function geocentricObserver({
     throw new RangeError(`Latitude must be within ±90°, got ${latitude}`);
   }
   // Any longitude: 181° is -179°, as the maths only takes its sine and cosine. Paths across the
-  // 180° meridian count on this
+  // 180° meridian count on this.
   if (!Number.isFinite(longitude)) {
     throw new RangeError(`Longitude must be a finite number of degrees, got ${longitude}`);
   }

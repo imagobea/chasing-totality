@@ -1,5 +1,5 @@
 // Mid-eclipse, C2, C3 and the duration of totality at one place. Explained in ../README.md;
-// limitations in docs/plans/004-local-totality-duration-plan.md
+// limitations in docs/plans/004-local-totality-duration-plan.md.
 
 import { evaluate, type BesselianElements } from "./besselian.js";
 import { EARTH_ROTATION_DEGREES_PER_SECOND, RAD } from "./constants.js";
@@ -127,7 +127,7 @@ export function localCircumstances(
   const distance = Math.hypot(atMid.u, atMid.v);
   const umbraRadius = Math.abs(atMid.L2);
   // A track passing `distance` from the umbra's centre at speed n spends 2√(R² - distance²)/n
-  // hours inside it; squared, that is negative when the track misses the umbra.
+  // hours inside it; squared, that is negative when the track misses the umbra
   const passSquared = ((4 * (umbraRadius ** 2 - distance ** 2)) / atMid.n2) * 3600 ** 2;
   const toUT = (t: number) => elements.t0 + t - elements.deltaT / 3600;
 

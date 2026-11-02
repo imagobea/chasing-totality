@@ -27,7 +27,7 @@ export function parseNasaPath(text: string): NasaPath {
     .filter((line) => ROW.test(line))
     .map((line) => ({
       time: line.slice(1, 7).trim(),
-      // Fixed-width columns, as NASA publishes them.
+      // Fixed-width columns, as NASA publishes them
       north: parseLatLon(line.slice(9, 27)),
       south: parseLatLon(line.slice(29, 47)),
       central: parseLatLon(line.slice(49, 67)) ?? fail(line),

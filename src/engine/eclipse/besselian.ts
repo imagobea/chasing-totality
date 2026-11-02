@@ -1,5 +1,5 @@
 // Where the Moon's shadow is, and how fast it moves, at any time: the Besselian elements
-// evaluated on the fundamental plane. Explained in ../README.md
+// evaluated on the fundamental plane. Explained in ../README.md.
 
 import { RAD } from "./constants.js";
 

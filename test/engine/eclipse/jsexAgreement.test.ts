@@ -20,7 +20,7 @@ const { points } = JSON.parse(
 ) as { points: JsexPoint[] };
 
 describe("localCircumstances vs JSEX", () => {
-  // Measured: ≤ 1 ms on duration and mid-eclipse, i.e. only the iterations' tolerance.
+  // Measured: ≤ 1 ms on duration and mid-eclipse, i.e. only the iterations' tolerance
   it.each(points.map((point) => [point.name, point] as const))(
     "agrees at %s within 0.01 s",
     (_, point) => {

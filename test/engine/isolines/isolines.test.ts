@@ -8,7 +8,7 @@ import {
 } from "../../../src/engine/isolines/contours.js";
 import { durationGrid } from "../../../src/engine/isolines/grid.js";
 
-// A small grid across the path over Egypt, around 10:00 UT (central duration ~6m23s).
+// A small grid across the path over Egypt, around 10:00 UT (central duration ~6m23s)
 const AREA = { west: 30, south: 24, east: 33, north: 29 };
 const STEP = 0.05;
 const grid = durationGrid(eclipse2027Aug02, AREA, STEP);
@@ -17,7 +17,7 @@ const at = ([longitude, latitude]: Position) =>
   localCircumstances(eclipse2027Aug02, { latitude, longitude, altitudeMeters: 0 });
 const durationAt = (position: Position) => at(position).durationSeconds;
 
-// Isoline vertices, leaving out those where d3-contour closes a polygon along the grid's edge.
+// Isoline vertices, leaving out those where d3-contour closes a polygon along the grid's edge
 const isolineVertices = (coordinates: Position[][][]) =>
   coordinates
     .flat(2)
@@ -106,7 +106,7 @@ describe("durationContours", () => {
   });
 
   it("leaves out durations no point reaches", () => {
-    // The longest totality of this eclipse is ~6m23s.
+    // The longest totality of this eclipse is ~6m23s
     const durations = durationContours(grid, [360, 390]).features.map(
       (f) => f.properties.durationSeconds,
     );
@@ -118,7 +118,7 @@ describe("durationContours", () => {
     expect(isoline?.properties.name).toBe("1m30s");
   });
 
-  // Measured on this 0.05° grid: 0.8 s at 30 s, 0.13 s at 180 s, 0.07 s at 360 s.
+  // Measured on this 0.05° grid: 0.8 s at 30 s, 0.13 s at 180 s, 0.07 s at 360 s
   it("draws each isoline where the engine gives that duration, within 1 s", () => {
     for (const { properties, geometry } of isolines.features.slice(1)) {
       const vertices = isolineVertices(geometry.coordinates);

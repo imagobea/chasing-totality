@@ -1,5 +1,5 @@
 // Traces isolines through a duration grid and returns them as GeoJSON. Explained in
-// ../README.md
+// ../README.md.
 
 import { contours } from "d3-contour";
 import type { DurationGrid } from "./grid.js";
@@ -44,7 +44,7 @@ export function durationContours(
   thresholdsSeconds: number[],
 ): IsolineCollection {
   // The grid holds squared durations; d3-contour keeps values ≥ threshold, so the path of
-  // totality is where they are above 0.
+  // totality is where they are above 0
   const levels = thresholdsSeconds.map((seconds) =>
     seconds === 0 ? Number.MIN_VALUE : seconds ** 2,
   );

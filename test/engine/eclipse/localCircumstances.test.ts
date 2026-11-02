@@ -91,7 +91,7 @@ describe.each(nasaPaths)("localCircumstances vs NASA's $date path table", ({ ele
   });
 
   // Not necessarily shorter than on the central line: with the Sun a few degrees up, the longest
-  // totality lies off to one side (2–5 s longer halfway, e.g. 2033-03-30)
+  // totality lies off to one side (2–5 s longer halfway, e.g. 2033-03-30).
   it("gives some totality halfway between the central line and a limit", () => {
     for (const { row, limit } of limits) {
       expect(at(along(row.central, limit, 0.5)).durationSeconds).toBeGreaterThan(0);
@@ -139,7 +139,7 @@ describe("localCircumstances", () => {
   });
 
   // At the sunrise end the Sun is on the horizon at mid-eclipse, ~0.3° below it at C2 and above
-  // it at C3.
+  // it at C3
   it("flags a Sun rising during totality at the sunrise end of the path", () => {
     const sunrise = rows.find((r) => r.time === "Limits")?.central ?? { lat: 0, lon: 0 };
     const result = at(sunrise);
@@ -154,11 +154,11 @@ describe("localCircumstances", () => {
     expect(((result.c3 ?? 0) - (result.c2 ?? 0)) * 3600).toBeCloseTo(result.durationSeconds, 6);
   });
 
-  // There, C2 and C3 are milliseconds apart and the contact iteration alone can fail to settle.
+  // There, C2 and C3 are milliseconds apart and the contact iteration alone can fail to settle
   it("gives a near-zero totality within a millimetre of a limit", () => {
     const at = (latitude: number) =>
       localCircumstances(eclipse2027Aug02, { latitude, longitude: 31, altitudeMeters: 0 });
-    // Northern limit at longitude 31° (Egypt), by bisection on the mid-eclipse geometry.
+    // Northern limit at longitude 31° (Egypt), by bisection on the mid-eclipse geometry
     let inside = 26;
     let outside = 31;
     for (let i = 0; i < 60; i++) {
@@ -180,7 +180,7 @@ describe("localCircumstances", () => {
   });
 
   it("throws rather than returning a wrong time when the iteration cannot converge", () => {
-    // A shadow that does not move relative to the Earth has no closest approach to find.
+    // A shadow that does not move relative to the Earth has no closest approach to find
     const frozen = { ...elements, x: [0], y: [0], d: [0], mu: [0] };
     expect(() =>
       localCircumstances(frozen, { latitude: 0, longitude: 0, altitudeMeters: 0 }),
