@@ -141,7 +141,7 @@ data/isolines/         # Pre-generated isolines the API serves, one file per ecl
 data/nasa-paths/       # NASA's path table per eclipse, to generate and test against
 data/airports.geojson  # Airports snapshot the API serves
 scripts/               # data:isolines, data:airports, fixtures:jsex
-tests/                 # Vitest tests and fixtures (JSEX)
+tests/                 # Vitest tests: unit/, integration/, e2e/ (empty for now), helpers/, fixtures/
 docs/plans/            # Plans, deviations and findings
 ```
 
