@@ -9,8 +9,8 @@ const STEP = 0.05;
 const grid = durationGrid(eclipse2027Aug02, AREA, STEP);
 
 describe("durationThresholds", () => {
-  it("rejects a zero step", () => {
-    expect(() => durationThresholds(grid, 0)).toThrow(RangeError);
+  it.each([0, -30, Number.NaN])("rejects a step of %s", (step) => {
+    expect(() => durationThresholds(grid, step)).toThrow(RangeError);
   });
 
   it("steps from 0 up to the longest duration in the grid (~6m23s)", () => {
@@ -19,5 +19,10 @@ describe("durationThresholds", () => {
 
   it("gives only the path of totality when nothing reaches the first step", () => {
     expect(durationThresholds(grid, 400)).toEqual([0]);
+  });
+
+  it("gives only the path of totality for a grid with no totality", () => {
+    const outside = { ...grid, values: new Float64Array(grid.values.length).fill(-1) };
+    expect(durationThresholds(outside, 30)).toEqual([0]);
   });
 });

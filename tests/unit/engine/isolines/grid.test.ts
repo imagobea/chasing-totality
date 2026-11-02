@@ -14,7 +14,11 @@ const at = ([longitude, latitude]: [number, number]) =>
 describe("durationGrid", () => {
   it.each([
     ["a zero step", { ...AREA }, 0],
+    ["a negative step", { ...AREA }, -STEP],
+    ["a step that isn't a number", { ...AREA }, Number.NaN],
     ["an empty box", { ...AREA, east: AREA.west }, STEP],
+    ["a box with west east of east", { ...AREA, west: AREA.east, east: AREA.west }, STEP],
+    ["a box with south north of north", { ...AREA, south: AREA.north, north: AREA.south }, STEP],
   ])("rejects %s", (_, area, step) => {
     expect(() => durationGrid(eclipse2027Aug02, area, step)).toThrow(RangeError);
   });

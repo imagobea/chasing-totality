@@ -65,6 +65,22 @@ describe("durationContours", () => {
     }
   });
 
+  // A grid across the 180° meridian carries on past 180, like NASA's path in area.ts
+  it("keeps longitudes past 180° for a grid across the meridian", () => {
+    const acrossMeridian = {
+      west: 178,
+      south: 0,
+      step: 1,
+      width: 5,
+      height: 3,
+      values: new Float64Array(15).fill(1),
+    };
+    const { bbox, features } = durationContours(acrossMeridian, [0]);
+    expect(bbox[2]).toBe(182.5);
+    const lons = features.flatMap((f) => f.geometry.coordinates.flat(2)).map(([lon]) => lon);
+    expect(Math.max(...lons)).toBeGreaterThan(180);
+  });
+
   // d3-contour closes polygons half a step beyond the outer points, so the bbox goes there too
   it("gives a bbox around the grid that holds every isoline", () => {
     const half = STEP / 2;
@@ -90,6 +106,10 @@ describe("durationContours", () => {
   it("names a duration that isn't a whole minute", () => {
     const [isoline] = durationContours(grid, [90]).features;
     expect(isoline?.properties.name).toBe("1m30s");
+  });
+
+  it("returns no features without thresholds", () => {
+    expect(durationContours(grid, []).features).toEqual([]);
   });
 
   it("leaves out durations no point reaches", () => {
