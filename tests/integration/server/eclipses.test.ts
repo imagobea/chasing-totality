@@ -9,7 +9,8 @@ import { buildApp } from "../../../src/server/app.js";
 const app = buildApp();
 afterAll(() => app.close());
 
-// An app over a temp data dir holding the given files; both are cleaned up when the test ends, even if it fails
+// An app over a temp data dir holding the given files; both are cleaned up when the test ends,
+// even if it fails
 async function appWithFiles(names: string[]) {
   const dataDir = await mkdtemp(join(tmpdir(), "eclipses-"));
   await Promise.all(names.map((name) => writeFile(join(dataDir, name), "{}")));
