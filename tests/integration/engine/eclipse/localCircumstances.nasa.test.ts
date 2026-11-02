@@ -1,3 +1,24 @@
+// Checks localCircumstances against NASA's path table for each eclipse in elements/. Each
+// 2-minute row of the table gives the northern limit, the southern limit, the central line and the
+// duration of totality on the central line. Two `Limits` rows give the sunrise and sunset ends of
+// the path.
+//
+// Checked per eclipse:
+// - duration on the central line: within 0.5 s
+// - time of mid-eclipse on the central line: within 5 s
+// - each limit: total 2 km inside, none 2 km outside
+// - signed squared duration: duration² inside, decreasing outside
+// - halfway between the central line and a limit: duration > 0
+// - Sun along the central line: above the horizon
+// - Sun at the sunrise and sunset ends: 0° within 2 km (0.018°)
+//
+// Passing all of them means the elements are typed in right and belong to that eclipse, and the
+// engine places the path where NASA does.
+//
+// The tolerances are the same for every eclipse and never widen to let one pass. "Worst measured"
+// is over the 61 central total eclipses of 2001–2100 that pass these checks, measured on
+// 2026-10-29 (docs/plans/051-checks-for-any-total-eclipse-plan.md).
+
 import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
 import type { BesselianElements } from "../../../../src/engine/eclipse/besselian.js";
@@ -11,12 +32,8 @@ import {
 import { unwrapPath } from "../../../../src/engine/isolines/area.js";
 import { acrossLimit, along } from "../../../helpers/geo.js";
 
-// Every known eclipse against its NASA path table, with the table's ΔT so only the geometry
-// is compared. This catches a mistyped element or a table from another eclipse. The rows carry
-// on past 180° where the path crosses it, so points between them don't wrap around the Earth.
-// The tolerances are the same for every eclipse and never widen to let one pass. "Worst
-// measured" is over the 61 central total eclipses of 2001–2100 that pass these checks, measured
-// once on 2026-10-29 (docs/plans/051-checks-for-any-total-eclipse-plan.md).
+// Each eclipse with NASA's ΔT, so only the geometry is compared. Rows carry on past 180° where
+// the path crosses it, so points between them don't wrap around the Earth.
 const nasaPaths = Object.entries(eclipses).map(([date, elements]) => {
   const { deltaT, rows } = parseNasaPath(
     readFileSync(new URL(`../../../../data/nasa-paths/${date}.txt`, import.meta.url), "utf8"),
