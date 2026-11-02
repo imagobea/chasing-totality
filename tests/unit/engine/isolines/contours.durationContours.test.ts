@@ -24,25 +24,26 @@ const isolineVertices = (coordinates: Position[][][]) =>
 describe("durationContours", () => {
   const isolines = durationContours(grid, [0, 30, 180, 360]);
 
-  it("returns one feature per threshold, labelled with its duration", () => {
-    expect(isolines.features.map((f) => f.properties)).toEqual([
-      { durationSeconds: 0, name: "Path of totality" },
-      { durationSeconds: 30, name: "0m30s" },
-      { durationSeconds: 180, name: "3m00s" },
-      { durationSeconds: 360, name: "6m00s" },
-    ]);
+  // Measured: within 30 m. The path runs west–east here, so a step north or south crosses it.
+  it("draws the path's edge within 100 m of the limit", () => {
+    const vertices = isolineVertices(isolines.features[0]?.geometry.coordinates ?? []);
+    expect(vertices.length).toBeGreaterThan(0);
+    const hundredMetres = 0.1 / 111.2; // degrees of latitude
+    for (const [lon, lat] of vertices) {
+      const south = at([lon, lat - hundredMetres]).type === "total";
+      const north = at([lon, lat + hundredMetres]).type === "total";
+      expect(south).not.toBe(north);
+    }
   });
 
-  // d3-contour closes polygons half a step beyond the outer points, so the bbox goes there too
-  it("gives a bbox around the grid that holds every isoline", () => {
-    const half = STEP / 2;
-    const [west = 0, south = 0, east = 0, north = 0] = isolines.bbox;
-    expect(west).toBeCloseTo(AREA.west - half, 9);
-    expect(south).toBeCloseTo(AREA.south - half, 9);
-    expect(east).toBeCloseTo(AREA.east + half, 9);
-    expect(north).toBeCloseTo(AREA.north + half, 9);
-    for (const [lon, lat] of isolines.features.flatMap((f) => f.geometry.coordinates.flat(2))) {
-      expect(lon >= west && lon <= east && lat >= south && lat <= north).toBe(true);
+  // Measured on this 0.05° grid: 0.8 s at 30 s, 0.13 s at 180 s, 0.07 s at 360 s
+  it("draws each isoline where the engine gives that duration, within 1 s", () => {
+    for (const { properties, geometry } of isolines.features.slice(1)) {
+      const vertices = isolineVertices(geometry.coordinates);
+      expect(vertices.length).toBeGreaterThan(0);
+      for (const vertex of vertices) {
+        expect(Math.abs(durationAt(vertex) - properties.durationSeconds)).toBeLessThan(1);
+      }
     }
   });
 
@@ -64,12 +65,26 @@ describe("durationContours", () => {
     }
   });
 
-  it("leaves out durations no point reaches", () => {
-    // The longest totality of this eclipse is ~6m23s
-    const durations = durationContours(grid, [360, 390]).features.map(
-      (f) => f.properties.durationSeconds,
-    );
-    expect(durations).toEqual([360]);
+  // d3-contour closes polygons half a step beyond the outer points, so the bbox goes there too
+  it("gives a bbox around the grid that holds every isoline", () => {
+    const half = STEP / 2;
+    const [west = 0, south = 0, east = 0, north = 0] = isolines.bbox;
+    expect(west).toBeCloseTo(AREA.west - half, 9);
+    expect(south).toBeCloseTo(AREA.south - half, 9);
+    expect(east).toBeCloseTo(AREA.east + half, 9);
+    expect(north).toBeCloseTo(AREA.north + half, 9);
+    for (const [lon, lat] of isolines.features.flatMap((f) => f.geometry.coordinates.flat(2))) {
+      expect(lon >= west && lon <= east && lat >= south && lat <= north).toBe(true);
+    }
+  });
+
+  it("returns one feature per threshold, labelled with its duration", () => {
+    expect(isolines.features.map((f) => f.properties)).toEqual([
+      { durationSeconds: 0, name: "Path of totality" },
+      { durationSeconds: 30, name: "0m30s" },
+      { durationSeconds: 180, name: "3m00s" },
+      { durationSeconds: 360, name: "6m00s" },
+    ]);
   });
 
   it("names a duration that isn't a whole minute", () => {
@@ -77,26 +92,11 @@ describe("durationContours", () => {
     expect(isoline?.properties.name).toBe("1m30s");
   });
 
-  // Measured on this 0.05° grid: 0.8 s at 30 s, 0.13 s at 180 s, 0.07 s at 360 s
-  it("draws each isoline where the engine gives that duration, within 1 s", () => {
-    for (const { properties, geometry } of isolines.features.slice(1)) {
-      const vertices = isolineVertices(geometry.coordinates);
-      expect(vertices.length).toBeGreaterThan(0);
-      for (const vertex of vertices) {
-        expect(Math.abs(durationAt(vertex) - properties.durationSeconds)).toBeLessThan(1);
-      }
-    }
-  });
-
-  // Measured: within 30 m. The path runs west–east here, so a step north or south crosses it.
-  it("draws the path's edge within 100 m of the limit", () => {
-    const vertices = isolineVertices(isolines.features[0]?.geometry.coordinates ?? []);
-    expect(vertices.length).toBeGreaterThan(0);
-    const hundredMetres = 0.1 / 111.2; // degrees of latitude
-    for (const [lon, lat] of vertices) {
-      const south = at([lon, lat - hundredMetres]).type === "total";
-      const north = at([lon, lat + hundredMetres]).type === "total";
-      expect(south).not.toBe(north);
-    }
+  it("leaves out durations no point reaches", () => {
+    // The longest totality of this eclipse is ~6m23s
+    const durations = durationContours(grid, [360, 390]).features.map(
+      (f) => f.properties.durationSeconds,
+    );
+    expect(durations).toEqual([360]);
   });
 });

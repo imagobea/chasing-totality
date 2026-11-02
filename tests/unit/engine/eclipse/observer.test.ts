@@ -8,6 +8,34 @@ const distanceFromCentre = (at: { rhoSinPhi: number; rhoCosPhi: number }) =>
   Math.hypot(at.rhoSinPhi, at.rhoCosPhi);
 
 describe("geocentricObserver", () => {
+  it.each([91, -91, Number.NaN])("rejects latitude %s", (latitude) => {
+    expect(() => geocentricObserver({ latitude, longitude: 0, altitudeMeters: 0 })).toThrow(
+      RangeError,
+    );
+  });
+
+  it.each([Number.NaN, Number.POSITIVE_INFINITY])("rejects longitude %s", (longitude) => {
+    expect(() => geocentricObserver({ latitude: 0, longitude, altitudeMeters: 0 })).toThrow(
+      RangeError,
+    );
+  });
+
+  it("treats a longitude past 180° as the same place: 181° is -179°", () => {
+    const at = (longitude: number) =>
+      geocentricObserver({ latitude: 0, longitude, altitudeMeters: 0 }).longitude;
+    expect(Math.cos(at(181))).toBeCloseTo(Math.cos(at(-179)), 12);
+    expect(Math.sin(at(181))).toBeCloseTo(Math.sin(at(-179)), 12);
+  });
+
+  it.each([Number.NaN, Number.POSITIVE_INFINITY, Number.NEGATIVE_INFINITY])(
+    "rejects altitude %s",
+    (altitudeMeters) => {
+      expect(() => geocentricObserver({ latitude: 0, longitude: 0, altitudeMeters })).toThrow(
+        RangeError,
+      );
+    },
+  );
+
   it("puts a sea-level point on the equator one Earth radius out, in the equatorial plane", () => {
     const at = geocentricObserver({ latitude: 0, longitude: 0, altitudeMeters: 0 });
     expect(at.rhoCosPhi).toBeCloseTo(1, 12);
@@ -51,32 +79,4 @@ describe("geocentricObserver", () => {
       geocentricObserver({ latitude: 0, longitude: -45, altitudeMeters: 0 }).longitude,
     ).toBeCloseTo(-Math.PI / 4, 12);
   });
-
-  it.each([91, -91, Number.NaN])("rejects latitude %s", (latitude) => {
-    expect(() => geocentricObserver({ latitude, longitude: 0, altitudeMeters: 0 })).toThrow(
-      RangeError,
-    );
-  });
-
-  it("treats a longitude past 180° as the same place: 181° is -179°", () => {
-    const at = (longitude: number) =>
-      geocentricObserver({ latitude: 0, longitude, altitudeMeters: 0 }).longitude;
-    expect(Math.cos(at(181))).toBeCloseTo(Math.cos(at(-179)), 12);
-    expect(Math.sin(at(181))).toBeCloseTo(Math.sin(at(-179)), 12);
-  });
-
-  it.each([Number.NaN, Number.POSITIVE_INFINITY])("rejects longitude %s", (longitude) => {
-    expect(() => geocentricObserver({ latitude: 0, longitude, altitudeMeters: 0 })).toThrow(
-      RangeError,
-    );
-  });
-
-  it.each([Number.NaN, Number.POSITIVE_INFINITY, Number.NEGATIVE_INFINITY])(
-    "rejects altitude %s",
-    (altitudeMeters) => {
-      expect(() => geocentricObserver({ latitude: 0, longitude: 0, altitudeMeters })).toThrow(
-        RangeError,
-      );
-    },
-  );
 });

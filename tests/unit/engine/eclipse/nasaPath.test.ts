@@ -8,9 +8,22 @@ const text = readFileSync(
 );
 const { deltaT, rows } = parseNasaPath(text);
 
+// One row as NASA writes it, and a header with ΔT, to build malformed input from
+const HEADER = "# ΔT = 71.7 s\n";
+const ROW =
+  " 10:00   27 51.4N 031 44.0E  25 55.3N 030 18.2E  26 53.3N 031 00.8E  1.079  81 177  257  06m23.2s";
+
 describe("parseNasaPath", () => {
   it("reads the ΔT NASA used from the header", () => {
     expect(deltaT).toBe(71.7);
+  });
+
+  it("throws when the header has no ΔT", () => {
+    expect(() => parseNasaPath(ROW)).toThrow(/ΔT/);
+  });
+
+  it("ignores lines that are not table rows", () => {
+    expect(parseNasaPath(`${HEADER}# comment\n  Time   Latitude Longitude\n\n`).rows).toEqual([]);
   });
 
   it("reads both path ends and every 2-minute row (08:26–11:48 UT)", () => {
@@ -48,31 +61,17 @@ describe("parseNasaPath", () => {
     expect(row?.south?.lat).toBeCloseTo(-(11 + 2.4 / 60), 9);
   });
 
-  describe("with malformed input", () => {
-    const header = "# ΔT = 71.7 s\n";
-    const row =
-      " 10:00   27 51.4N 031 44.0E  25 55.3N 030 18.2E  26 53.3N 031 00.8E  1.079  81 177  257  06m23.2s";
+  it("throws on bad limit coordinates", () => {
+    expect(() => parseNasaPath(HEADER + ROW.replace("27 51.4N", "27 51.4X"))).toThrow(/27 51.4X/);
+  });
 
-    it("ignores lines that are not table rows", () => {
-      expect(parseNasaPath(`${header}# comment\n  Time   Latitude Longitude\n\n`).rows).toEqual([]);
-    });
+  it("throws when the central line is missing", () => {
+    expect(() =>
+      parseNasaPath(HEADER + ROW.replace("26 53.3N 031 00.8E", "   -         -     ")),
+    ).toThrow(/Cannot parse/);
+  });
 
-    it("throws when the header has no ΔT", () => {
-      expect(() => parseNasaPath(row)).toThrow(/ΔT/);
-    });
-
-    it("throws on bad limit coordinates", () => {
-      expect(() => parseNasaPath(header + row.replace("27 51.4N", "27 51.4X"))).toThrow(/27 51.4X/);
-    });
-
-    it("throws when the central line is missing", () => {
-      expect(() =>
-        parseNasaPath(header + row.replace("26 53.3N 031 00.8E", "   -         -     ")),
-      ).toThrow(/Cannot parse/);
-    });
-
-    it("throws on bad duration", () => {
-      expect(() => parseNasaPath(header + row.replace("06m23.2s", "6:23.2"))).toThrow(/6:23.2/);
-    });
+  it("throws on bad duration", () => {
+    expect(() => parseNasaPath(HEADER + ROW.replace("06m23.2s", "6:23.2"))).toThrow(/6:23.2/);
   });
 });

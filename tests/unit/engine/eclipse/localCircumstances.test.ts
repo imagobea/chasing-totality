@@ -15,6 +15,24 @@ const at = ({ lat, lon }: LatLon) =>
   localCircumstances(elements, { latitude: lat, longitude: lon, altitudeMeters: 0 });
 
 describe("localCircumstances", () => {
+  it("rejects an invalid position", () => {
+    expect(() =>
+      localCircumstances(elements, { latitude: 91, longitude: 0, altitudeMeters: 0 }),
+    ).toThrow(RangeError);
+  });
+
+  it("throws rather than returning a wrong time when the iteration cannot converge", () => {
+    // A shadow that does not move relative to the Earth has no closest approach to find
+    const frozen = { ...elements, x: [0], y: [0], d: [0], mu: [0] };
+    expect(() =>
+      localCircumstances(frozen, { latitude: 0, longitude: 0, altitudeMeters: 0 }),
+    ).toThrow(/No convergence/);
+  });
+
+  it("puts the Sun high over the middle of the path (10:00, NASA: 81°)", () => {
+    expect(at(CENTRAL_AT_10).sunAltitude).toBeGreaterThan(80);
+  });
+
   it("reports no eclipse far from the shadow (Honolulu)", () => {
     const result = at({ lat: 21.3, lon: -157.9 });
     expect(result.type).toBe("none");
@@ -26,18 +44,6 @@ describe("localCircumstances", () => {
     const result = at({ lat: -CENTRAL_AT_10.lat, lon: CENTRAL_AT_10.lon - 180 });
     expect(result.type).toBe("none");
     expect(result.durationSeconds).toBe(0);
-  });
-
-  it("puts the Sun high over the middle of the path (10:00, NASA: 81°)", () => {
-    expect(at(CENTRAL_AT_10).sunAltitude).toBeGreaterThan(80);
-  });
-
-  // At the sunrise end the Sun is on the horizon at mid-eclipse, ~0.3° below it at C2 and above
-  // it at C3
-  it("flags a Sun rising during totality at the sunrise end of the path", () => {
-    const result = at(CENTRAL_AT_SUNRISE);
-    expect(result.type).toBe("total");
-    expect(result.sunBelowHorizon).toBe(true);
   });
 
   it("puts C2 before mid-eclipse and C3 after, c3 - c2 apart", () => {
@@ -66,17 +72,11 @@ describe("localCircumstances", () => {
     }
   });
 
-  it("rejects an invalid position", () => {
-    expect(() =>
-      localCircumstances(elements, { latitude: 91, longitude: 0, altitudeMeters: 0 }),
-    ).toThrow(RangeError);
-  });
-
-  it("throws rather than returning a wrong time when the iteration cannot converge", () => {
-    // A shadow that does not move relative to the Earth has no closest approach to find
-    const frozen = { ...elements, x: [0], y: [0], d: [0], mu: [0] };
-    expect(() =>
-      localCircumstances(frozen, { latitude: 0, longitude: 0, altitudeMeters: 0 }),
-    ).toThrow(/No convergence/);
+  // At the sunrise end the Sun is on the horizon at mid-eclipse, ~0.3° below it at C2 and above
+  // it at C3
+  it("flags a Sun rising during totality at the sunrise end of the path", () => {
+    const result = at(CENTRAL_AT_SUNRISE);
+    expect(result.type).toBe("total");
+    expect(result.sunBelowHorizon).toBe(true);
   });
 });

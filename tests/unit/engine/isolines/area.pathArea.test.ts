@@ -3,32 +3,6 @@ import { pathArea } from "../../../../src/engine/isolines/area.js";
 import { row } from "../../../helpers/pathRow.js";
 
 describe("pathArea", () => {
-  it("spans NASA's limits plus the margin on every side", () => {
-    expect(pathArea([row([30, -10]), row([20, 40])], 0.5)).toEqual({
-      west: -10.5,
-      south: 18.5,
-      east: 40.5,
-      north: 31.5,
-    });
-  });
-
-  it("uses the central line where a limit is off the Earth", () => {
-    expect(pathArea([row([30, 0], null, null), row([20, 10])], 0)).toEqual({
-      west: 0,
-      south: 19,
-      east: 10,
-      north: 30,
-    });
-  });
-
-  it("stops at the poles", () => {
-    expect(pathArea([row([89, 0]), row([-89, 10])], 5)).toMatchObject({ south: -90, north: 90 });
-  });
-
-  it("rejects an empty table", () => {
-    expect(() => pathArea([], 1)).toThrow(RangeError);
-  });
-
   it("carries a path across the 180° meridian on past 180", () => {
     expect(pathArea([row([-40, 170]), row([-45, -170])], 1)).toEqual({
       west: 169,
@@ -54,5 +28,31 @@ describe("pathArea", () => {
       east: 90,
       north: 21,
     });
+  });
+
+  it("uses the central line where a limit is off the Earth", () => {
+    expect(pathArea([row([30, 0], null, null), row([20, 10])], 0)).toEqual({
+      west: 0,
+      south: 19,
+      east: 10,
+      north: 30,
+    });
+  });
+
+  it("rejects an empty table", () => {
+    expect(() => pathArea([], 1)).toThrow(RangeError);
+  });
+
+  it("spans NASA's limits plus the margin on every side", () => {
+    expect(pathArea([row([30, -10]), row([20, 40])], 0.5)).toEqual({
+      west: -10.5,
+      south: 18.5,
+      east: 40.5,
+      north: 31.5,
+    });
+  });
+
+  it("stops at the poles", () => {
+    expect(pathArea([row([89, 0]), row([-89, 10])], 5)).toMatchObject({ south: -90, north: 90 });
   });
 });

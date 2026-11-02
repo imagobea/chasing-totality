@@ -9,15 +9,15 @@ const STEP = 0.05;
 const grid = durationGrid(eclipse2027Aug02, AREA, STEP);
 
 describe("durationThresholds", () => {
+  it("rejects a zero step", () => {
+    expect(() => durationThresholds(grid, 0)).toThrow(RangeError);
+  });
+
   it("steps from 0 up to the longest duration in the grid (~6m23s)", () => {
     expect(durationThresholds(grid, 30)).toEqual(Array.from({ length: 13 }, (_, i) => i * 30));
   });
 
   it("gives only the path of totality when nothing reaches the first step", () => {
     expect(durationThresholds(grid, 400)).toEqual([0]);
-  });
-
-  it("rejects a zero step", () => {
-    expect(() => durationThresholds(grid, 0)).toThrow(RangeError);
   });
 });

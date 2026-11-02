@@ -12,6 +12,13 @@ const at = ([longitude, latitude]: [number, number]) =>
   localCircumstances(eclipse2027Aug02, { latitude, longitude, altitudeMeters: 0 });
 
 describe("durationGrid", () => {
+  it.each([
+    ["a zero step", { ...AREA }, 0],
+    ["an empty box", { ...AREA, east: AREA.west }, STEP],
+  ])("rejects %s", (_, area, step) => {
+    expect(() => durationGrid(eclipse2027Aug02, area, step)).toThrow(RangeError);
+  });
+
   it("covers the bounding box, corners included", () => {
     expect(grid.width).toBe(61);
     expect(grid.height).toBe(101);
@@ -24,12 +31,5 @@ describe("durationGrid", () => {
     expect(grid.values[row * grid.width + column]).toBe(
       at([AREA.west + column * STEP, AREA.south + row * STEP]).signedDurationSquared,
     );
-  });
-
-  it.each([
-    ["a zero step", { ...AREA }, 0],
-    ["an empty box", { ...AREA, east: AREA.west }, STEP],
-  ])("rejects %s", (_, area, step) => {
-    expect(() => durationGrid(eclipse2027Aug02, area, step)).toThrow(RangeError);
   });
 });
