@@ -8,17 +8,23 @@ const distanceFromCentre = (at: { rhoSinPhi: number; rhoCosPhi: number }) =>
   Math.hypot(at.rhoSinPhi, at.rhoCosPhi);
 
 describe("geocentricObserver", () => {
-  it.each([91, -91, Number.NaN])("rejects latitude %s", (latitude) => {
-    expect(() => geocentricObserver({ latitude, longitude: 0, altitudeMeters: 0 })).toThrow(
-      RangeError,
-    );
-  });
+  it.each([91, -91, Number.NaN, Number.POSITIVE_INFINITY, Number.NEGATIVE_INFINITY])(
+    "rejects latitude %s",
+    (latitude) => {
+      expect(() => geocentricObserver({ latitude, longitude: 0, altitudeMeters: 0 })).toThrow(
+        RangeError,
+      );
+    },
+  );
 
-  it.each([Number.NaN, Number.POSITIVE_INFINITY])("rejects longitude %s", (longitude) => {
-    expect(() => geocentricObserver({ latitude: 0, longitude, altitudeMeters: 0 })).toThrow(
-      RangeError,
-    );
-  });
+  it.each([Number.NaN, Number.POSITIVE_INFINITY, Number.NEGATIVE_INFINITY])(
+    "rejects longitude %s",
+    (longitude) => {
+      expect(() => geocentricObserver({ latitude: 0, longitude, altitudeMeters: 0 })).toThrow(
+        RangeError,
+      );
+    },
+  );
 
   it("treats a longitude past 180° as the same place: 181° is -179°", () => {
     const at = (longitude: number) =>
@@ -42,9 +48,13 @@ describe("geocentricObserver", () => {
     expect(at.rhoSinPhi).toBeCloseTo(0, 12);
   });
 
-  it("puts the North Pole one polar radius out, on the axis", () => {
-    const at = geocentricObserver({ latitude: 90, longitude: 0, altitudeMeters: 0 });
-    expect(at.rhoSinPhi).toBeCloseTo(EARTH_POLAR_TO_EQUATORIAL, 12);
+  // The limits of the latitude range are valid places
+  it.each([
+    ["North", 90],
+    ["South", -90],
+  ])("puts the %s Pole one polar radius out, on the axis", (_, latitude) => {
+    const at = geocentricObserver({ latitude, longitude: 0, altitudeMeters: 0 });
+    expect(at.rhoSinPhi).toBeCloseTo(Math.sign(latitude) * EARTH_POLAR_TO_EQUATORIAL, 12);
     expect(at.rhoCosPhi).toBeCloseTo(0, 12);
   });
 

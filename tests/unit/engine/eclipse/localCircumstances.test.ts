@@ -46,6 +46,14 @@ describe("localCircumstances", () => {
     expect(result.durationSeconds).toBe(0);
   });
 
+  it("reports a partial eclipse inside the penumbra, outside the path (Madrid)", () => {
+    const result = at({ lat: 40.417, lon: -3.704 });
+    expect(result.type).toBe("partial");
+    expect(result.durationSeconds).toBe(0);
+    expect(result.c2).toBeUndefined();
+    expect(result.signedDurationSquared).toBeLessThan(0);
+  });
+
   it("puts C2 before mid-eclipse and C3 after, c3 - c2 apart", () => {
     const result = at({ lat: 25.7, lon: 32.6 }); // Luxor
     expect(result.c2).toBeLessThan(result.mid);
@@ -78,5 +86,17 @@ describe("localCircumstances", () => {
     const result = at(CENTRAL_AT_SUNRISE);
     expect(result.type).toBe("total");
     expect(result.sunBelowHorizon).toBe(true);
+  });
+
+  // A positive umbra radius: the Moon too far to cover the Sun, as in an annular eclipse
+  it("reports an annular eclipse, with its duration, when the umbra radius is positive", () => {
+    const annular = { ...elements, l2: elements.l2.map((c) => -c) };
+    const result = localCircumstances(annular, {
+      latitude: 25.7,
+      longitude: 32.6,
+      altitudeMeters: 0,
+    });
+    expect(result.type).toBe("annular");
+    expect(result.durationSeconds).toBeGreaterThan(0);
   });
 });

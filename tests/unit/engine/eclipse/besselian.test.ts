@@ -60,4 +60,10 @@ describe("evaluate", () => {
     expect(at.x).toBeCloseTo(1 - 2 + 3 - 4, 12); // -2
     expect(at.xRate).toBeCloseTo(2 - 6 + 12, 12); // 8
   });
+
+  it("gives a zero rate for an element with no time terms", () => {
+    const at = evaluate({ ...elements, mu: [300] }, 2);
+    expect(at.mu).toBeCloseTo(rad(300), 12);
+    expect(at.muRate).toBe(0);
+  });
 });
