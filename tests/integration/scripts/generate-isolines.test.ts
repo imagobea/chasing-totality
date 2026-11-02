@@ -6,6 +6,11 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 // to read.
 vi.mock("node:fs", () => ({ readFileSync: vi.fn(), writeFileSync: vi.fn(), mkdirSync: vi.fn() }));
 
+type Feature = {
+  properties: { name: string; durationSeconds?: number };
+  geometry: { coordinates: unknown[] };
+};
+
 const { readFileSync: readActual } = await vi.importActual<typeof import("node:fs")>("node:fs");
 const TABLE = readActual(
   new URL("../../../data/nasa-paths/2027-08-02.txt", import.meta.url),
@@ -16,12 +21,8 @@ const ROW = /^ (Limits|\d\d:\d\d) /;
 const MID_PATH = ["10:00", "10:02", "10:04"];
 const ARGV = process.argv;
 
-type Feature = {
-  properties: { name: string; durationSeconds?: number };
-  geometry: { coordinates: unknown[] };
-};
-
-// NASA's 2027 table with its header and only the rows at the given times
+// NASA's 2027 table with its header and only the rows at the given times. Never the Limits rows:
+// both ends of the path share that name, so keeping one keeps the whole path and its slow grid.
 function excerpt(times: string[]): string {
   return TABLE.split("\n")
     .filter((line) => !ROW.test(line) || times.some((time) => line.startsWith(` ${time} `)))
