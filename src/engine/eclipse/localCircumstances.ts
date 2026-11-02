@@ -109,6 +109,8 @@ function noConvergence(): never {
   throw new Error(`No convergence after ${MAX_ITERATIONS} iterations`);
 }
 
+// The eclipse as seen from one place: mid-eclipse, then C2, C3 and the duration if the place is in
+// the path. Throws a RangeError for an invalid position, and an Error if the times never converge.
 export function localCircumstances(
   elements: BesselianElements,
   position: GeographicPosition,
