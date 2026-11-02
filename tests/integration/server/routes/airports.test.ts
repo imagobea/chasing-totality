@@ -2,7 +2,7 @@ import { randomUUID } from "node:crypto";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { afterAll, describe, expect, it, onTestFinished } from "vitest";
-import { buildApp } from "../../../src/server/app.js";
+import { buildApp } from "../../../../src/server/app.js";
 
 type AirportsBody = {
   type: string;
