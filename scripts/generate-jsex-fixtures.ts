@@ -21,7 +21,7 @@ const OUTPUT = new URL("../tests/fixtures/jsex-2027.json", import.meta.url);
 
 type Point = LatLon & { name: string; altitudeMeters: number };
 
-// JSEX's local event types (mid[39]).
+// JSEX's local event types (mid[39])
 const TYPES = ["none", "partial", "annular", "total"] as const;
 
 const points = [...cities(), ...pointsAroundThePath()];
@@ -98,7 +98,7 @@ async function loadJsex() {
   runInContext(program, context);
 
   // Once loaded, SE2001.js calls recalculate() → SE2001() → calculatefor(elements of all its
-  // eclipses), which would render the page; capture the elements instead.
+  // eclipses), which would render the page; capture the elements instead
   let elements: number[] = [];
   context.calculatefor = (all: number[]) => (elements = all);
   context.currenttimeperiod = "SE2001";
@@ -121,7 +121,7 @@ async function loadJsex() {
       const central = type === "total" || type === "annular";
       return {
         type,
-        // t is in hours from t0, in TDT.
+        // t is in hours from t0, in TDT
         mid: t0 + (mid[1] ?? 0) - deltaT / 3600,
         durationSeconds: central ? ((c3[1] ?? 0) - (c2[1] ?? 0)) * 3600 : 0,
       };
