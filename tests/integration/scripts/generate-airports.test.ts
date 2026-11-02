@@ -41,7 +41,7 @@ async function generate(body: string, status = 200) {
     vi.fn(async () => new Response(body, { status })),
   );
   vi.resetModules();
-  await import("../../scripts/generate-airports.js");
+  await import("../../../scripts/generate-airports.js");
   const [, text] = vi.mocked(writeFileSync).mock.lastCall ?? [];
   return JSON.parse(String(text));
 }

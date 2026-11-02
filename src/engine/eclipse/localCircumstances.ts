@@ -1,20 +1,22 @@
 // Mid-eclipse, C2, C3 and the duration of totality at one place. Explained in ../README.md;
-// limitations in docs/plans/004-local-totality-duration-plan.md
+// limitations in docs/plans/004-local-totality-duration-plan.md.
 
 import { evaluate, type BesselianElements } from "./besselian.js";
-import { RAD } from "./constants.js";
+import { EARTH_ROTATION_DEGREES_PER_SECOND, RAD } from "./constants.js";
 import {
   geocentricObserver,
   type GeocentricObserver,
   type GeographicPosition,
 } from "./observer.js";
 
+// What one observer sees of the eclipse: its type, when totality starts and ends, how long it
+// lasts, and where the Sun is
 export type LocalCircumstances = {
   type: "total" | "annular" | "partial" | "none";
   mid: number; // time of greatest eclipse, hours UT
   c2?: number; // start of totality (or annularity), hours UT
   c3?: number; // end of totality (or annularity), hours UT
-  durationSeconds: number; // c3 − c2, seconds; 0 unless total or annular
+  durationSeconds: number; // c3 - c2, seconds; 0 unless total or annular
   sunAltitude: number; // at mid-eclipse, degrees
   sunBelowHorizon: boolean; // true if the Sun is below the horizon at mid, c2 or c3
   // durationSeconds² inside the path; outside, negative and growing with the distance from its
@@ -23,9 +25,10 @@ export type LocalCircumstances = {
   signedDurationSquared: number;
 };
 
+// The shadow as one observer sees it at one instant, measured on the fundamental plane
 type ShadowSeenFrom = {
-  u: number; // shadow axis − observer, eastward, Earth radii
-  v: number; // shadow axis − observer, northward, Earth radii
+  u: number; // shadow axis - observer, eastward, Earth radii
+  v: number; // shadow axis - observer, northward, Earth radii
   a: number; // rate of u, Earth radii per hour
   b: number; // rate of v, Earth radii per hour
   n2: number; // a² + b²
@@ -34,13 +37,13 @@ type ShadowSeenFrom = {
   sunAltitude: number; // above the observer's horizon, degrees
 };
 
-// Besselian μ is measured against a meridian that turns with ephemeris time; an observer's
-// hour angle needs universal time. The Earth turns 1.002738 × 15°/h = 0.00417807° per
-// second of ΔT.
-const EARTH_ROTATION_DEGREES_PER_SECOND = 0.00417807;
-const TOLERANCE_HOURS = 1e-6; // ~4 ms
+// The iterations stop once a step is under ~4 ms, far below NASA's 0.1 s rounding
+const TOLERANCE_HOURS = 1e-6;
+// Steps before giving up: the iterations settle in a few, so 50 means they never will
 const MAX_ITERATIONS = 50;
 
+// Places the observer on the fundamental plane at t hours after t0 and measures the shadow
+// from there
 function shadowSeenFrom(
   elements: BesselianElements,
   observer: GeocentricObserver,
@@ -49,7 +52,9 @@ function shadowSeenFrom(
   const { x, y, d, mu, l1, l2, xRate, yRate, dRate, muRate } = evaluate(elements, t);
   const { rhoSinPhi, rhoCosPhi, latitude, longitude } = observer;
 
-  // Observer's hour angle from the shadow axis
+  // Observer's hour angle from the shadow axis. Besselian μ is measured against a meridian that
+  // turns with ephemeris time, and the hour angle needs universal time: ΔT seconds of turning
+  // apart.
   const H = mu + longitude - EARTH_ROTATION_DEGREES_PER_SECOND * elements.deltaT * RAD;
 
   // Rotate the observer's geocentric position into the fundamental plane
@@ -104,6 +109,8 @@ function noConvergence(): never {
   throw new Error(`No convergence after ${MAX_ITERATIONS} iterations`);
 }
 
+// The eclipse as seen from one place: mid-eclipse, then C2, C3 and the duration if the place is in
+// the path. Throws a RangeError for an invalid position, and an Error if the times never converge.
 export function localCircumstances(
   elements: BesselianElements,
   position: GeographicPosition,
@@ -121,8 +128,8 @@ export function localCircumstances(
   const atMid = at(mid);
   const distance = Math.hypot(atMid.u, atMid.v);
   const umbraRadius = Math.abs(atMid.L2);
-  // A track passing `distance` from the umbra's centre at speed n spends 2√(R² − distance²)/n
-  // hours inside it; squared, that is negative when the track misses the umbra.
+  // A track passing `distance` from the umbra's centre at speed n spends 2√(R² - distance²)/n
+  // hours inside it; squared, that is negative when the track misses the umbra
   const passSquared = ((4 * (umbraRadius ** 2 - distance ** 2)) / atMid.n2) * 3600 ** 2;
   const toUT = (t: number) => elements.t0 + t - elements.deltaT / 3600;
 
@@ -156,7 +163,7 @@ export function localCircumstances(
   };
   // Contacts: when the distance equals the umbra radius. Solving |(u, v) + (a, b)·Δt| = |L2′|
   // for Δt, with the rates held constant, gives the step below; iterating refines it. The
-  // earlier root (−) is C2, the later (+) is C3.
+  // earlier root (-) is C2, the later (+) is C3.
   const contact = (sign: -1 | 1) =>
     iterate(mid, (t) => {
       const s = at(t);

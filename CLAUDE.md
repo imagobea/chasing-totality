@@ -34,7 +34,7 @@ Node 24 (`.nvmrc`), pnpm via corepack. Run from the repo root.
   them as the commit message; CI enforces it
 - Small, scoped commits, test-first where it makes sense
 - Prettier (printWidth 100) owns formatting, so don't hand-format
-- One-line comments have no trailing full stop
+- Comments: a single sentence has no trailing full stop; with more than one, every sentence ends with one
 - File order: imports, types, consts, helpers, main function last
 - Component order: state, refs, effect events, effects
 

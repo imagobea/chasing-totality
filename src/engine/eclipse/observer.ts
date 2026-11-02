@@ -1,14 +1,16 @@
 // The observer's position as the eclipse maths needs it: ρ·sinφ′ and ρ·cosφ′, from latitude,
-// longitude and altitude. Explained in ../README.md
+// longitude and altitude. Explained in ../README.md.
 
-import { RAD } from "./constants.js";
+import { EQUATORIAL_RADIUS_METERS, POLAR_TO_EQUATORIAL, RAD } from "./constants.js";
 
+// Where the observer stands, as a map or GPS gives it
 export type GeographicPosition = {
   latitude: number; // north positive, degrees
   longitude: number; // east positive, degrees
   altitudeMeters: number; // height above sea level, meters
 };
 
+// The observer measured from the Earth's centre, as the shadow geometry needs it
 export type GeocentricObserver = {
   rhoSinPhi: number; // height above the equatorial plane, equatorial Earth radii
   rhoCosPhi: number; // distance from the Earth's axis, equatorial Earth radii
@@ -16,10 +18,8 @@ export type GeocentricObserver = {
   longitude: number; // east positive, radians
 };
 
-// IAU 1976 ellipsoid, as used by Meeus and the eclipse elements
-const EQUATORIAL_RADIUS_METERS = 6378140;
-const POLAR_TO_EQUATORIAL = 0.99664719; // b/a, from flattening 1/298.257
-
+// Converts a map position into geocentric terms on the IAU 1976 ellipsoid; throws a RangeError
+// for a latitude beyond ±90° or a longitude or altitude that isn't finite
 export function geocentricObserver({
   latitude,
   longitude,
@@ -29,7 +29,7 @@ export function geocentricObserver({
     throw new RangeError(`Latitude must be within ±90°, got ${latitude}`);
   }
   // Any longitude: 181° is -179°, as the maths only takes its sine and cosine. Paths across the
-  // 180° meridian count on this
+  // 180° meridian count on this.
   if (!Number.isFinite(longitude)) {
     throw new RangeError(`Longitude must be a finite number of degrees, got ${longitude}`);
   }

@@ -47,6 +47,8 @@ nvm use
 pnpm install
 
 pnpm test        # run the tests
+pnpm test:unit   # only the unit tests (tests/unit/)
+pnpm test:integration  # only the integration tests (tests/integration/)
 pnpm test:coverage  # run the tests with coverage, report in coverage/
 pnpm typecheck   # type-check without emitting
 pnpm dev         # start the API with reload on port 3000
@@ -88,7 +90,7 @@ pnpm --filter web build          # static files in web/dist
 
 The page shows the API status from `GET /api/health` and a map: an [OpenFreeMap](https://openfreemap.org) base map drawn by [MapLibre GL JS](https://maplibre.org), with the picked eclipse's isolines from `GET /api/eclipses/:date/isolines` and the airports around the path from `GET /api/airports` on top. The airport icon is [Maki](https://github.com/mapbox/maki)'s (CC0). The tiles come straight from OpenFreeMap: no key, no proxy. The proxy target is `API_PROXY_TARGET` (default `http://localhost:3000`).
 
-`pnpm fixtures:jsex` regenerates `test/fixtures/jsex-2027.json` from JSEX (a GitHub copy of NASA's calculator, pinned to one commit). Only needed if the test points or the elements change.
+`pnpm fixtures:jsex` regenerates `tests/fixtures/jsex-2027.json` from JSEX (a GitHub copy of NASA's calculator, pinned to one commit). Only needed if the test points or the elements change.
 
 ### Docker
 
@@ -139,7 +141,7 @@ data/isolines/         # Pre-generated isolines the API serves, one file per ecl
 data/nasa-paths/       # NASA's path table per eclipse, to generate and test against
 data/airports.geojson  # Airports snapshot the API serves
 scripts/               # data:isolines, data:airports, fixtures:jsex
-test/                  # Vitest tests and fixtures (JSEX)
+tests/                 # Vitest tests: unit/, integration/, e2e/ (empty for now), helpers/, fixtures/
 docs/plans/            # Plans, deviations and findings
 ```
 

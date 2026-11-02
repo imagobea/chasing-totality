@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
-import { evaluate, type BesselianElements } from "../../../src/engine/eclipse/besselian.js";
+import { evaluate, type BesselianElements } from "../../../../src/engine/eclipse/besselian.js";
 
-// Round-number coefficients so every expected value can be checked by hand.
+// Round-number coefficients so every expected value can be checked by hand
 const elements: BesselianElements = {
   t0: 10,
   deltaT: 76,
@@ -36,7 +36,7 @@ describe("evaluate", () => {
     expect(at.muRate).toBeCloseTo(rad(15), 12);
   });
 
-  // t = 2 rather than 1, so that t, t² and t³ differ and a wrong power shows up.
+  // t = 2 rather than 1, so that t, t² and t³ differ and a wrong power shows up
   it("sums the polynomials at t = 2 hours after t0", () => {
     const at = evaluate(elements, 2);
     expect(at.x).toBeCloseTo(1 + 2 * 2 + 3 * 4 + 4 * 8, 12); // 49
@@ -59,5 +59,11 @@ describe("evaluate", () => {
     const at = evaluate(elements, -1);
     expect(at.x).toBeCloseTo(1 - 2 + 3 - 4, 12); // -2
     expect(at.xRate).toBeCloseTo(2 - 6 + 12, 12); // 8
+  });
+
+  it("gives a zero rate for an element with no time terms", () => {
+    const at = evaluate({ ...elements, mu: [300] }, 2);
+    expect(at.mu).toBeCloseTo(rad(300), 12);
+    expect(at.muRate).toBe(0);
   });
 });

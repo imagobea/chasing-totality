@@ -153,6 +153,10 @@ The fundamental plane passes straight through the Earth, so places on the night 
 - If the Sun is below at one or two of them, the result is `total` with `sunBelowHorizon` set (Sun rises or sets during totality, so the visible part is shorter than the duration reported).
 - If the Sun is above at all three, the result is `total`.
 
+### nasaPath.ts
+
+A fourth file, `nasaPath.ts`, takes no part in the calculation. It reads NASA's published table for an eclipse: where the path of totality runs every 2 minutes, how long totality lasts on its centre line, and the ΔT NASA used. `area.ts` uses it to place the isolines (see below), and the NASA tests check `localCircumstances()` against it, to verify that each eclipse's elements are right and that the engine puts the path where NASA does.
+
 ## Isolines: lines of equal duration
 
 Three files turn durations at single places into lines on a map: `area.ts` picks where to look, `grid.ts` asks `localCircumstances()` for the duration at many places there, and `contours.ts` joins the places with equal durations into lines.

@@ -1,5 +1,5 @@
 // Where to compute the grid: around NASA's path, so the isolines are never cut short.
-// Explained in ../README.md
+// Explained in ../README.md.
 
 import type { LatLon, PathRow } from "../eclipse/nasaPath.js";
 import type { BoundingBox } from "./grid.js";
