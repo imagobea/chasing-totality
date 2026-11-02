@@ -58,7 +58,7 @@ async function download(url: string): Promise<string> {
 }
 
 // RFC 4180: fields may be quoted, with "" for a quote and commas or newlines inside. Each row
-// becomes a record keyed by the header's column names
+// becomes a record keyed by the header's column names.
 function parseCsv(text: string): Record<string, string>[] {
   const rows: string[][] = [];
   let row: string[] = [];
@@ -101,7 +101,7 @@ function coordinates(row: Record<string, string>): [longitude: number, latitude:
 }
 
 // Large and medium airports with scheduled service, an IATA code and coordinates, sorted by IATA
-// code. Fails rather than return none, so a broken download can't replace the committed snapshot
+// code. Fails rather than return none, so a broken download can't replace the committed snapshot.
 function toAirportsGeoJson(rows: Record<string, string>[], retrieved: string): AirportsSnapshot {
   const missing = rows.length ? REQUIRED_COLUMNS.filter((column) => !(column in rows[0])) : [];
   if (missing.length) throw new Error(`OurAirports CSV has no ${missing.join(", ")} column`);
@@ -136,13 +136,17 @@ function toAirportsGeoJson(rows: Record<string, string>[], retrieved: string): A
 }
 
 async function main() {
-  // Get the current date as the retrieval date
+  // Step 1: download OurAirports' CSV, dated in UTC whatever the local time zone
   const retrieved = new Date().toISOString().slice(0, 10);
-
   const csvText = await download(OURAIRPORTS_CSV_URL);
+
+  // Step 2: parse it into one record per airport, keyed by column name
   const rows = parseCsv(csvText);
+
+  // Step 3: keep the commercial airports as GeoJSON
   const snapshot = toAirportsGeoJson(rows, retrieved);
 
+  // Step 4: write the snapshot over the committed one
   writeFileSync(OUTPUT, `${JSON.stringify(snapshot)}\n`);
   console.log(`Wrote ${snapshot.features.length} airports to ${OUTPUT.pathname}`);
 }

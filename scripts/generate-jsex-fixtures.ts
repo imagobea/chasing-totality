@@ -13,26 +13,15 @@ import { createContext, runInContext } from "node:vm";
 import { along, pastLimit } from "../tests/helpers/geo.js";
 import { parseNasaPath, type LatLon } from "../src/engine/eclipse/nasaPath.js";
 
+type Point = LatLon & { name: string; altitudeMeters: number };
+
 const JSEX_COMMIT = "dbbd677c00e215c33d3d47a1aa920a6fbc2ff982";
 const JSEX_URL = `https://raw.githubusercontent.com/ebradyjobory/eclipse-explorer/${JSEX_COMMIT}/JSEX`;
 const ECLIPSE_JULIAN_DATE = 2461619.922108; // identifies 2027-08-02 in SE2001.js
 const ELEMENTS_PER_ECLIPSE = 28; // JSEX's layout of each eclipse in the elements array
 const OUTPUT = new URL("../tests/fixtures/jsex-2027.json", import.meta.url);
-
-type Point = LatLon & { name: string; altitudeMeters: number };
-
-// JSEX's local event types (mid[39]).
+// JSEX's local event types (mid[39])
 const TYPES = ["none", "partial", "annular", "total"] as const;
-
-const points = [...cities(), ...pointsAroundThePath()];
-const jsex = await loadJsex();
-const results = points.map((point) => ({ ...point, ...jsex.circumstances(point) }));
-
-writeFileSync(
-  OUTPUT,
-  `${JSON.stringify({ source: `${JSEX_URL}/program.js`, generatedBy: "scripts/generate-jsex-fixtures.ts", points: results }, null, 2)}\n`,
-);
-console.log(`Wrote ${results.length} points to ${OUTPUT.pathname}`);
 
 function cities(): Point[] {
   return [
@@ -47,7 +36,7 @@ function cities(): Point[] {
     { name: "Luxor", lat: 25.687, lon: 32.639 },
     { name: "Jeddah", lat: 21.485, lon: 39.192 },
     { name: "Mecca", lat: 21.389, lon: 39.858 },
-    // Just outside the path: partial eclipse only
+    // Outside the path, near a limit (Seville, Aswan) or far from it: partial eclipse only
     { name: "Seville", lat: 37.389, lon: -5.984 },
     { name: "Aswan", lat: 24.089, lon: 32.899 },
     { name: "Madrid", lat: 40.417, lon: -3.704 },
@@ -57,7 +46,7 @@ function cities(): Point[] {
 
 // Points across the path at a few NASA table rows over Spain and North Africa: the central
 // line, halfway to each limit, and 1 km either side of each limit, where duration is most
-// sensitive.
+// sensitive. A point 2000 m up checks the observer's altitude is taken into account.
 function pointsAroundThePath(): Point[] {
   const { rows } = parseNasaPath(
     readFileSync(new URL("../data/nasa-paths/2027-08-02.txt", import.meta.url), "utf8"),
@@ -98,11 +87,14 @@ async function loadJsex() {
   runInContext(program, context);
 
   // Once loaded, SE2001.js calls recalculate() → SE2001() → calculatefor(elements of all its
-  // eclipses), which would render the page; capture the elements instead.
+  // eclipses), which would render the page; capture the elements instead. recalculate() calls
+  // the catalogue named by currenttimeperiod.
   let elements: number[] = [];
   context.calculatefor = (all: number[]) => (elements = all);
   context.currenttimeperiod = "SE2001";
   runInContext(elementsFile, context);
+  // Each eclipse is 28 numbers: [0] Julian date of greatest eclipse, [1] t0 (TDT hour), [2-3]
+  // range of t, [5] ΔT (seconds), then the Besselian elements x, y, d, μ, l1, l2, tan f1, tan f2.
   const index = elements.indexOf(ECLIPSE_JULIAN_DATE);
   if (index < 0 || index % ELEMENTS_PER_ECLIPSE !== 0) {
     throw new Error("2027-08-02 not found in SE2001.js");
@@ -113,15 +105,18 @@ async function loadJsex() {
     circumstances({ lat, lon, altitudeMeters }: Point) {
       form.set(lat, lon, altitudeMeters);
       runInContext("readform()", context);
+      // The eclipse to compute, as its offset in the elements array
       context.obsvconst[6] = index;
+      // Mid-eclipse, the contacts C1-C4 and the local event type, for the observer in the form
       runInContext("getall(elements)", Object.assign(context, { elements }));
 
+      // One array per contact: [1] its time t, [39] the local event type (mid only)
       const { mid, c2, c3 } = context as unknown as Record<"mid" | "c2" | "c3", number[]>;
       const type = TYPES[mid[39] ?? 0] ?? "none";
       const central = type === "total" || type === "annular";
       return {
         type,
-        // t is in hours from t0, in TDT.
+        // t is in hours from t0, in TDT; mid is converted to UT
         mid: t0 + (mid[1] ?? 0) - deltaT / 3600,
         durationSeconds: central ? ((c3[1] ?? 0) - (c2[1] ?? 0)) * 3600 : 0,
       };
@@ -157,3 +152,23 @@ function stubForm() {
   };
   return form;
 }
+
+async function main() {
+  // Step 1: the points to compute, at cities and across NASA's path
+  const points = [...cities(), ...pointsAroundThePath()];
+
+  // Step 2: download JSEX and load it, with the 2027-08-02 elements, in an isolated context
+  const jsex = await loadJsex();
+
+  // Step 3: JSEX's local circumstances at every point
+  const results = points.map((point) => ({ ...point, ...jsex.circumstances(point) }));
+
+  // Step 4: write the fixture, with the JSEX source it came from
+  writeFileSync(
+    OUTPUT,
+    `${JSON.stringify({ source: `${JSEX_URL}/program.js`, generatedBy: "scripts/generate-jsex-fixtures.ts", points: results }, null, 2)}\n`,
+  );
+  console.log(`Wrote ${results.length} points to ${OUTPUT.pathname}`);
+}
+
+await main();
