@@ -67,6 +67,7 @@ afterEach(() => {
 describe("generate-airports", () => {
   it("fails when the download fails", async () => {
     await expect(generate("", 503)).rejects.toThrow(/503/);
+    expect(writeFileSync).not.toHaveBeenCalled();
   });
 
   it("reads quoted fields with commas, escaped quotes and newlines", async () => {
@@ -80,10 +81,16 @@ describe("generate-airports", () => {
     );
   });
 
+  it("reads columns by header name, in any order", async () => {
+    const reversed = Object.fromEntries(Object.entries(row()).reverse());
+    expect(await generate(csv(reversed))).toEqual(await generate(csv(row())));
+  });
+
   it("fails when a column it needs is missing", async () => {
     const withoutIata = row();
     delete withoutIata.iata_code;
     await expect(generate(csv(withoutIata))).rejects.toThrow(/iata_code/);
+    expect(writeFileSync).not.toHaveBeenCalled();
   });
 
   it("keeps large and medium airports with scheduled service and an IATA code", async () => {
@@ -100,6 +107,7 @@ describe("generate-airports", () => {
     ["airports without scheduled service", { scheduled_service: "no" }],
     ["airports without an IATA code", { iata_code: "" }],
     ["malformed IATA codes", { iata_code: "0A" }],
+    ["lowercase IATA codes", { iata_code: "agp" }],
     ["airports without a latitude", { latitude_deg: "" }],
     ["airports with a malformed longitude", { longitude_deg: "west" }],
   ])("leaves out %s", async (_, overrides) => {
