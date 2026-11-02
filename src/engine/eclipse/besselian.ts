@@ -7,7 +7,7 @@ import { RAD } from "./constants.js";
 // the hours since t0
 export type BesselianElements = {
   t0: number; // reference time on the eclipse date (TDT), hours
-  deltaT: number; // TDT − UT, seconds
+  deltaT: number; // TDT - UT, seconds
   x: number[]; // shadow axis position, eastward, Earth radii
   y: number[]; // shadow axis position, northward, Earth radii
   d: number[]; // declination of the shadow axis, degrees

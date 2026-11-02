@@ -147,7 +147,7 @@ describe("localCircumstances", () => {
     expect(result.sunBelowHorizon).toBe(true);
   });
 
-  it("puts C2 before mid-eclipse and C3 after, c3 − c2 apart", () => {
+  it("puts C2 before mid-eclipse and C3 after, c3 - c2 apart", () => {
     const result = at({ lat: 25.7, lon: 32.6 }); // Luxor
     expect(result.c2).toBeLessThan(result.mid);
     expect(result.c3).toBeGreaterThan(result.mid);

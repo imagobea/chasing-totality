@@ -16,7 +16,7 @@ export type LocalCircumstances = {
   mid: number; // time of greatest eclipse, hours UT
   c2?: number; // start of totality (or annularity), hours UT
   c3?: number; // end of totality (or annularity), hours UT
-  durationSeconds: number; // c3 − c2, seconds; 0 unless total or annular
+  durationSeconds: number; // c3 - c2, seconds; 0 unless total or annular
   sunAltitude: number; // at mid-eclipse, degrees
   sunBelowHorizon: boolean; // true if the Sun is below the horizon at mid, c2 or c3
   // durationSeconds² inside the path; outside, negative and growing with the distance from its
@@ -27,8 +27,8 @@ export type LocalCircumstances = {
 
 // The shadow as one observer sees it at one instant, measured on the fundamental plane
 type ShadowSeenFrom = {
-  u: number; // shadow axis − observer, eastward, Earth radii
-  v: number; // shadow axis − observer, northward, Earth radii
+  u: number; // shadow axis - observer, eastward, Earth radii
+  v: number; // shadow axis - observer, northward, Earth radii
   a: number; // rate of u, Earth radii per hour
   b: number; // rate of v, Earth radii per hour
   n2: number; // a² + b²
@@ -126,7 +126,7 @@ export function localCircumstances(
   const atMid = at(mid);
   const distance = Math.hypot(atMid.u, atMid.v);
   const umbraRadius = Math.abs(atMid.L2);
-  // A track passing `distance` from the umbra's centre at speed n spends 2√(R² − distance²)/n
+  // A track passing `distance` from the umbra's centre at speed n spends 2√(R² - distance²)/n
   // hours inside it; squared, that is negative when the track misses the umbra.
   const passSquared = ((4 * (umbraRadius ** 2 - distance ** 2)) / atMid.n2) * 3600 ** 2;
   const toUT = (t: number) => elements.t0 + t - elements.deltaT / 3600;
@@ -161,7 +161,7 @@ export function localCircumstances(
   };
   // Contacts: when the distance equals the umbra radius. Solving |(u, v) + (a, b)·Δt| = |L2′|
   // for Δt, with the rates held constant, gives the step below; iterating refines it. The
-  // earlier root (−) is C2, the later (+) is C3.
+  // earlier root (-) is C2, the later (+) is C3.
   const contact = (sign: -1 | 1) =>
     iterate(mid, (t) => {
       const s = at(t);
