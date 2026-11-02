@@ -63,18 +63,17 @@ describe("localCircumstances", () => {
 
   // There, C2 and C3 are milliseconds apart and the contact iteration alone can fail to settle
   it("gives a near-zero totality within a millimetre of a limit", () => {
-    const at = (latitude: number) =>
-      localCircumstances(eclipse2027Aug02, { latitude, longitude: 31, altitudeMeters: 0 });
+    const atLatitude = (latitude: number) => at({ lat: latitude, lon: 31 });
     // Northern limit at longitude 31° (Egypt), by bisection on the mid-eclipse geometry
     let inside = 26;
     let outside = 31;
     for (let i = 0; i < 60; i++) {
       const middle = (inside + outside) / 2;
-      if (at(middle).signedDurationSquared > 0) inside = middle;
+      if (atLatitude(middle).signedDurationSquared > 0) inside = middle;
       else outside = middle;
     }
     for (let exponent = -12; exponent <= -8; exponent += 0.1) {
-      const result = at(inside - 10 ** exponent); // 10⁻⁸° ≈ 1 mm
+      const result = atLatitude(inside - 10 ** exponent); // 10⁻⁸° ≈ 1 mm
       expect(result.type).toBe("total");
       expect(result.durationSeconds).toBeLessThan(0.1);
     }
