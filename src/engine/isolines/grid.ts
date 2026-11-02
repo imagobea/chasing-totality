@@ -4,6 +4,7 @@
 import type { BesselianElements } from "../eclipse/besselian.js";
 import { localCircumstances } from "../eclipse/localCircumstances.js";
 
+// An area by its edges, in degrees; across the 180° meridian east carries on past 180
 export type BoundingBox = {
   west: number; // degrees, east positive
   south: number; // degrees, north positive
@@ -11,6 +12,7 @@ export type BoundingBox = {
   north: number;
 };
 
+// Totality sampled on a regular lat/lon grid, with what places each value on the map
 export type DurationGrid = {
   west: number; // longitude of the first column, degrees
   south: number; // latitude of the first row, degrees
@@ -22,6 +24,8 @@ export type DurationGrid = {
   values: Float64Array;
 };
 
+// Samples totality every `step` degrees across the box, corners included; throws a RangeError
+// for a step that isn't positive or an empty box
 export function durationGrid(
   elements: BesselianElements,
   { west, south, east, north }: BoundingBox,

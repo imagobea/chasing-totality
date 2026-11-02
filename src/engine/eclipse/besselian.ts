@@ -19,7 +19,7 @@ export type BesselianElements = {
 };
 
 // The elements evaluated at one instant t, plus hourly rates. d and mu become radians,
-// ready for trigonometry
+// ready for trigonometry.
 export type ElementsAt = {
   x: number; // Earth radii
   y: number; // Earth radii
@@ -46,6 +46,7 @@ function derivative(coefficients: number[], t: number): number {
   );
 }
 
+// The elements at t hours after t0: where the shadow is, how big, and how fast it all changes
 export function evaluate(elements: BesselianElements, t: number): ElementsAt {
   return {
     x: polynomial(elements.x, t),

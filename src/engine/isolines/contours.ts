@@ -6,12 +6,14 @@ import type { DurationGrid } from "./grid.js";
 
 export type Position = [longitude: number, latitude: number];
 
+// One isoline as GeoJSON: the area where totality lasts at least durationSeconds
 export type IsolineFeature = {
   type: "Feature";
   properties: { durationSeconds: number; name: string };
   geometry: { type: "MultiPolygon"; coordinates: Position[][][] };
 };
 
+// One eclipse's isolines as GeoJSON, with the bbox that holds them
 export type IsolineCollection = {
   type: "FeatureCollection";
   // West, south, east and north edges, stopping at the poles; across the 180° meridian east
@@ -35,6 +37,8 @@ export function durationThresholds(grid: DurationGrid, stepSeconds: number): num
   return Array.from({ length: Math.floor(longest / stepSeconds) + 1 }, (_, i) => i * stepSeconds);
 }
 
+// Traces the isoline for each threshold, in seconds, through the grid; thresholds no point
+// reaches are left out
 export function durationContours(
   grid: DurationGrid,
   thresholdsSeconds: number[],

@@ -9,6 +9,8 @@ import {
   type GeographicPosition,
 } from "./observer.js";
 
+// What one observer sees of the eclipse: its type, when totality starts and ends, how long it
+// lasts, and where the Sun is
 export type LocalCircumstances = {
   type: "total" | "annular" | "partial" | "none";
   mid: number; // time of greatest eclipse, hours UT
@@ -23,6 +25,7 @@ export type LocalCircumstances = {
   signedDurationSquared: number;
 };
 
+// The shadow as one observer sees it at one instant, measured on the fundamental plane
 type ShadowSeenFrom = {
   u: number; // shadow axis − observer, eastward, Earth radii
   v: number; // shadow axis − observer, northward, Earth radii
@@ -41,6 +44,8 @@ const EARTH_ROTATION_DEGREES_PER_SECOND = 0.00417807;
 const TOLERANCE_HOURS = 1e-6; // ~4 ms
 const MAX_ITERATIONS = 50;
 
+// Places the observer on the fundamental plane at t hours after t0 and measures the shadow
+// from there
 function shadowSeenFrom(
   elements: BesselianElements,
   observer: GeocentricObserver,

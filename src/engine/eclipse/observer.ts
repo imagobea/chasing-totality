@@ -3,12 +3,14 @@
 
 import { RAD } from "./constants.js";
 
+// Where the observer stands, as a map or GPS gives it
 export type GeographicPosition = {
   latitude: number; // north positive, degrees
   longitude: number; // east positive, degrees
   altitudeMeters: number; // height above sea level, meters
 };
 
+// The observer measured from the Earth's centre, as the shadow geometry needs it
 export type GeocentricObserver = {
   rhoSinPhi: number; // height above the equatorial plane, equatorial Earth radii
   rhoCosPhi: number; // distance from the Earth's axis, equatorial Earth radii
@@ -20,6 +22,8 @@ export type GeocentricObserver = {
 const EQUATORIAL_RADIUS_METERS = 6378140;
 const POLAR_TO_EQUATORIAL = 0.99664719; // b/a, from flattening 1/298.257
 
+// Converts a map position into geocentric terms on the IAU 1976 ellipsoid; throws a RangeError
+// for a latitude beyond ±90° or a longitude or altitude that isn't finite
 export function geocentricObserver({
   latitude,
   longitude,
