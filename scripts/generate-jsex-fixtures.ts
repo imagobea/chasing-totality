@@ -1,4 +1,4 @@
-// Generates test/fixtures/jsex-2027.json: local circumstances of the 2027-08-02 eclipse at a set
+// Generates tests/fixtures/jsex-2027.json: local circumstances of the 2027-08-02 eclipse at a set
 // of points, computed by NASA's Javascript Solar Eclipse Explorer (JSEX), to test our engine
 // against.
 //
@@ -10,14 +10,14 @@
 
 import { readFileSync, writeFileSync } from "node:fs";
 import { createContext, runInContext } from "node:vm";
-import { along, pastLimit } from "../test/geo.js";
+import { along, pastLimit } from "../tests/geo.js";
 import { parseNasaPath, type LatLon } from "../src/engine/eclipse/nasaPath.js";
 
 const JSEX_COMMIT = "dbbd677c00e215c33d3d47a1aa920a6fbc2ff982";
 const JSEX_URL = `https://raw.githubusercontent.com/ebradyjobory/eclipse-explorer/${JSEX_COMMIT}/JSEX`;
 const ECLIPSE_JULIAN_DATE = 2461619.922108; // identifies 2027-08-02 in SE2001.js
 const ELEMENTS_PER_ECLIPSE = 28; // JSEX's layout of each eclipse in the elements array
-const OUTPUT = new URL("../test/fixtures/jsex-2027.json", import.meta.url);
+const OUTPUT = new URL("../tests/fixtures/jsex-2027.json", import.meta.url);
 
 type Point = LatLon & { name: string; altitudeMeters: number };
 
