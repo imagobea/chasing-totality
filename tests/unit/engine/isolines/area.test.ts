@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
-import type { PathRow } from "../../../src/engine/eclipse/nasaPath.js";
-import { pathArea, unwrapPath } from "../../../src/engine/isolines/area.js";
+import type { PathRow } from "../../../../src/engine/eclipse/nasaPath.js";
+import { pathArea, unwrapPath } from "../../../../src/engine/isolines/area.js";
 
 // A NASA table row, with round numbers so the extent can be checked by hand
 const row = (

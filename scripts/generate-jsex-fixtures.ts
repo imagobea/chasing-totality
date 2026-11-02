@@ -10,7 +10,7 @@
 
 import { readFileSync, writeFileSync } from "node:fs";
 import { createContext, runInContext } from "node:vm";
-import { along, pastLimit } from "../tests/geo.js";
+import { along, pastLimit } from "../tests/helpers/geo.js";
 import { parseNasaPath, type LatLon } from "../src/engine/eclipse/nasaPath.js";
 
 const JSEX_COMMIT = "dbbd677c00e215c33d3d47a1aa920a6fbc2ff982";

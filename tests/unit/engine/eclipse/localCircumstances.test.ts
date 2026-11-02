@@ -1,12 +1,16 @@
 import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
-import type { BesselianElements } from "../../../src/engine/eclipse/besselian.js";
-import { eclipse2027Aug02 } from "../../../src/engine/eclipse/elements/2027-08-02.js";
-import { eclipses } from "../../../src/engine/eclipse/elements/index.js";
-import { localCircumstances } from "../../../src/engine/eclipse/localCircumstances.js";
-import { parseNasaPath, type LatLon, type PathRow } from "../../../src/engine/eclipse/nasaPath.js";
-import { unwrapPath } from "../../../src/engine/isolines/area.js";
-import { acrossLimit, along } from "../../geo.js";
+import type { BesselianElements } from "../../../../src/engine/eclipse/besselian.js";
+import { eclipse2027Aug02 } from "../../../../src/engine/eclipse/elements/2027-08-02.js";
+import { eclipses } from "../../../../src/engine/eclipse/elements/index.js";
+import { localCircumstances } from "../../../../src/engine/eclipse/localCircumstances.js";
+import {
+  parseNasaPath,
+  type LatLon,
+  type PathRow,
+} from "../../../../src/engine/eclipse/nasaPath.js";
+import { unwrapPath } from "../../../../src/engine/isolines/area.js";
+import { acrossLimit, along } from "../../../helpers/geo.js";
 
 // Every known eclipse against its NASA path table, with the table's ΔT so only the geometry
 // is compared. This catches a mistyped element or a table from another eclipse. The rows carry
@@ -16,7 +20,7 @@ import { acrossLimit, along } from "../../geo.js";
 // once on 2026-10-29 (docs/plans/051-checks-for-any-total-eclipse-plan.md).
 const nasaPaths = Object.entries(eclipses).map(([date, elements]) => {
   const { deltaT, rows } = parseNasaPath(
-    readFileSync(new URL(`../../../data/nasa-paths/${date}.txt`, import.meta.url), "utf8"),
+    readFileSync(new URL(`../../../../data/nasa-paths/${date}.txt`, import.meta.url), "utf8"),
   );
   return { date, elements: { ...elements, deltaT }, rows: unwrapPath(rows) };
 });

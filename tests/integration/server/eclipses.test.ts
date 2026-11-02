@@ -3,7 +3,7 @@ import { mkdtemp, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { afterAll, describe, expect, it, onTestFinished } from "vitest";
-import { buildApp } from "../../src/server/app.js";
+import { buildApp } from "../../../src/server/app.js";
 
 // Shared by every test that reads the real data dir
 const app = buildApp();
