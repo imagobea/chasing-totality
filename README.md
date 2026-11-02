@@ -47,6 +47,8 @@ nvm use
 pnpm install
 
 pnpm test        # run the tests
+pnpm test:unit   # only the unit tests (tests/unit/)
+pnpm test:integration  # only the integration tests (tests/integration/)
 pnpm test:coverage  # run the tests with coverage, report in coverage/
 pnpm typecheck   # type-check without emitting
 pnpm dev         # start the API with reload on port 3000
