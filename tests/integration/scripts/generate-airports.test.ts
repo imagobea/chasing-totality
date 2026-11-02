@@ -65,6 +65,27 @@ afterEach(() => {
 });
 
 describe("generate-airports", () => {
+  it("fails when the download fails", async () => {
+    await expect(generate("", 503)).rejects.toThrow(/503/);
+  });
+
+  it("reads quoted fields with commas, escaped quotes and newlines", async () => {
+    const snapshot = await generate(csv(row({ name: 'Aeropuerto "El Prat",\nBarcelona' })));
+    expect(snapshot.features[0].properties.name).toBe('Aeropuerto "El Prat",\nBarcelona');
+  });
+
+  it("handles CRLF line endings and a trailing newline", async () => {
+    expect(await generate(`${csv(row()).replaceAll("\n", "\r\n")}\r\n`)).toEqual(
+      await generate(csv(row())),
+    );
+  });
+
+  it("fails when a column it needs is missing", async () => {
+    const withoutIata = row();
+    delete withoutIata.iata_code;
+    await expect(generate(csv(withoutIata))).rejects.toThrow(/iata_code/);
+  });
+
   it("keeps large and medium airports with scheduled service and an IATA code", async () => {
     expect(await iataCodes(row(), row({ type: "medium_airport", iata_code: "XRY" }))).toEqual([
       "AGP",
@@ -122,17 +143,6 @@ describe("generate-airports", () => {
     });
   });
 
-  it("reads quoted fields with commas, escaped quotes and newlines", async () => {
-    const snapshot = await generate(csv(row({ name: 'Aeropuerto "El Prat",\nBarcelona' })));
-    expect(snapshot.features[0].properties.name).toBe('Aeropuerto "El Prat",\nBarcelona');
-  });
-
-  it("handles CRLF line endings and a trailing newline", async () => {
-    expect(await generate(`${csv(row()).replaceAll("\n", "\r\n")}\r\n`)).toEqual(
-      await generate(csv(row())),
-    );
-  });
-
   it.each([
     ["an empty file", ""],
     ["a header only", csv()],
@@ -140,15 +150,5 @@ describe("generate-airports", () => {
   ])("fails and writes nothing for %s", async (_, body) => {
     await expect(generate(body)).rejects.toThrow(/no airports/);
     expect(writeFileSync).not.toHaveBeenCalled();
-  });
-
-  it("fails when a column it needs is missing", async () => {
-    const withoutIata = row();
-    delete withoutIata.iata_code;
-    await expect(generate(csv(withoutIata))).rejects.toThrow(/iata_code/);
-  });
-
-  it("fails when the download fails", async () => {
-    await expect(generate("", 503)).rejects.toThrow(/503/);
   });
 });
