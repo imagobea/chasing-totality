@@ -13,26 +13,15 @@ import { createContext, runInContext } from "node:vm";
 import { along, pastLimit } from "../tests/helpers/geo.js";
 import { parseNasaPath, type LatLon } from "../src/engine/eclipse/nasaPath.js";
 
+type Point = LatLon & { name: string; altitudeMeters: number };
+
 const JSEX_COMMIT = "dbbd677c00e215c33d3d47a1aa920a6fbc2ff982";
 const JSEX_URL = `https://raw.githubusercontent.com/ebradyjobory/eclipse-explorer/${JSEX_COMMIT}/JSEX`;
 const ECLIPSE_JULIAN_DATE = 2461619.922108; // identifies 2027-08-02 in SE2001.js
 const ELEMENTS_PER_ECLIPSE = 28; // JSEX's layout of each eclipse in the elements array
 const OUTPUT = new URL("../tests/fixtures/jsex-2027.json", import.meta.url);
-
-type Point = LatLon & { name: string; altitudeMeters: number };
-
 // JSEX's local event types (mid[39])
 const TYPES = ["none", "partial", "annular", "total"] as const;
-
-const points = [...cities(), ...pointsAroundThePath()];
-const jsex = await loadJsex();
-const results = points.map((point) => ({ ...point, ...jsex.circumstances(point) }));
-
-writeFileSync(
-  OUTPUT,
-  `${JSON.stringify({ source: `${JSEX_URL}/program.js`, generatedBy: "scripts/generate-jsex-fixtures.ts", points: results }, null, 2)}\n`,
-);
-console.log(`Wrote ${results.length} points to ${OUTPUT.pathname}`);
 
 function cities(): Point[] {
   return [
@@ -157,3 +146,17 @@ function stubForm() {
   };
   return form;
 }
+
+async function main() {
+  const points = [...cities(), ...pointsAroundThePath()];
+  const jsex = await loadJsex();
+  const results = points.map((point) => ({ ...point, ...jsex.circumstances(point) }));
+
+  writeFileSync(
+    OUTPUT,
+    `${JSON.stringify({ source: `${JSEX_URL}/program.js`, generatedBy: "scripts/generate-jsex-fixtures.ts", points: results }, null, 2)}\n`,
+  );
+  console.log(`Wrote ${results.length} points to ${OUTPUT.pathname}`);
+}
+
+await main();
