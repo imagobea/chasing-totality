@@ -1,6 +1,6 @@
 // typescript-eslint can't run on TypeScript 7 (no JS API), so the root package.json
 // aliases "typescript" to the TS 6 API and installs TS 7 as @typescript/native for tsc.
-// web/ keeps plain TS 7 because ESLint only runs from the root and never loads web's copy
+// web/ keeps plain TS 7 because ESLint only runs from the root and never loads web's copy.
 import js from "@eslint/js";
 import { defineConfig } from "eslint/config";
 import globals from "globals";
