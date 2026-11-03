@@ -100,7 +100,7 @@ export function EclipseMap({ date, onCursorMove, attributionRef }: EclipseMapPro
     map.on("mouseout", () => reportCursor(null));
 
     // MapLibre's own control, so the credits follow the style and sources. Mounted by hand
-    // through its public onAdd/onRemove, because it goes outside the map
+    // through its public onAdd/onRemove, because it goes outside the map.
     const attribution = new AttributionControl({
       compact: false,
       // Passing options replaces MapLibre's defaults, so its own credit goes back in by hand

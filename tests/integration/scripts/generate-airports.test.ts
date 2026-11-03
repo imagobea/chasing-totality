@@ -1,7 +1,8 @@
 import { writeFileSync } from "node:fs";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
-// The script writes its snapshot with writeFileSync; the mock keeps it off disk for the tests to read
+// The script writes its snapshot with writeFileSync; the mock keeps it off disk for the tests to
+// read
 vi.mock("node:fs", () => ({ writeFileSync: vi.fn() }));
 
 const RETRIEVED = "2026-10-25";
