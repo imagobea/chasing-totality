@@ -78,7 +78,10 @@ describe("GET /airports", () => {
       licence: "Public domain",
     });
     expect(body.retrieved).toMatch(/^\d{4}-\d{2}-\d{2}$/);
-    expect(body.features.length).toBeGreaterThan(0);
+    // Around the 2027 path, so the target region is covered
+    expect(body.features.map((feature) => feature.id)).toEqual(
+      expect.arrayContaining(["AGP", "TNG"]),
+    );
   });
 
   it("serves the snapshot as is without a bbox", async () => {
