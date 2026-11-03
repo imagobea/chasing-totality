@@ -1,12 +1,14 @@
+import { tmpdir } from "node:os";
 import { afterAll, describe, expect, it } from "vitest";
 import { buildApp } from "../../../../src/server/app.js";
+import { appWithFiles } from "../../../helpers/server.js";
 
 // Shared by every test that reads the real data dir
 const app = buildApp();
 afterAll(() => app.close());
 
 describe("GET /eclipses/:date/isolines", () => {
-  it("serves the isolines as GeoJSON", async () => {
+  it("serves the committed 2027 isolines as GeoJSON", async () => {
     const res = await app.inject({ method: "GET", url: "/eclipses/2027-08-02/isolines" });
     expect(res.statusCode).toBe(200);
     expect(res.headers["content-type"]).toBe("application/geo+json");
@@ -17,9 +19,25 @@ describe("GET /eclipses/:date/isolines", () => {
     expect(names).toContain("6m00s");
   });
 
+  it("serves the date's file as is", async () => {
+    const dataApp = await appWithFiles(["2027-08-02.geojson"]);
+    const res = await dataApp.inject({ method: "GET", url: "/eclipses/2027-08-02/isolines" });
+    expect(res.statusCode).toBe(200);
+    expect(res.body).toBe("{}");
+  });
+
   it("answers 404 for a valid date with no data", async () => {
-    const res = await app.inject({ method: "GET", url: "/eclipses/2030-01-01/isolines" });
+    const emptyApp = await appWithFiles([]);
+    const res = await emptyApp.inject({ method: "GET", url: "/eclipses/2027-08-02/isolines" });
     expect(res.statusCode).toBe(404);
+  });
+
+  // Any read error other than a missing file, here a dir where the file should be
+  it("answers 500 without the server path when the file can't be read", async () => {
+    const brokenApp = await appWithFiles([], ["2027-08-02.geojson"]);
+    const res = await brokenApp.inject({ method: "GET", url: "/eclipses/2027-08-02/isolines" });
+    expect(res.statusCode).toBe(500);
+    expect(res.body).not.toContain(tmpdir());
   });
 
   // The last one would climb out of the data dir if the schema let slashes through
