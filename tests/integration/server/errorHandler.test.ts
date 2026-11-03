@@ -17,6 +17,9 @@ function appWithFailingRoutes() {
   app.get("/unavailable", async () => {
     throw Object.assign(new Error("Upstream is down"), { statusCode: 503 });
   });
+  app.get("/redirect", async () => {
+    throw Object.assign(new Error("Cannot read /srv/secret/file"), { statusCode: 304 });
+  });
   app.get("/crash", async () => {
     throw new Error("Cannot read /srv/secret/file");
   });
@@ -41,6 +44,7 @@ describe("errorHandler", () => {
 
   it.each([
     ["an error without a status", "/crash", 500, "Internal Server Error"],
+    ["an error with a status below 400", "/redirect", 500, "Internal Server Error"],
     ["a server error", "/unavailable", 503, "Service Unavailable"],
   ])("answers %s generically", async (_, url, statusCode, message) => {
     const app = appWithFailingRoutes();

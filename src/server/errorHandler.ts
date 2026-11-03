@@ -9,8 +9,8 @@ export function errorHandler(error: FastifyError, request: FastifyRequest, reply
   if (error.validation) error.statusCode = 422;
 
   // Server errors are logged in full but answered generically, so internals like file paths
-  // don't leak
-  const statusCode = error.statusCode ?? 500;
+  // don't leak. An error without an error status (400 and up) counts as one.
+  const statusCode = error.statusCode && error.statusCode >= 400 ? error.statusCode : 500;
   if (statusCode >= 500) {
     request.log.error({ err: error }, error.message);
     const message = STATUS_CODES[statusCode];
