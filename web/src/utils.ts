@@ -30,7 +30,8 @@ export function formatCoordinates({ lng, lat }: Coordinates): string {
   return `${formatDegrees(lat, "N", "S")} · ${formatDegrees(lng, "E", "W")}`;
 }
 
-// Given a list of eclipse dates, return the first one that is today or in the future, or null if none
+// Given a list of eclipse dates, return the first one that is today or in the future, or null if none.
+// Designed to be used with the list returned by GET /eclipses, which is sorted ascending.
 export function firstUpcomingEclipse(dates: string[]): string | null {
   const todayMs = Date.UTC(new Date().getFullYear(), new Date().getMonth(), new Date().getDate());
   for (const date of dates) {
