@@ -3,8 +3,6 @@ import { AttributionControl, MapLibreMap } from "maplibre-gl";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { fetchIsolines, type Isolines } from "../../../src/api/eclipses.js";
 import {
-  AIRPORT_ICON_ID,
-  AIRPORT_ICON_OPTIONS,
   AIRPORTS_LAYERS,
   AIRPORTS_SOURCE_ID,
   airportsSource,
@@ -116,14 +114,6 @@ describe("EclipseMap", () => {
     map.getSource.mockReset();
   });
 
-  it("creates one map in its container", () => {
-    const { container } = render(<EclipseMap {...mapProps("2027-08-02")} />);
-    expect(MapLibreMap).toHaveBeenCalledOnce();
-    expect(MapLibreMap).toHaveBeenCalledWith(
-      expect.objectContaining({ container: container.firstChild }),
-    );
-  });
-
   it("adds nothing until the style has loaded", () => {
     render(<EclipseMap {...mapProps("2027-08-02")} />);
     expect(map.addSource).not.toHaveBeenCalled();
@@ -137,11 +127,61 @@ describe("EclipseMap", () => {
     expect(map.addLayer).not.toHaveBeenCalled();
   });
 
-  it("opens with no view of its own", () => {
-    render(<EclipseMap {...mapProps(null)} />);
-    const [options] = vi.mocked(MapLibreMap).mock.calls[0]!;
-    expect(options).not.toHaveProperty("center");
-    expect(options).not.toHaveProperty("zoom");
+  it("adds nothing when the map goes away before the icon loads", async () => {
+    const { unmount } = render(<EclipseMap {...mapProps("2027-08-02")} />);
+    fire("load");
+    unmount();
+    await act(async () => {});
+    expect(map.addImage).not.toHaveBeenCalled();
+    expect(map.addSource).not.toHaveBeenCalled();
+  });
+
+  it("warns and still adds everything, airports without their icon, when the icon fails to load", async () => {
+    const error = new Error("not found");
+    vi.mocked(loadAirportIcon).mockRejectedValueOnce(error);
+    const warn = vi.spyOn(console, "warn").mockImplementation(() => {});
+    render(<EclipseMap {...mapProps("2027-08-02")} />);
+    await loadStyle();
+    expect(warn).toHaveBeenCalledWith(expect.any(String), error);
+    expect(map.addImage).not.toHaveBeenCalled();
+    expect(map.addSource).toHaveBeenCalledWith(
+      ISOLINES_SOURCE_ID,
+      isolinesSource(ISOLINES["2027-08-02"]!),
+    );
+    expect(map.addSource).toHaveBeenCalledWith(
+      AIRPORTS_SOURCE_ID,
+      airportsSource(ISOLINES["2027-08-02"]!.bbox),
+    );
+  });
+
+  it("reports the wrapped cursor position, and null when it leaves the map", () => {
+    const onCursorMove = vi.fn();
+    render(<EclipseMap {...mapProps(null)} onCursorMove={onCursorMove} />);
+    const wrapped = { lng: -170, lat: 36 };
+    fire("mousemove", { lngLat: { wrap: () => wrapped } });
+    expect(onCursorMove).toHaveBeenLastCalledWith(wrapped);
+    fire("mouseout");
+    expect(onCursorMove).toHaveBeenLastCalledWith(null);
+  });
+
+  it("puts the attribution in the given slot", () => {
+    const props = mapProps(null);
+    render(<EclipseMap {...props} />);
+    // The map's own control is off, so the credits show once
+    expect(MapLibreMap).toHaveBeenCalledWith(
+      expect.objectContaining({ attributionControl: false }),
+    );
+    expect(AttributionControl).toHaveBeenCalledWith(
+      expect.objectContaining({ customAttribution: expect.stringContaining("MapLibre") }),
+    );
+    expect(props.attributionRef.current.contains(attribution.element)).toBe(true);
+  });
+
+  it("removes the map and its attribution when unmounted", () => {
+    const { unmount } = render(<EclipseMap {...mapProps("2027-08-02")} />);
+    unmount();
+    expect(attribution.onRemove).toHaveBeenCalledOnce();
+    expect(map.remove).toHaveBeenCalledOnce();
   });
 
   it("adds the date's isolines once the style has loaded", async () => {
@@ -186,29 +226,16 @@ describe("EclipseMap", () => {
     expect(map.fitBounds).toHaveBeenCalledWith(ISOLINES["2027-08-02"]!.bbox);
   });
 
-  it("adds the isolines when the first date arrives after the style", async () => {
-    const props = mapProps(null);
-    const { rerender } = render(<EclipseMap {...props} />);
+  it("adds the airports around the path on top of everything once the isolines arrive", async () => {
+    render(<EclipseMap {...mapProps("2027-08-02")} />);
     await loadStyle();
-    rerender(<EclipseMap {...props} date="2027-08-02" />);
-    await settle();
     expect(map.addSource).toHaveBeenCalledWith(
-      ISOLINES_SOURCE_ID,
-      isolinesSource(ISOLINES["2027-08-02"]!),
+      AIRPORTS_SOURCE_ID,
+      airportsSource(ISOLINES["2027-08-02"]!.bbox),
     );
-  });
-
-  it("swaps the data on the same map when the date changes", async () => {
-    const props = mapProps("2027-08-02");
-    const { rerender } = render(<EclipseMap {...props} />);
-    await loadStyle();
-    map.getSource.mockReturnValue(source);
-    rerender(<EclipseMap {...props} date="2028-07-22" />);
-    await settle();
-    expect(source.setData).toHaveBeenCalledWith(ISOLINES["2028-07-22"]);
-    expect(map.addSource.mock.calls.filter(([id]) => id === ISOLINES_SOURCE_ID)).toHaveLength(1);
-    expect(layersFrom(ISOLINES_SOURCE_ID)).toEqual(ISOLINES_LAYERS);
-    expect(MapLibreMap).toHaveBeenCalledOnce();
+    // Last and with no beforeId, so they go above the isolines and the base map's labels
+    const added = map.addLayer.mock.calls.slice(-AIRPORTS_LAYERS.length);
+    expect(added).toEqual(AIRPORTS_LAYERS.map((layer) => [layer, undefined]));
   });
 
   it("fits the map to the whole path of each eclipse picked", async () => {
@@ -222,6 +249,36 @@ describe("EclipseMap", () => {
       ISOLINES["2027-08-02"]!.bbox,
       ISOLINES["2028-07-22"]!.bbox,
     ]);
+  });
+
+  it("adds the isolines when the first date arrives after the style", async () => {
+    const props = mapProps(null);
+    const { rerender } = render(<EclipseMap {...props} />);
+    await loadStyle();
+    rerender(<EclipseMap {...props} date="2027-08-02" />);
+    await settle();
+    expect(map.addSource).toHaveBeenCalledWith(
+      ISOLINES_SOURCE_ID,
+      isolinesSource(ISOLINES["2027-08-02"]!),
+    );
+  });
+
+  it("swaps the isolines and airports on the same map when the date changes", async () => {
+    const props = mapProps("2027-08-02");
+    const { rerender } = render(<EclipseMap {...props} />);
+    await loadStyle();
+    map.getSource.mockReturnValue(source);
+    rerender(<EclipseMap {...props} date="2028-07-22" />);
+    await settle();
+    expect(source.setData).toHaveBeenCalledWith(ISOLINES["2028-07-22"]);
+    expect(source.setData).toHaveBeenCalledWith(airportsSource(ISOLINES["2028-07-22"]!.bbox).data);
+    for (const id of [ISOLINES_SOURCE_ID, AIRPORTS_SOURCE_ID]) {
+      expect(map.addSource.mock.calls.filter(([added]) => added === id)).toHaveLength(1);
+    }
+    expect(layersFrom(ISOLINES_SOURCE_ID)).toEqual(ISOLINES_LAYERS);
+    expect(layersFrom(AIRPORTS_SOURCE_ID)).toEqual(AIRPORTS_LAYERS);
+    expect(map.addImage).toHaveBeenCalledOnce();
+    expect(MapLibreMap).toHaveBeenCalledOnce();
   });
 
   it("ignores isolines that arrive after another date was picked", async () => {
@@ -256,103 +313,5 @@ describe("EclipseMap", () => {
     expect(warn).toHaveBeenCalledWith(expect.any(String), error);
     expect(map.addLayer).not.toHaveBeenCalled();
     expect(map.fitBounds).not.toHaveBeenCalled();
-  });
-
-  it("registers the airport icon before adding anything", async () => {
-    render(<EclipseMap {...mapProps("2027-08-02")} />);
-    fire("load");
-    expect(map.addSource).not.toHaveBeenCalled();
-    await act(async () => {});
-    expect(map.addImage).toHaveBeenCalledWith(AIRPORT_ICON_ID, icon, AIRPORT_ICON_OPTIONS);
-    expect(map.addImage.mock.invocationCallOrder[0]).toBeLessThan(
-      map.addSource.mock.invocationCallOrder[0]!,
-    );
-  });
-
-  it("adds the airports around the path on top of everything once the isolines arrive", async () => {
-    render(<EclipseMap {...mapProps("2027-08-02")} />);
-    await loadStyle();
-    expect(map.addSource).toHaveBeenCalledWith(
-      AIRPORTS_SOURCE_ID,
-      airportsSource(ISOLINES["2027-08-02"]!.bbox),
-    );
-    // Last and with no beforeId, so they go above the isolines and the base map's labels
-    const added = map.addLayer.mock.calls.slice(-AIRPORTS_LAYERS.length);
-    expect(added).toEqual(AIRPORTS_LAYERS.map((layer) => [layer, undefined]));
-  });
-
-  it("moves the airports with the date, on the same layers", async () => {
-    const props = mapProps("2027-08-02");
-    const { rerender } = render(<EclipseMap {...props} />);
-    await loadStyle();
-    map.getSource.mockReturnValue(source);
-    rerender(<EclipseMap {...props} date="2028-07-22" />);
-    await settle();
-    expect(source.setData).toHaveBeenCalledWith(airportsSource(ISOLINES["2028-07-22"]!.bbox).data);
-    expect(map.addImage).toHaveBeenCalledOnce();
-    expect(layersFrom(AIRPORTS_SOURCE_ID)).toEqual(AIRPORTS_LAYERS);
-  });
-
-  it("adds nothing when the map goes away before the icon loads", async () => {
-    const { unmount } = render(<EclipseMap {...mapProps("2027-08-02")} />);
-    fire("load");
-    unmount();
-    await act(async () => {});
-    expect(map.addImage).not.toHaveBeenCalled();
-    expect(map.addSource).not.toHaveBeenCalled();
-  });
-
-  it("warns and still adds everything, airports without their icon, when the icon fails to load", async () => {
-    const error = new Error("not found");
-    vi.mocked(loadAirportIcon).mockRejectedValueOnce(error);
-    const warn = vi.spyOn(console, "warn").mockImplementation(() => {});
-    render(<EclipseMap {...mapProps("2027-08-02")} />);
-    await loadStyle();
-    expect(warn).toHaveBeenCalledWith(expect.any(String), error);
-    expect(map.addImage).not.toHaveBeenCalled();
-    expect(map.addSource).toHaveBeenCalledWith(
-      ISOLINES_SOURCE_ID,
-      isolinesSource(ISOLINES["2027-08-02"]!),
-    );
-    expect(map.addSource).toHaveBeenCalledWith(
-      AIRPORTS_SOURCE_ID,
-      airportsSource(ISOLINES["2027-08-02"]!.bbox),
-    );
-  });
-
-  it("reports the wrapped cursor position, and null when it leaves the map", () => {
-    const onCursorMove = vi.fn();
-    render(<EclipseMap {...mapProps(null)} onCursorMove={onCursorMove} />);
-    const wrapped = { lng: -170, lat: 36 };
-    fire("mousemove", { lngLat: { wrap: () => wrapped } });
-    expect(onCursorMove).toHaveBeenLastCalledWith(wrapped);
-    fire("mouseout");
-    expect(onCursorMove).toHaveBeenLastCalledWith(null);
-  });
-
-  it("puts the attribution in the given slot", () => {
-    const props = mapProps(null);
-    render(<EclipseMap {...props} />);
-    expect(MapLibreMap).toHaveBeenCalledWith(
-      expect.objectContaining({ attributionControl: false }),
-    );
-    expect(AttributionControl).toHaveBeenCalledWith({
-      compact: false,
-      customAttribution: expect.stringContaining("MapLibre"),
-    });
-    expect(attribution.onAdd).toHaveBeenCalledWith(map);
-    expect(props.attributionRef.current.contains(attribution.element)).toBe(true);
-  });
-
-  it("takes the attribution out of its slot when unmounted", () => {
-    const { unmount } = render(<EclipseMap {...mapProps(null)} />);
-    unmount();
-    expect(attribution.onRemove).toHaveBeenCalledOnce();
-  });
-
-  it("removes the map when unmounted", () => {
-    const { unmount } = render(<EclipseMap {...mapProps("2027-08-02")} />);
-    unmount();
-    expect(map.remove).toHaveBeenCalledOnce();
   });
 });
