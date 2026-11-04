@@ -16,7 +16,8 @@ export default defineConfig({
     },
   },
   test: {
-    // One project per layer: unit tests are pure logic, integration tests render React in jsdom
+    // One project per layer: unit tests are pure logic, integration tests render React in jsdom.
+    // tests/e2e/ has no project yet, so tests put there don't run until one is added.
     projects: [
       {
         extends: true,
