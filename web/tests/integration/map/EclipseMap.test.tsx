@@ -3,6 +3,8 @@ import { AttributionControl, MapLibreMap } from "maplibre-gl";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { fetchIsolines, type Isolines } from "../../../src/api/eclipses.js";
 import {
+  AIRPORT_ICON_ID,
+  AIRPORT_ICON_OPTIONS,
   AIRPORTS_LAYERS,
   AIRPORTS_SOURCE_ID,
   airportsSource,
@@ -226,9 +228,11 @@ describe("EclipseMap", () => {
     expect(map.fitBounds).toHaveBeenCalledWith(ISOLINES["2027-08-02"]!.bbox);
   });
 
-  it("adds the airports around the path on top of everything once the isolines arrive", async () => {
+  it("adds the airports and their icon around the path on top of everything once the isolines arrive", async () => {
     render(<EclipseMap {...mapProps("2027-08-02")} />);
     await loadStyle();
+    // The id the airports layer draws, not the base map's own "airport"
+    expect(map.addImage).toHaveBeenCalledWith(AIRPORT_ICON_ID, icon, AIRPORT_ICON_OPTIONS);
     expect(map.addSource).toHaveBeenCalledWith(
       AIRPORTS_SOURCE_ID,
       airportsSource(ISOLINES["2027-08-02"]!.bbox),
