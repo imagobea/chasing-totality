@@ -62,6 +62,13 @@ describe("ApiStatus", () => {
     expect(status()).toBe("API DOWN");
   });
 
+  it("shows DOWN when the API answers but doesn't report ok", async () => {
+    mockFetch(async () => ({ ok: true, json: async () => ({ status: "degraded" }) }));
+    render(<ApiStatus />);
+    await flush();
+    expect(status()).toBe("API DOWN");
+  });
+
   it("checks again every 30 s and shows the latest answer", async () => {
     const fetchMock = mockFetch(async () => OK);
     render(<ApiStatus />);
