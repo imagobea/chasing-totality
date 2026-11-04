@@ -135,7 +135,7 @@ src/
 
 web/                   # React + Vite frontend (own package, tests and Dockerfile)
 ├── src/               # App, the API status and the map with its isolines layers
-└── tests/             # Vitest tests: unit/, integration/, e2e/ (empty for now)
+└── tests/             # Vitest tests: unit/, integration/, e2e/ (empty for now), helpers/
 
 data/isolines/         # Pre-generated isolines the API serves, one file per eclipse
 data/nasa-paths/       # NASA's path table per eclipse, to generate and test against
