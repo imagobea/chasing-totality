@@ -1,7 +1,7 @@
 import { act, cleanup, render } from "@testing-library/react";
 import { AttributionControl, MapLibreMap } from "maplibre-gl";
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { fetchIsolines, type Isolines } from "../../src/api/eclipses.js";
+import { fetchIsolines, type Isolines } from "../../../src/api/eclipses.js";
 import {
   AIRPORT_ICON_ID,
   AIRPORT_ICON_OPTIONS,
@@ -9,8 +9,8 @@ import {
   AIRPORTS_SOURCE_ID,
   airportsSource,
   loadAirportIcon,
-} from "../../src/map/airports.js";
-import { EclipseMap } from "../../src/map/EclipseMap.js";
+} from "../../../src/map/airports.js";
+import { EclipseMap } from "../../../src/map/EclipseMap.js";
 import {
   DURATION_BANDS_LAYERS,
   DURATION_BANDS_SOURCE_ID,
@@ -18,7 +18,7 @@ import {
   ISOLINES_LAYERS,
   ISOLINES_SOURCE_ID,
   isolinesSource,
-} from "../../src/map/isolines.js";
+} from "../../../src/map/isolines.js";
 
 // jsdom has no WebGL, so MapLibre is replaced by a map that only records calls
 const map = vi.hoisted(() => ({
@@ -47,20 +47,20 @@ const ISOLINES = vi.hoisted((): Record<string, Isolines> => ({
   "2027-08-02": { type: "FeatureCollection", bbox: [-46, -14, 92, 38], features: [] },
   "2028-07-22": { type: "FeatureCollection", bbox: [74, -52, 182, -9], features: [] },
 }));
-vi.mock("../../src/api/eclipses.js", () => ({
+vi.mock("../../../src/api/eclipses.js", () => ({
   fetchIsolines: vi.fn(async (date: string) => ISOLINES[date]),
 }));
 
 // jsdom can't draw images, so the airport icon is a stand-in that loads at once
 const icon = vi.hoisted(() => ({ stands: "for the airport icon" }));
-vi.mock("../../src/map/airports.js", async (importOriginal) => ({
-  ...(await importOriginal<typeof import("../../src/map/airports.js")>()),
+vi.mock("../../../src/map/airports.js", async (importOriginal) => ({
+  ...(await importOriginal<typeof import("../../../src/map/airports.js")>()),
   loadAirportIcon: vi.fn(async () => icon),
 }));
 
 // The real isolines module, with band cutting that a test can make fail
-vi.mock("../../src/map/isolines.js", async (importOriginal) => {
-  const isolines = await importOriginal<typeof import("../../src/map/isolines.js")>();
+vi.mock("../../../src/map/isolines.js", async (importOriginal) => {
+  const isolines = await importOriginal<typeof import("../../../src/map/isolines.js")>();
   return { ...isolines, durationBandsSource: vi.fn(isolines.durationBandsSource) };
 });
 

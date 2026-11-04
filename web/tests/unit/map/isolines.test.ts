@@ -5,7 +5,7 @@ import type {
   SymbolLayerSpecification,
 } from "maplibre-gl";
 import { describe, expect, it } from "vitest";
-import type { Isolines } from "../../src/api/eclipses.js";
+import type { Isolines } from "../../../src/api/eclipses.js";
 import {
   DURATION_BANDS_LAYERS,
   DURATION_BANDS_SOURCE_ID,
@@ -14,8 +14,8 @@ import {
   ISOLINES_LAYERS,
   ISOLINES_SOURCE_ID,
   isolinesSource,
-} from "../../src/map/isolines.js";
-import { theme } from "../../src/theme.js";
+} from "../../../src/map/isolines.js";
+import { theme } from "../../../src/theme.js";
 
 // A square centred on 0, 0 reaching `half` degrees each way
 function square(half: number): [number, number][][][] {

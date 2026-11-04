@@ -16,8 +16,21 @@ export default defineConfig({
     },
   },
   test: {
-    environment: "jsdom",
-    include: ["test/**/*.test.{ts,tsx}"],
+    // One project per layer: unit tests are pure logic, integration tests render React in jsdom
+    projects: [
+      {
+        extends: true,
+        test: { name: "unit", environment: "node", include: ["tests/unit/**/*.test.ts"] },
+      },
+      {
+        extends: true,
+        test: {
+          name: "integration",
+          environment: "jsdom",
+          include: ["tests/integration/**/*.test.{ts,tsx}"],
+        },
+      },
+    ],
     coverage: {
       provider: "v8",
       // Every source file, tested or not, so untested ones show up as gaps

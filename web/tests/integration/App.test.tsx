@@ -1,9 +1,9 @@
 import { act, cleanup, fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { App } from "../src/App.js";
+import { App } from "../../src/App.js";
 
 // The map has its own tests and needs WebGL, so it is left out here
-vi.mock("../src/map/EclipseMap.js", () => ({ EclipseMap: () => null }));
+vi.mock("../../src/map/EclipseMap.js", () => ({ EclipseMap: () => null }));
 
 // Answers /api/eclipses with the given handler and the health check with ok
 function mockApi(eclipses: () => Promise<unknown>) {

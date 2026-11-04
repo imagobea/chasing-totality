@@ -6,8 +6,8 @@ import {
   AIRPORTS_LAYERS,
   AIRPORTS_SOURCE_ID,
   airportsSource,
-} from "../../src/map/airports.js";
-import { theme } from "../../src/theme.js";
+} from "../../../src/map/airports.js";
+import { theme } from "../../../src/theme.js";
 
 function layerOfType<T extends LayerSpecification>(type: T["type"]): T {
   return AIRPORTS_LAYERS.find((layer): layer is T => layer.type === type)!;
