@@ -1,5 +1,6 @@
 import { act, cleanup, render } from "@testing-library/react";
 import { AttributionControl, MapLibreMap } from "maplibre-gl";
+import polygonClipping from "polygon-clipping";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { fetchIsolines, type Isolines } from "../../../src/api/eclipses.js";
 import {
@@ -19,6 +20,7 @@ import {
   ISOLINES_SOURCE_ID,
   isolinesSource,
 } from "../../../src/map/isolines.js";
+import { isolines } from "../../helpers/isolines.js";
 
 // jsdom has no WebGL, so MapLibre is replaced by a map that only records calls
 const map = vi.hoisted(() => ({
@@ -58,10 +60,10 @@ vi.mock("../../../src/map/airports.js", async (importOriginal) => ({
   loadAirportIcon: vi.fn(async () => icon),
 }));
 
-// The real isolines module, with band cutting that a test can make fail
-vi.mock("../../../src/map/isolines.js", async (importOriginal) => {
-  const isolines = await importOriginal<typeof import("../../../src/map/isolines.js")>();
-  return { ...isolines, durationBandsSource: vi.fn(isolines.durationBandsSource) };
+// The real geometry library, which a test can make fail the way odd geometry does
+vi.mock("polygon-clipping", async (importOriginal) => {
+  const { default: clipping } = await importOriginal<{ default: typeof polygonClipping }>();
+  return { default: { ...clipping, difference: vi.fn(clipping.difference) } };
 });
 
 vi.mock("maplibre-gl", () => ({
@@ -214,8 +216,11 @@ describe("EclipseMap", () => {
   });
 
   it("warns and still shows the isolines and airports when the bands can't be cut", async () => {
+    // Two isolines, so there is a band to cut
+    const given = isolines(0, 60);
+    vi.mocked(fetchIsolines).mockResolvedValueOnce(given);
     const error = new Error("Unable to complete output ring");
-    vi.mocked(durationBandsSource).mockImplementationOnce(() => {
+    vi.mocked(polygonClipping.difference).mockImplementationOnce(() => {
       throw error;
     });
     const warn = vi.spyOn(console, "warn").mockImplementation(() => {});
@@ -225,7 +230,7 @@ describe("EclipseMap", () => {
     expect(layersFrom(DURATION_BANDS_SOURCE_ID)).toEqual([]);
     expect(layersFrom(ISOLINES_SOURCE_ID)).toEqual(ISOLINES_LAYERS);
     expect(layersFrom(AIRPORTS_SOURCE_ID)).toEqual(AIRPORTS_LAYERS);
-    expect(map.fitBounds).toHaveBeenCalledWith(ISOLINES["2027-08-02"]!.bbox);
+    expect(map.fitBounds).toHaveBeenCalledWith(given.bbox);
   });
 
   it("adds the airports and their icon around the path on top of everything once the isolines arrive", async () => {
