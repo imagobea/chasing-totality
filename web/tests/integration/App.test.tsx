@@ -2,8 +2,14 @@ import { act, cleanup, fireEvent, render, screen, waitFor } from "@testing-libra
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { App } from "../../src/App.js";
 
-// The map has its own tests and needs WebGL, so it is left out here
-vi.mock("../../src/map/EclipseMap.js", () => ({ EclipseMap: () => null }));
+// The map has its own tests and needs WebGL, so a stand-in shows the eclipse it was given
+vi.mock("../../src/map/EclipseMap.js", () => ({
+  EclipseMap: ({ date }: { date: string | null }) => (
+    <div role="region" aria-label="Map">
+      {date}
+    </div>
+  ),
+}));
 
 // Answers /api/eclipses with the given handler and the health check with ok
 function mockApi(eclipses: () => Promise<unknown>) {
@@ -15,13 +21,17 @@ function mockApi(eclipses: () => Promise<unknown>) {
   );
 }
 
+function map() {
+  return screen.getByRole("region", { name: "Map" });
+}
+
 function picker() {
   return screen.getByRole<HTMLSelectElement>("combobox", { name: /eclipse/i });
 }
 
 describe("App", () => {
   beforeEach(() => {
-    // Only Date, so waitFor's timers still run; a fixed today keeps both eclipses upcoming
+    // Only Date, so waitFor's timers still run; a fixed today keeps the tests' dates upcoming or past
     vi.useFakeTimers({ toFake: ["Date"] });
     vi.setSystemTime(new Date(2026, 9, 21, 9));
   });
@@ -68,6 +78,7 @@ describe("App", () => {
     fireEvent.change(picker(), { target: { value: "2028-07-22" } });
     expect(picker().value).toBe("2028-07-22");
     expect(screen.getByText("T−640 D")).toBeTruthy();
+    expect(map().textContent).toBe("2028-07-22");
   });
 
   it("leaves the picker and countdown empty when the dates can't be fetched", async () => {
