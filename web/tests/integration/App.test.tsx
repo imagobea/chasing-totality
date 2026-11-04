@@ -33,11 +33,23 @@ describe("App", () => {
   });
 
   it("selects the first upcoming eclipse once the dates arrive", async () => {
-    mockApi(async () => ({ ok: true, json: async () => ["2027-08-02", "2028-07-22"] }));
+    mockApi(async () => ({
+      ok: true,
+      json: async () => ["2026-08-12", "2027-08-02", "2028-07-22"],
+    }));
     render(<App />);
     expect(picker().disabled).toBe(true);
     await waitFor(() => expect(picker().value).toBe("2027-08-02"));
     expect(picker().disabled).toBe(false);
+  });
+
+  it("selects an eclipse happening today", async () => {
+    vi.setSystemTime(new Date(2026, 9, 14, 9));
+    mockApi(async () => ({ ok: true, json: async () => ["2026-10-14", "2027-08-02"] }));
+    render(<App />);
+    await waitFor(() => expect(picker().disabled).toBe(false));
+    expect(picker().value).toBe("2026-10-14");
+    expect(screen.getByText("T−0 D")).toBeTruthy();
   });
 
   it("selects the first eclipse once every eclipse is past", async () => {
