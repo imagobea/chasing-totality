@@ -7,8 +7,8 @@ describe("StatusBar", () => {
   afterEach(cleanup);
 
   it("shows the cursor's coordinates", () => {
-    render(<StatusBar cursor={{ lng: 32.64, lat: 25.69 }} attributionRef={createRef()} />);
-    expect(screen.getByText("Cursor · 25.69° N · 32.64° E")).toBeTruthy();
+    render(<StatusBar cursor={{ lng: -5.6047, lat: 36.0136 }} attributionRef={createRef()} />);
+    expect(screen.getByText("Cursor · 36.01° N · 5.60° W")).toBeTruthy();
   });
 
   it("shows — when the cursor is off the map", () => {
