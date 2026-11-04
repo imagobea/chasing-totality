@@ -1,5 +1,5 @@
 import { act, cleanup, fireEvent, render, screen, waitFor } from "@testing-library/react";
-import { afterEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { App } from "../../src/App.js";
 
 // The map has its own tests and needs WebGL, so it is left out here
@@ -20,12 +20,19 @@ function picker() {
 }
 
 describe("App", () => {
+  beforeEach(() => {
+    // Only Date, so waitFor's timers still run; a fixed today keeps both eclipses upcoming
+    vi.useFakeTimers({ toFake: ["Date"] });
+    vi.setSystemTime(new Date(2026, 9, 21, 9));
+  });
+
   afterEach(() => {
     cleanup();
+    vi.useRealTimers();
     vi.unstubAllGlobals();
   });
 
-  it("selects the first eclipse once the dates arrive", async () => {
+  it("selects the first upcoming eclipse once the dates arrive", async () => {
     mockApi(async () => ({ ok: true, json: async () => ["2027-08-02", "2028-07-22"] }));
     render(<App />);
     expect(picker().disabled).toBe(true);
@@ -39,9 +46,10 @@ describe("App", () => {
     await waitFor(() => expect(picker().disabled).toBe(false));
     fireEvent.change(picker(), { target: { value: "2028-07-22" } });
     expect(picker().value).toBe("2028-07-22");
+    expect(screen.getByText("T−640 D")).toBeTruthy();
   });
 
-  it("leaves the picker empty when the dates can't be fetched", async () => {
+  it("leaves the picker and countdown empty when the dates can't be fetched", async () => {
     mockApi(async () => ({ ok: false, json: async () => ({}) }));
     render(<App />);
     await waitFor(() => expect(fetch).toHaveBeenCalledWith("/api/eclipses"));
@@ -49,5 +57,6 @@ describe("App", () => {
     await act(async () => {});
     expect(picker().disabled).toBe(true);
     expect(screen.getByRole("option", { name: "—" })).toBeTruthy();
+    expect(screen.getByText("T−— D")).toBeTruthy();
   });
 });
