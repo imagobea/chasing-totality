@@ -40,6 +40,15 @@ describe("App", () => {
     expect(picker().disabled).toBe(false);
   });
 
+  it("selects the first eclipse once every eclipse is past", async () => {
+    vi.setSystemTime(new Date(2028, 7, 1, 9));
+    mockApi(async () => ({ ok: true, json: async () => ["2027-08-02", "2028-07-22"] }));
+    render(<App />);
+    await waitFor(() => expect(picker().disabled).toBe(false));
+    expect(picker().value).toBe("2027-08-02");
+    expect(screen.getByText("T−0 D")).toBeTruthy();
+  });
+
   it("selects the eclipse the user picks", async () => {
     mockApi(async () => ({ ok: true, json: async () => ["2027-08-02", "2028-07-22"] }));
     render(<App />);
