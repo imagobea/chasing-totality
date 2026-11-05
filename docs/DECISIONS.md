@@ -92,3 +92,31 @@ sits up to ~0.8 km south of NASA's and mid-eclipse ~1 s later. A
 tolerance set per eclipse would absorb that and any typo with it; a
 fixed one still catches them. Covering the failing eclipses would need
 special-case code for places nobody travels to.
+
+---
+
+## 006 — Paths beyond 85° latitude draw wrongly, for now
+
+Date: 2026-11-05
+
+Paths that reach past ~85° latitude, such as 2026-08-12's, draw wrongly
+near the pole: a half-disc with a fan of triangles, on the globe and on
+Mercator alike. We leave it as it is.
+
+The isolines are not the cause. For 2026-08-12 no vertex reaches the
+pole (the highest is 89.07°N), no ring jumps across the map, and the
+path is a single ring, but half its vertices lie north of 85.05°.
+MapLibre cuts GeoJSON into Web Mercator tiles, which stop at ±85.05°,
+even on the globe, where the polar caps are drawn plain. Everything
+beyond is squashed onto that parallel, which makes the half-disc's edge
+and the fan. Changing the projection or how the isolines are contoured
+doesn't help, since the vertices still lie beyond 85.05°.
+
+The fix, when needed, is to clip the isolines and bands at ±85.05°
+before they reach the map, so the path stops cleanly at the polar cap.
+
+### Why
+
+Only polar paths are affected: 2026-08-12, already past, and a few late
+in the century. The 2027-08-02 path over Spain and North Africa stays
+far from 85°.
