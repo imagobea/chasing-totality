@@ -7,7 +7,7 @@ disable-model-invocation: true
 
 # Add eclipse
 
-Adds the total solar eclipse on the date given (`$ARGUMENTS`); below, `<date>` is that date as `YYYY-MM-DD`. Why and how this works: `docs/plans/049-add-eclipse-skill-plan.md`, `src/engine/README.md`, and the existing eclipses (2027-08-02, 2028-07-22) as worked examples.
+Adds the total solar eclipse on the date given (`$ARGUMENTS`); below, `<date>` is that date as `YYYY-MM-DD`. Why and how this works: `docs/plans/049-add-eclipse-skill-plan.md`, `src/engine/README.md`, and the existing eclipses (2027-08-02, 2028-07-22; 1919-05-29 for 1901–2000) as worked examples.
 
 Run the gates in order. **Any failure stops the run**: report which gate, what you saw and what you think caused it, and leave the files as they are for the user to inspect. Never commit.
 
@@ -52,7 +52,7 @@ Each eclipse is a `// YYYY M D` comment (month and day space-padded, e.g. `// 20
 | 7    | 3 coefficients        | `l2` (negative for a total eclipse) |
 | 8    | 2 numbers             | `tanF1`, `tanF2`                    |
 
-Check the mapping on 2028-07-22 against `src/engine/eclipse/elements/2028-07-22.ts` before writing the new file.
+Check the mapping on 2028-07-22 (in `SE2001.js`; `SE1901.js` has the same layout) against `src/engine/eclipse/elements/2028-07-22.ts` before writing the new file.
 
 - New file `src/engine/eclipse/elements/<date>.ts`, shaped like 2028's: the header comment names the eclipse, the source (Canon via the JSEX file used), the Canon's ΔT and NASA's path-page ΔT (gate 4 fills it in). Export `eclipse<YYYY><Mon><DD>`, e.g. `eclipse2026Aug12`
 - Add it to the list in `src/engine/eclipse/elements/index.ts`, in date order
@@ -83,7 +83,7 @@ pnpm lint && pnpm format:check && pnpm typecheck && pnpm test
 pnpm --dir web test
 ```
 
-`pnpm test` checks the new elements against the new path table (central-line durations, mid-eclipse times, limits within 2 km). A failure here is usually a mistyped element, a row copied wrong, or the wrong ΔT; for the limit check, see the guardrail. If only formatting fails, `pnpm exec prettier --write` the new files and rerun.
+`pnpm test` checks the new elements against the new path table (central-line durations, mid-eclipse times, limits within 2 km). A failure here is usually a mistyped element, a row copied wrong, or the wrong ΔT; for the limit check, see the guardrail. "Cannot parse NASA path table" on a row copied verbatim is a glitch in NASA's table (e.g. a limit's latitude printed as `-` while its longitude is there, 1944-01-25): report it, don't edit the row. If only formatting fails, `pnpm exec prettier --write` the new files and rerun.
 
 ## Gate 7: smoke
 
