@@ -33,6 +33,7 @@ const map = vi.hoisted(() => ({
   getStyle: vi.fn(() => ({ layers: [{ id: "place", type: "symbol" }] })),
   fitBounds: vi.fn(),
   remove: vi.fn(),
+  setProjection: vi.fn(),
 }));
 
 // A source once it has been added: the duration bands, the isolines or the airports

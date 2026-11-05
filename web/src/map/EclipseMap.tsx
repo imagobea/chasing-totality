@@ -82,6 +82,9 @@ export function EclipseMap({ date, onCursorMove, attributionRef }: EclipseMapPro
       style: MAP_STYLE,
       attributionControl: false,
     });
+    // A globe, so paths far from the equator keep their true shape and size. Set on every style
+    // load, since the projection belongs to the style.
+    map.on("style.load", () => map.setProjection({ type: "globe" }));
     // Ignore the icon if the map goes away before it loads
     let removed = false;
     map.on("load", () => {
