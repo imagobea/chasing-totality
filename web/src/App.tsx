@@ -7,7 +7,7 @@ import { firstUpcomingEclipse, type Coordinates } from "./utils.js";
 
 export function App() {
   const [dates, setDates] = useState<string[]>([]);
-  // The selected eclipse; the first one with data until the user picks another
+  // The selected eclipse; the first upcoming one with data until the user picks another
   const [date, setDate] = useState<string | null>(null);
   // Where the mouse is on the map, null when it's off the map
   // TODO: every mouse move re-renders the whole app; move cursor state out of App when panels land
@@ -21,7 +21,8 @@ export function App() {
       .then((result) => {
         if (!active) return;
         setDates(result);
-        setDate(firstUpcomingEclipse(result));
+        // First upcoming eclipse, or the first one returned if all are past, or null if none
+        setDate(firstUpcomingEclipse(result) ?? result[0] ?? null);
       })
       // On failure the picker stays empty and shows —
       .catch(() => {});

@@ -1,6 +1,6 @@
 import { cleanup, render, screen } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { Countdown } from "../../src/components/Countdown.js";
+import { Countdown } from "../../../src/components/Countdown.js";
 
 describe("Countdown", () => {
   beforeEach(() => {
@@ -13,7 +13,7 @@ describe("Countdown", () => {
   });
 
   it("shows the days left to the eclipse", () => {
-    vi.setSystemTime(new Date(2026, 9, 21, 9));
+    vi.setSystemTime(new Date(2026, 9, 21, 23, 59));
     render(<Countdown date="2027-08-02" />);
     expect(screen.getByText("T−285 D")).toBeTruthy();
   });

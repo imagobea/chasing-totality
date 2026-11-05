@@ -1,6 +1,6 @@
 import { act, cleanup, render, screen } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { ApiStatus } from "../../src/components/ApiStatus.js";
+import { ApiStatus } from "../../../src/components/ApiStatus.js";
 
 const OK = { ok: true, json: async () => ({ status: "ok" }) };
 
@@ -8,6 +8,11 @@ function mockFetch(impl: () => Promise<unknown>) {
   const fetchMock = vi.fn(impl);
   vi.stubGlobal("fetch", fetchMock);
   return fetchMock;
+}
+
+// The status as assistive tech reads it
+function status() {
+  return screen.getByRole("status").textContent;
 }
 
 // Lets pending fetch promises settle and React apply the result
@@ -30,14 +35,14 @@ describe("ApiStatus", () => {
     // A request that never answers keeps the component in its first state
     mockFetch(() => new Promise(() => {}));
     render(<ApiStatus />);
-    expect(screen.getByText("API …")).toBeTruthy();
+    expect(status()).toBe("API …");
   });
 
   it("shows OK when the health check answers ok", async () => {
     const fetchMock = mockFetch(async () => OK);
     render(<ApiStatus />);
     await flush();
-    expect(screen.getByText("API OK")).toBeTruthy();
+    expect(status()).toBe("API OK");
     expect(fetchMock).toHaveBeenCalledWith("/api/health");
   });
 
@@ -47,14 +52,21 @@ describe("ApiStatus", () => {
     });
     render(<ApiStatus />);
     await flush();
-    expect(screen.getByText("API DOWN")).toBeTruthy();
+    expect(status()).toBe("API DOWN");
   });
 
   it("shows DOWN when the API answers with an error status", async () => {
     mockFetch(async () => ({ ok: false, json: async () => ({}) }));
     render(<ApiStatus />);
     await flush();
-    expect(screen.getByText("API DOWN")).toBeTruthy();
+    expect(status()).toBe("API DOWN");
+  });
+
+  it("shows DOWN when the API answers but doesn't report ok", async () => {
+    mockFetch(async () => ({ ok: true, json: async () => ({ status: "degraded" }) }));
+    render(<ApiStatus />);
+    await flush();
+    expect(status()).toBe("API DOWN");
   });
 
   it("checks again every 30 s and shows the latest answer", async () => {
@@ -68,7 +80,7 @@ describe("ApiStatus", () => {
     });
     await act(() => vi.advanceTimersByTimeAsync(30_000));
     expect(fetchMock).toHaveBeenCalledTimes(2);
-    expect(screen.getByText("API DOWN")).toBeTruthy();
+    expect(status()).toBe("API DOWN");
   });
 
   it("stops checking once unmounted", async () => {

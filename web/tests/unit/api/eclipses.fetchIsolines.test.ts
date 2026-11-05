@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { fetchIsolines, type Isolines } from "../../src/api/eclipses.js";
+import { fetchIsolines, type Isolines } from "../../../src/api/eclipses.js";
 
 const ISOLINES: Isolines = { type: "FeatureCollection", bbox: [-46, -14, 92, 38], features: [] };
 
