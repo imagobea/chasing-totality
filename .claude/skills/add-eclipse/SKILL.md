@@ -19,8 +19,8 @@ The limit check (each limit within 2 km of NASA's, measured square to the path's
 
 - Any wording works ("12 August 2026", "Aug 12 2026", "2026-08-12"): turn it into a real calendar date as `YYYY-MM-DD` and say which date you read before going on
 - Ask instead of guessing when it's missing, has no year, or could be two dates (`08/12/2026`: 12 August or 8 December?)
-- Not already added: it isn't a key in `src/engine/eclipse/elements/index.ts`. If it is but `git status` shows its files uncommitted, it's a run that stopped earlier: say so and run every gate again, rewriting those files
-- Within 1901–2100, the centuries the skill has been tried on. Outside it, stop: the skill hasn't been tried there
+- Not already added: it isn't a key in `src/engine/eclipse/elements/index.ts`. If it is but `git status` shows its files uncommitted, it's a run that stopped earlier: say so and run every gate again, rewriting those files.
+- Within 1901–2100, the centuries the skill has been tried on. Outside it, stop: the skill hasn't been tried there.
 
 Each century has its own sources; gates 2 and 3 use the date's row:
 
@@ -33,7 +33,7 @@ Each century has its own sources; gates 2 and 3 use the date's row:
 
 Download the century's catalogue from `https://eclipse.gsfc.nasa.gov/SEcat5/` into a new, empty folder in the scratchpad and find the row for the date (`2026 Aug 12` style). Its Type column must be exactly `T`, a central total eclipse. Keep the row's link to its path page (`../SEpath/SEpath<folder>/SE<YYYY><Mon><DD>Tpath.html`) for gate 4.
 
-Anything else stops the run, saying what it is: `A` annular, `H` hybrid, `P` partial, no row (no eclipse that day), or `T+`/`T-` (total but non-central: there is no central line, which the path table and its checks need).
+Anything else stops the run, saying what it is: `A` annular, `H` hybrid, `P` partial, no row (no eclipse that day), or `T+`/`T-` (total but non-central: there is no central line, which the path table and its checks need)
 
 ## Gate 3: Besselian elements
 
@@ -52,9 +52,9 @@ Each eclipse is a `// YYYY M D` comment (month and day space-padded, e.g. `// 20
 | 7    | 3 coefficients        | `l2` (negative for a total eclipse) |
 | 8    | 2 numbers             | `tanF1`, `tanF2`                    |
 
-Check the mapping on 2028-07-22 (in `SE2001.js`; `SE1901.js` has the same layout) against `src/engine/eclipse/elements/2028-07-22.ts` before writing the new file.
+Check the mapping on 2028-07-22 (in `SE2001.js`; `SE1901.js` has the same layout) against `src/engine/eclipse/elements/2028-07-22.ts` before writing the new file
 
-- New file `src/engine/eclipse/elements/<date>.ts`, shaped like 2028's: the header comment names the eclipse, the source (Canon via the JSEX file used), the Canon's ΔT and NASA's path-page ΔT (gate 4 fills it in). Export `eclipse<YYYY><Mon><DD>`, e.g. `eclipse2026Aug12`
+- New file `src/engine/eclipse/elements/<date>.ts`, shaped like 2028's: the header comment names the eclipse, the source (Canon via the JSEX file used), the Canon's ΔT and NASA's path-page ΔT (gate 4 fills it in). Export `eclipse<YYYY><Mon><DD>`, e.g. `eclipse2026Aug12`.
 - Add it to the list in `src/engine/eclipse/elements/index.ts`, in date order
 
 ## Gate 4: NASA's path table
@@ -62,8 +62,8 @@ Check the mapping on 2028-07-22 (in `SE2001.js`; `SE1901.js` has the same layout
 Open the link from the catalogue row (it's relative to `https://eclipse.gsfc.nasa.gov/SEcat5/`) and download the page into a scratch folder. Don't build the URL yourself: NASA keeps 1901–2000 under `SEpath1901/`, 2001–2050 under `SEpath2001/` and 2051–2100 under `SEpath2051/`.
 
 - Write `data/nasa-paths/<date>.txt` shaped like `data/nasa-paths/2028-07-22.txt`: three `#` lines (title, source URL with today's retrieval date, "Table rows copied verbatim; ΔT = <NASA's ΔT> s. '-' means the limit is off the Earth at that time."), a `#` line, then the table's five header lines and every row, from the first `Limits` row to the last
-- Rows verbatim: the parser reads fixed-width columns. Turn HTML entities in the header into characters (`&#176;` → `°`, `&#180;` → `'`); never touch the rows. Long tables (one row a minute, e.g. 1919-05-29) repeat the header every 40 rows: keep only the first and drop the blank lines between rows
-- NASA's ΔT is on the page ("a value of ΔT = 71.4 seconds"). For 2001–2100 it usually differs from the Canon's (both are predictions); for 1901–2000 they match (both are measured). It can be negative (−0.9 s in 1901): copy it as NASA writes it, with a plain `-`, or the parser won't read it. Add it to the elements file's header comment too
+- Rows verbatim: the parser reads fixed-width columns. Turn HTML entities in the header into characters (`&#176;` → `°`, `&#180;` → `'`); never touch the rows. Long tables (one row a minute, e.g. 1919-05-29) repeat the header every 40 rows: keep only the first and drop the blank lines between rows.
+- NASA's ΔT is on the page ("a value of ΔT = 71.4 seconds"). For 2001–2100 it usually differs from the Canon's (both are predictions); for 1901–2000 they match (both are measured). It can be negative (−0.9 s in 1901): copy it as NASA writes it, with a plain `-`, or the parser won't read it. Add it to the elements file's header comment too.
 
 ## Gate 5: generate
 
@@ -112,9 +112,9 @@ Nothing is committed. Report:
    docker compose -f compose.yaml -f compose.dev.yaml up --build
    ```
 
-   Then open http://localhost:5173, pick the new date and check the map fits its path. Without Docker, `pnpm dev` and `pnpm --dir web dev` serve the same page
+   Then open http://localhost:5173, pick the new date and check the map fits its path. Without Docker, `pnpm dev` and `pnpm --dir web dev` serve the same page.
 
 3. **Optional check**: drop `data/isolines/<date>.geojson` and `out/<date>-nasa-path.geojson` into https://geojson.io; the isolines should follow NASA's limits along the whole path
 4. **Commit message** to suggest: `feat: add the <date> eclipse`
 
-Then wait for the user.
+Then wait for the user
