@@ -62,7 +62,7 @@ Check the mapping on 2028-07-22 against `src/engine/eclipse/elements/2028-07-22.
 Open the link from the catalogue row (it's relative to `https://eclipse.gsfc.nasa.gov/SEcat5/`) and download the page into a scratch folder. Don't build the URL yourself: NASA keeps 1901–2000 under `SEpath1901/`, 2001–2050 under `SEpath2001/` and 2051–2100 under `SEpath2051/`.
 
 - Write `data/nasa-paths/<date>.txt` shaped like `data/nasa-paths/2028-07-22.txt`: three `#` lines (title, source URL with today's retrieval date, "Table rows copied verbatim; ΔT = <NASA's ΔT> s. '-' means the limit is off the Earth at that time."), a `#` line, then the table's five header lines and every row, from the first `Limits` row to the last
-- Rows verbatim: the parser reads fixed-width columns. Turn HTML entities in the header into characters (`&#176;` → `°`, `&#180;` → `'`); never touch the rows
+- Rows verbatim: the parser reads fixed-width columns. Turn HTML entities in the header into characters (`&#176;` → `°`, `&#180;` → `'`); never touch the rows. Long tables (one row a minute, e.g. 1919-05-29) repeat the header every 40 rows: keep only the first and drop the blank lines between rows
 - NASA's ΔT is on the page ("a value of ΔT = 71.4 seconds"). For 2001–2100 it usually differs from the Canon's (both are predictions); for 1901–2000 they match (both are measured). It can be negative (−0.9 s in 1901): copy it as NASA writes it, with a plain `-`, or the parser won't read it. Add it to the elements file's header comment too
 
 ## Gate 5: generate
