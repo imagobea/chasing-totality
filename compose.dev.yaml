@@ -7,6 +7,9 @@ services:
     build:
       target: dev
     command: ["pnpm", "dev"]
+    # Published in dev only, so the API can be called from the host
+    ports:
+      - "3000:3000"
     # Pinned, so a host .env meant for pnpm dev can't move the API off the mapped port
     environment:
       PORT: 3000

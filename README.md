@@ -96,11 +96,11 @@ The page shows the API status from `GET /api/health` and a map: an [OpenFreeMap]
 
 `compose.yaml` is the production stack: the compiled API and the built frontend served by nginx. `compose.dev.yaml` is an override that turns the same two services into development mode, with your source mounted and reload on.
 
-|          | Prod                          | Dev                                                             |
-| -------- | ----------------------------- | --------------------------------------------------------------- |
-| Command  | `docker compose up --build`   | `docker compose -f compose.yaml -f compose.dev.yaml up --build` |
-| API      | http://localhost:3000/health  | http://localhost:3000/health (`pnpm dev`)                       |
-| Frontend | http://localhost:8080 (nginx) | http://localhost:5173 (Vite)                                    |
+|          | Prod                                                                           | Dev                                                             |
+| -------- | ------------------------------------------------------------------------------ | --------------------------------------------------------------- |
+| Command  | `docker compose up --build`                                                    | `docker compose -f compose.yaml -f compose.dev.yaml up --build` |
+| API      | http://localhost:8080/api/health (through nginx; the API port isn't published) | http://localhost:3000/health (`pnpm dev`)                       |
+| Frontend | http://localhost:8080 (nginx)                                                  | http://localhost:5173 (Vite)                                    |
 
 In both, the frontend reaches the API through `/api`. In dev, after adding a dependency, add `-V` to `up --build`: `node_modules` lives in a volume that otherwise keeps the old packages.
 

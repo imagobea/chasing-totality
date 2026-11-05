@@ -4,8 +4,7 @@ services:
     build:
       context: .
       target: runtime
-    ports:
-      - "3000:3000"
+    # No published port: only nginx reaches the API, over the compose network
     # Health check is defined in the Dockerfile
 
   web:
