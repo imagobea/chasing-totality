@@ -35,6 +35,7 @@ export const AIRPORTS_LAYERS: LayerSpecification[] = [
     id: "airports",
     type: "symbol",
     source: AIRPORTS_SOURCE_ID,
+    minzoom: 5,
     layout: {
       "icon-image": AIRPORT_ICON_ID,
       "text-field": ["get", "iata"],
