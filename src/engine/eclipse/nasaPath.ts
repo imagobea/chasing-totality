@@ -18,7 +18,7 @@ export type NasaPath = {
 };
 
 const ROW = /^ (Limits|\d\d:\d\d) /;
-const DELTA_T = /ΔT = (\d+(?:\.\d+)?) s/;
+const DELTA_T = /ΔT = (-?\d+(?:\.\d+)?) s/;
 
 export function parseNasaPath(text: string): NasaPath {
   const [, deltaT] = text.match(DELTA_T) ?? fail("no 'ΔT = … s' in the header");

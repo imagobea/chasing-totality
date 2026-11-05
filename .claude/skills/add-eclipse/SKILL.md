@@ -63,7 +63,7 @@ Open the link from the catalogue row (it's relative to `https://eclipse.gsfc.nas
 
 - Write `data/nasa-paths/<date>.txt` shaped like `data/nasa-paths/2028-07-22.txt`: three `#` lines (title, source URL with today's retrieval date, "Table rows copied verbatim; ΔT = <NASA's ΔT> s. '-' means the limit is off the Earth at that time."), a `#` line, then the table's five header lines and every row, from the first `Limits` row to the last
 - Rows verbatim: the parser reads fixed-width columns. Turn HTML entities in the header into characters (`&#176;` → `°`, `&#180;` → `'`); never touch the rows
-- NASA's ΔT is on the page ("a value of ΔT = 71.4 seconds"). For 2001–2100 it usually differs from the Canon's (both are predictions); for 1901–2000 they match (both are measured). Add it to the elements file's header comment too
+- NASA's ΔT is on the page ("a value of ΔT = 71.4 seconds"). For 2001–2100 it usually differs from the Canon's (both are predictions); for 1901–2000 they match (both are measured). It can be negative (−0.9 s in 1901): copy it as NASA writes it, with a plain `-`, or the parser won't read it. Add it to the elements file's header comment too
 
 ## Gate 5: generate
 

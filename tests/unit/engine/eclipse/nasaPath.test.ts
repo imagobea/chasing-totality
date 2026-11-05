@@ -18,6 +18,11 @@ describe("parseNasaPath", () => {
     expect(deltaT).toBe(71.7);
   });
 
+  // As around 1900, e.g. 1901-05-18
+  it("reads a negative ΔT", () => {
+    expect(parseNasaPath("# ΔT = -0.9 s\n").deltaT).toBe(-0.9);
+  });
+
   it("throws when the header has no ΔT", () => {
     expect(() => parseNasaPath(ROW)).toThrow(/ΔT/);
   });
