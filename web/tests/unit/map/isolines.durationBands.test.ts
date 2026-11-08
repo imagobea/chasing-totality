@@ -24,9 +24,9 @@ describe("durationBands", () => {
     expect(bands.at(-1)?.geometry.coordinates).toEqual(square(1));
   });
 
-  it("makes one band for 6 min and over", () => {
-    const bands = durationBands(isolines(300, 360, 420, 480));
-    expect(bands.map((band) => band.properties.durationSeconds)).toEqual([300, 360]);
+  it("makes one band for 7 min and over", () => {
+    const bands = durationBands(isolines(360, 420, 480, 540));
+    expect(bands.map((band) => band.properties.durationSeconds)).toEqual([360, 420]);
     expect(bands.at(-1)?.geometry.coordinates).toEqual(square(3));
   });
 

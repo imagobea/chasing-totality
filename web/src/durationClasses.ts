@@ -13,7 +13,7 @@ export type DurationClass = {
 // Each class of totality spans a whole minute
 export const CLASS_SECONDS = 60;
 
-// One colour per class, from under 1 min to 6 min and over
+// One colour per class, from under 1 min to 7 min and over
 const CLASS_COLOR_TOKENS: PathFillToken[] = [
   "--color-path-fill-0",
   "--color-path-fill-1",
@@ -22,6 +22,7 @@ const CLASS_COLOR_TOKENS: PathFillToken[] = [
   "--color-path-fill-4",
   "--color-path-fill-5",
   "--color-path-fill-6",
+  "--color-path-fill-7",
 ];
 
 // The classes in order, starting at 0 s, 60 s, … up to the last, open-ended class

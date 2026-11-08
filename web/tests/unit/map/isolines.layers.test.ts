@@ -69,13 +69,15 @@ describe("isolines layers", () => {
     [120, "--color-path-fill-2"],
     [359, "--color-path-fill-5"],
     [360, "--color-path-fill-6"],
-    [450, "--color-path-fill-6"],
+    [419, "--color-path-fill-6"],
+    [420, "--color-path-fill-7"],
+    [480, "--color-path-fill-7"],
   ])("fills %i s with %s", (durationSeconds, token) => {
     expect(fillToken(durationSeconds)).toBe(token);
   });
 
   it("fills each band with its own class, a minute apart from the limit", () => {
-    const bands = durationBands(isolines(30, 60, 90, 120, 180, 240, 300, 360, 390));
+    const bands = durationBands(isolines(30, 60, 90, 120, 180, 240, 300, 360, 420, 450));
     expect(bands.map((band) => fillToken(band.properties.durationSeconds))).toEqual([
       "--color-path-fill-0",
       "--color-path-fill-1",
@@ -84,6 +86,7 @@ describe("isolines layers", () => {
       "--color-path-fill-4",
       "--color-path-fill-5",
       "--color-path-fill-6",
+      "--color-path-fill-7",
     ]);
   });
 

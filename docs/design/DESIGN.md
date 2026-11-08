@@ -228,13 +228,14 @@ Sections in this exact order: will I see it → will the sky be clear → can I 
 | `--color-text-faint`     | disabled, fine print                                     | `#5F6975`               | `#8E8E96`            | `#AAB4C8`            |
 | `--color-accent`         | primary emphasis: selection, key numbers, focus brackets | `#B85400`               | `#FFB547`            | `#FFB547`            |
 | `--color-on-accent`      | text/icons on accent                                     | `#FFFFFF`               | `#0C0C0D`            | `#1E2433`            |
-| `--color-path-fill-0`    | duration band fill, < 1 min                              | —                       | —                    | `#6B3A4E`            |
-| `--color-path-fill-1`    | duration band fill, 1–2 min                              | —                       | —                    | `#8A3F3F`            |
-| `--color-path-fill-2`    | duration band fill, 2–3 min                              | —                       | —                    | `#AD4E34`            |
-| `--color-path-fill-3`    | duration band fill, 3–4 min                              | —                       | —                    | `#CE6A2C`            |
-| `--color-path-fill-4`    | duration band fill, 4–5 min                              | —                       | —                    | `#E88B2E`            |
-| `--color-path-fill-5`    | duration band fill, 5–6 min                              | —                       | —                    | `#F5AE4F`            |
-| `--color-path-fill-6`    | duration band fill, ≥ 6 min                              | —                       | —                    | `#FFD98A`            |
+| `--color-path-fill-0`    | duration band fill, < 1 min                              | —                       | —                    | `#4B245B`            |
+| `--color-path-fill-1`    | duration band fill, 1–2 min                              | —                       | —                    | `#7E2260`            |
+| `--color-path-fill-2`    | duration band fill, 2–3 min                              | —                       | —                    | `#AD244D`            |
+| `--color-path-fill-3`    | duration band fill, 3–4 min                              | —                       | —                    | `#D13C29`            |
+| `--color-path-fill-4`    | duration band fill, 4–5 min                              | —                       | —                    | `#E66310`            |
+| `--color-path-fill-5`    | duration band fill, 5–6 min                              | —                       | —                    | `#F48D0A`            |
+| `--color-path-fill-6`    | duration band fill, 6–7 min                              | —                       | —                    | `#F8BC4C`            |
+| `--color-path-fill-7`    | duration band fill, ≥ 7 min                              | —                       | —                    | `#F9E99A`            |
 | `--color-path-limit`     | outer limit of totality, the only strong line            | —                       | —                    | `#FFC46B`            |
 | `--color-isoline`        | inner isolines, drawn faint                              | —                       | —                    | `#FFF3DC`            |
 | `--color-travel`         | airports, flight links, distance bars                    | `#0B6E86`               | `#63C7DB`            | `#8BE4F2`            |
@@ -243,7 +244,7 @@ Sections in this exact order: will I see it → will the sky be clear → can I 
 | `--color-status-ok`      | API OK dot                                               | `#2E8540`               | `#8FD4A0`            | `#9BE0AE`            |
 | `--color-label-halo`     | halo behind map labels                                   | `#FFFFFF`               | `#0C0C0D`            | `#2E3850`            |
 
-**Duration ramp:** colour by absolute minutes (not % of max); longest = lightest; only the outer limit line is strong. The ramp is set for Fiord only so far (— = not yet chosen).
+**Duration ramp:** colour by absolute minutes (not % of max); longest = lightest; only the outer limit line is strong. Colour shows where it's longer; exact durations come from the whole-minute isoline labels and the spot panel. The ramp is set for Fiord only so far (— = not yet chosen).
 
 On the light theme (Positron) the accent is darker, to keep 4.5:1 text contrast on white; its path colours are not chosen yet.
 
@@ -251,7 +252,7 @@ On the light theme (Positron) the accent is darker, to keep 4.5:1 text contrast 
 
 | Token                     | Current value                         |
 | ------------------------- | ------------------------------------- |
-| `--path-fill-opacity`     | `0.85` per band (bands don't overlap) |
+| `--path-fill-opacity`     | `0.95` per band (bands don't overlap) |
 | `--isoline-opacity`       | `0.35`                                |
 | `--isoline-width`         | `0.75px`                              |
 | `--path-limit-width`      | `1.25px`                              |
