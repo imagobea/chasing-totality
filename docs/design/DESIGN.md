@@ -110,14 +110,14 @@ Our fills and lines are inserted **before the first basemap symbol layer**. Our 
 
 `LayersPanel` (bottom-left overlay)
 
-- **Layer toggles**, in this order:
-  1. Totality path
-  2. Airports
-  3. Travel advisories
-- **Each toggle:** a real button with `aria-pressed`, a checkbox mark, a label and a small swatch matching the layer.
-- **Legend: "Totality duration".** One swatch per whole-minute class shown on the map, from `< 1 min` at the limit to the longest class, with end labels `LIMIT · 0s` and `CENTRE · <max>`. `<max>` comes from the eclipse data (6m 23s for 2027).
+A legend, separated by dividers, in this order:
 
-🧪 Toggles are a nice to have and can come later. Consider the design description for the legend/totality duration as tentative.
+1. **Totality duration.** One row per duration class, longest first: `≥ 7 min`, `6 – 7 min`, … `< 1 min`, each a swatch plus its label. A last row keys the limit line: a short solid line labelled "Totality limit". Rows show every class, whether or not the selected eclipse reaches it.
+2. **Airports**, with the airport icon on the right.
+3. **Travel advisories**, with its hatch swatch on the right.
+
+Each group has a layer name, then a source line under it in small muted text: `<source>, <date>`. Each source links to the dataset. Dates formatted as `06 Nov 2026`, only for data that was retrieved instead of generated.
+
 📦 Travel advisories and airport data need to be integrated.
 
 `SpotPanel` (right overlay)
