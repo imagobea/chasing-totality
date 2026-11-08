@@ -110,7 +110,7 @@ Our fills and lines are inserted **before the first basemap symbol layer**. Our 
 
 `LayersPanel` (bottom-left overlay)
 
-A legend, separated by dividers, in this order:
+A legend that details map layers separated by dividers, in this order:
 
 1. **Totality duration.** One row per duration class, longest first: `≥ 7 min`, `6 – 7 min`, … `< 1 min`, each a swatch plus its label. A last row keys the limit line: a short solid line labelled "Totality limit". Rows show every class, whether or not the selected eclipse reaches it.
 2. **Airports**, with the airport icon on the right.
