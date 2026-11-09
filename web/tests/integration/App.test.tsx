@@ -28,10 +28,14 @@ const ISOLINES: Record<string, Isolines> = {
   "2028-07-22": { type: "FeatureCollection", bbox: [74, -52, 182, -9], features: [] },
 };
 
+// The airports' bbox around each date's path, as App asks for it: 3° each way, rounded outwards
+const AIRPORTS_BBOX_2027 = "-49,-17,95,41";
+const AIRPORTS_BBOX_2028 = "71,-55,185,-6";
+
 // What the API serves for the airports around each date's path, by bbox
 const AIRPORTS: Record<string, Airports> = {
-  "-49,-17,95,41": airports("AGP", "LXR"),
-  "71,-55,185,-6": airports("SYD"),
+  [AIRPORTS_BBOX_2027]: airports("AGP", "LXR"),
+  [AIRPORTS_BBOX_2028]: airports("SYD"),
 };
 
 const ISOLINES_URL = /^\/api\/eclipses\/(.+)\/isolines$/;
@@ -69,6 +73,11 @@ function mockApi(
       return bbox ? airports(bbox) : ok({ status: "ok" });
     }),
   );
+}
+
+// How the map stand-in shows a date's isolines
+function shownIsolines(date: string) {
+  return ISOLINES[date]!.bbox.join(",");
 }
 
 // The bbox of the isolines on the map
@@ -145,9 +154,9 @@ describe("App", () => {
   it("shows the selected eclipse's isolines on the map", async () => {
     mockApi(async () => ok(["2027-08-02", "2028-07-22"]));
     render(<App />);
-    await waitFor(() => expect(mapIsolines()).toBe(ISOLINES["2027-08-02"]!.bbox.join(",")));
+    await waitFor(() => expect(mapIsolines()).toBe(shownIsolines("2027-08-02")));
     fireEvent.change(picker(), { target: { value: "2028-07-22" } });
-    await waitFor(() => expect(mapIsolines()).toBe(ISOLINES["2028-07-22"]!.bbox.join(",")));
+    await waitFor(() => expect(mapIsolines()).toBe(shownIsolines("2028-07-22")));
   });
 
   it("ignores isolines that arrive after another date was picked", async () => {
@@ -161,9 +170,9 @@ describe("App", () => {
     render(<App />);
     await waitFor(() => expect(picker().disabled).toBe(false));
     fireEvent.change(picker(), { target: { value: "2028-07-22" } });
-    await waitFor(() => expect(mapIsolines()).toBe(ISOLINES["2028-07-22"]!.bbox.join(",")));
+    await waitFor(() => expect(mapIsolines()).toBe(shownIsolines("2028-07-22")));
     await act(async () => answer2027(ok(ISOLINES["2027-08-02"])));
-    expect(mapIsolines()).toBe(ISOLINES["2028-07-22"]!.bbox.join(","));
+    expect(mapIsolines()).toBe(shownIsolines("2028-07-22"));
   });
 
   it("warns and leaves the map as it is when the isolines can't be fetched", async () => {
@@ -173,10 +182,10 @@ describe("App", () => {
         date === "2027-08-02" ? ok(ISOLINES[date]) : { ok: false, status: 500 },
     });
     render(<App />);
-    await waitFor(() => expect(mapIsolines()).toBe(ISOLINES["2027-08-02"]!.bbox.join(",")));
+    await waitFor(() => expect(mapIsolines()).toBe(shownIsolines("2027-08-02")));
     fireEvent.change(picker(), { target: { value: "2028-07-22" } });
     await waitFor(() => expect(warn).toHaveBeenCalledWith(expect.any(String), expect.any(Error)));
-    expect(mapIsolines()).toBe(ISOLINES["2027-08-02"]!.bbox.join(","));
+    expect(mapIsolines()).toBe(shownIsolines("2027-08-02"));
   });
 
   it("shows the airports around the selected eclipse's path on the map", async () => {
@@ -198,7 +207,7 @@ describe("App", () => {
     let answer2027: (answer: unknown) => void = () => {};
     mockApi(async () => ok(["2027-08-02", "2028-07-22"]), {
       airports: (bbox) =>
-        bbox === "-49,-17,95,41"
+        bbox === AIRPORTS_BBOX_2027
           ? new Promise((resolve) => (answer2027 = resolve))
           : Promise.resolve(ok(AIRPORTS[bbox])),
     });
@@ -206,7 +215,7 @@ describe("App", () => {
     await waitFor(() => expect(picker().disabled).toBe(false));
     fireEvent.change(picker(), { target: { value: "2028-07-22" } });
     await waitFor(() => expect(mapAirports()).toBe("SYD"));
-    await act(async () => answer2027(ok(AIRPORTS["-49,-17,95,41"])));
+    await act(async () => answer2027(ok(AIRPORTS[AIRPORTS_BBOX_2027])));
     expect(mapAirports()).toBe("SYD");
   });
 
@@ -214,7 +223,7 @@ describe("App", () => {
     const warn = vi.spyOn(console, "warn").mockImplementation(() => {});
     mockApi(async () => ok(["2027-08-02", "2028-07-22"]), {
       airports: async (bbox) =>
-        bbox === "-49,-17,95,41" ? ok(AIRPORTS[bbox]) : { ok: false, status: 500 },
+        bbox === AIRPORTS_BBOX_2027 ? ok(AIRPORTS[bbox]) : { ok: false, status: 500 },
     });
     render(<App />);
     await waitFor(() => expect(mapAirports()).toBe("AGP,LXR"));
