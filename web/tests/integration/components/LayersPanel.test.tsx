@@ -59,12 +59,12 @@ describe("LayersPanel", () => {
     render(<LayersPanel airports={airports("AGP")} />);
     const link = airportsGroup().getByRole("link", { name: "OurAirports" });
     expect(link.getAttribute("href")).toBe("https://ourairports.com/data/");
-    expect(airportsGroup().getByRole("paragraph").textContent).toBe("OurAirports, 25 Oct 2026");
+    expect(airportsGroup().getByRole("paragraph").textContent).toBe("OurAirports, 25 OCT 2026");
   });
 
   it("writes the retrieval day with two digits", () => {
     render(<LayersPanel airports={{ ...airports("AGP"), retrieved: "2026-11-06" }} />);
-    expect(airportsGroup().getByRole("paragraph").textContent).toBe("OurAirports, 06 Nov 2026");
+    expect(airportsGroup().getByRole("paragraph").textContent).toBe("OurAirports, 06 NOV 2026");
   });
 
   it("shows — for the airports' source until they arrive, or when they can't be fetched", () => {

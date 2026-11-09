@@ -40,3 +40,5 @@ The map colours the totality path by whole-minute duration class, but nothing sa
 No MCP needed. `/run` for a screenshot, `/simplify` and `/code-review` before the PR.
 
 ## Deviations and findings
+
+- One date format across the app, `02 AUG 2027`, for the picker and the source lines; the picker read `2027 · AUG 02` and the design gave sources `06 Nov 2026`

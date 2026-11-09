@@ -200,7 +200,7 @@ describe("App", () => {
     mockApi(async () => ok(["2027-08-02"]));
     render(<App />);
     expect(airportsSourceLine()).toBe("—");
-    await waitFor(() => expect(airportsSourceLine()).toBe("OurAirports, 25 Oct 2026"));
+    await waitFor(() => expect(airportsSourceLine()).toBe("OurAirports, 25 OCT 2026"));
   });
 
   it("clears the previous eclipse's airports while the new ones load", async () => {

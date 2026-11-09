@@ -1,4 +1,4 @@
-import { formatEclipseDate } from "../utils.js";
+import { formatDate } from "../utils.js";
 
 type EclipsePickerProps = {
   dates: string[];
@@ -23,7 +23,7 @@ export function EclipsePicker({ dates, date, onChange }: EclipsePickerProps) {
         ) : (
           dates.map((option) => (
             <option key={option} value={option}>
-              {formatEclipseDate(option)}
+              {formatDate(option)}
             </option>
           ))
         )}

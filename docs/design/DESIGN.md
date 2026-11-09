@@ -58,7 +58,7 @@ Components are described by **role**, not by colour or font.
 
 `EclipsePicker`
 
-- **Trigger:** a button showing the selected eclipse as date, e.g. `2027 · AUG 02`, plus a chevron.
+- **Trigger:** a button showing the selected eclipse as date, e.g. `02 AUG 2027`, plus a chevron.
 - **Dropdown:** one row per eclipse, containing:
   - date
 - **On select:** if we handle eclipse dates as ids, we could set an app-wide `eclipseId`, then every data request would be scoped to it.
@@ -116,7 +116,7 @@ A legend that details map layers separated by dividers, in this order:
 2. **Airports**, with the airport icon on the right.
 3. **Travel advisories**, with its hatch swatch on the right.
 
-Each group has a layer name, then a source line under it in small muted text: `<source>, <date>`. Each source links to the dataset. Dates formatted as `06 Nov 2026`, only for data that was retrieved instead of generated.
+Each group has a layer name, then a source line under it in small muted text: `<source>, <date>`. Each source links to the dataset. Dates formatted as `06 NOV 2026`, only for data that was retrieved instead of generated.
 
 📦 Travel advisories and airport data need to be integrated.
 

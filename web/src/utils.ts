@@ -10,18 +10,11 @@ function formatDegrees(value: number, positive: string, negative: string): strin
   return `${Math.abs(value).toFixed(2)}° ${value < 0 ? negative : positive}`;
 }
 
-// "2027-08-02" → "2027 · AUG 02", read from the string so time zones can't shift the day
-export function formatEclipseDate(date: string): string {
+// "2027-08-02" → "02 AUG 2027", the one way the UI writes a date, read from the string so time
+// zones can't shift the day
+export function formatDate(date: string): string {
   const [year, month, day] = date.split("-");
-  return `${year} · ${MONTHS[Number(month) - 1]} ${day}`;
-}
-
-// "2026-11-06" → "06 Nov 2026", for when data was retrieved, read from the string like the
-// eclipse dates
-export function formatRetrievedDate(date: string): string {
-  const [year, month, day] = date.split("-");
-  const name = MONTHS[Number(month) - 1] ?? "";
-  return `${day} ${name.charAt(0)}${name.slice(1).toLowerCase()} ${year}`;
+  return `${day} ${MONTHS[Number(month) - 1]} ${year}`;
 }
 
 // Whole days from now's local calendar day to the eclipse date, 0 once it's here or past.

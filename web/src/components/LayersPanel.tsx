@@ -1,7 +1,7 @@
 import type { CSSProperties } from "react";
 import type { Airports } from "../api/airports.js";
 import { CLASS_SECONDS, DURATION_CLASSES } from "../durationClasses.js";
-import { formatRetrievedDate } from "../utils.js";
+import { formatDate } from "../utils.js";
 
 type LayersPanelProps = {
   // The airports on the map, whose source and date the panel credits; null until they arrive or
@@ -77,7 +77,7 @@ export function LayersPanel({ airports }: LayersPanelProps) {
                   <a href={airports.source.url} target="_blank" rel="noreferrer">
                     {airports.source.name}
                   </a>
-                  , {formatRetrievedDate(airports.retrieved)}
+                  , {formatDate(airports.retrieved)}
                 </>
               ) : (
                 "—"
