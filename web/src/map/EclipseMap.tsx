@@ -9,6 +9,8 @@ import {
 } from "maplibre-gl";
 import "maplibre-gl/dist/maplibre-gl.css";
 import workerUrl from "maplibre-gl/dist/maplibre-gl-worker.mjs?worker&url";
+import type { FeatureCollection } from "geojson";
+import type { Airports } from "../api/airports.js";
 import type { Isolines } from "../api/eclipses.js";
 import type { Coordinates } from "../utils.js";
 import {
@@ -31,6 +33,8 @@ import {
 type EclipseMapProps = {
   // The selected eclipse's isolines, null until they arrive
   isolines: Isolines | null;
+  // The airports around the eclipse's path, null until they arrive or when they can't be had
+  airports: Airports | null;
   // Called with the mouse position as it moves, and null when it leaves the map
   onCursorMove: (cursor: Coordinates | null) => void;
   // Where to put the attribution, outside the map
@@ -43,6 +47,9 @@ setWorkerUrl(workerUrl);
 // Styles as per OpenFreeMap documentation at https://openfreemap.org/quick_start/
 // TODO: careful - map style is chosen here, not by the theme!!
 const MAP_STYLE = "https://tiles.openfreemap.org/styles/fiord";
+
+// What the airports source shows when there are no airports
+const NO_AIRPORTS: FeatureCollection = { type: "FeatureCollection", features: [] };
 
 // Added the first time with its layers, on top or under the layer beforeId picks; swapped in
 // place afterwards
@@ -68,7 +75,7 @@ function firstSymbolId(map: MapLibreMap): string | undefined {
   return map.getStyle().layers.find((layer) => layer.type === "symbol")?.id;
 }
 
-export function EclipseMap({ isolines, onCursorMove, attributionRef }: EclipseMapProps) {
+export function EclipseMap({ isolines, airports, onCursorMove, attributionRef }: EclipseMapProps) {
   // Set once the style has loaded and our images are in, since sources and layers can only be
   // added after that
   const [map, setMap] = useState<MapLibreMap | null>(null);
@@ -121,8 +128,8 @@ export function EclipseMap({ isolines, onCursorMove, attributionRef }: EclipseMa
     // A ref object stays the same across renders, so the map is still created once
   }, [attributionRef]);
 
-  // The eclipse's isolines and the airports around them, with the map fitted to its whole path;
-  // the user is then free to pan and zoom
+  // The eclipse's isolines, with the map fitted to its whole path; the user is then free to pan
+  // and zoom
   useEffect(() => {
     if (!map || isolines === null) return;
 
@@ -143,10 +150,20 @@ export function EclipseMap({ isolines, onCursorMove, attributionRef }: EclipseMa
     } catch (error) {
       console.warn("Duration bands not shown", error);
     }
-    // Last, so on top of everything, the base map's labels included
-    showSource(map, AIRPORTS_SOURCE_ID, airportsSource(isolines.bbox), AIRPORTS_LAYERS);
     map.fitBounds(isolines.bbox);
   }, [map, isolines]);
+
+  // The airports, cleared when there are none. App fetches them after the isolines, so they go
+  // last, on top of everything, the base map's labels included.
+  useEffect(() => {
+    if (!map) return;
+
+    if (airports === null) {
+      map.getSource<GeoJSONSource>(AIRPORTS_SOURCE_ID)?.setData(NO_AIRPORTS);
+      return;
+    }
+    showSource(map, AIRPORTS_SOURCE_ID, airportsSource(airports), AIRPORTS_LAYERS);
+  }, [map, airports]);
 
   return (
     <div
