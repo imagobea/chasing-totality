@@ -45,7 +45,10 @@ export function App() {
     let active = true;
     fetchIsolines(date)
       .then((result) => {
-        if (active) setIsolines(result);
+        if (!active) return;
+        setIsolines(result);
+        // The previous eclipse's airports go until the new path's arrive
+        setAirports(null);
       })
       // The map keeps whatever it was showing
       .catch((error) => console.warn(`Eclipse ${date} not shown`, error));

@@ -203,6 +203,19 @@ describe("App", () => {
     await waitFor(() => expect(airportsSourceLine()).toBe("OurAirports, 25 Oct 2026"));
   });
 
+  it("clears the previous eclipse's airports while the new ones load", async () => {
+    mockApi(async () => ok(["2027-08-02", "2028-07-22"]), {
+      airports: (bbox) =>
+        bbox === AIRPORTS_BBOX_2027 ? Promise.resolve(ok(AIRPORTS[bbox])) : new Promise(() => {}),
+    });
+    render(<App />);
+    await waitFor(() => expect(mapAirports()).toBe("AGP,LXR"));
+    fireEvent.change(picker(), { target: { value: "2028-07-22" } });
+    await waitFor(() => expect(mapIsolines()).toBe(shownIsolines("2028-07-22")));
+    expect(mapAirports()).toBe("");
+    expect(airportsSourceLine()).toBe("—");
+  });
+
   it("ignores airports that arrive after another eclipse's isolines", async () => {
     let answer2027: (answer: unknown) => void = () => {};
     mockApi(async () => ok(["2027-08-02", "2028-07-22"]), {
