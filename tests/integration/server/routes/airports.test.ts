@@ -74,7 +74,7 @@ describe("GET /airports", () => {
     expect(body.type).toBe("FeatureCollection");
     expect(body.source).toEqual({
       name: "OurAirports",
-      url: "https://ourairports.com/data/",
+      url: "https://github.com/davidmegginson/ourairports-data",
       licence: "Public domain",
     });
     expect(body.retrieved).toMatch(/^\d{4}-\d{2}-\d{2}$/);

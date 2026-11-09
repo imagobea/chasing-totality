@@ -9,6 +9,7 @@ import type {
 } from "maplibre-gl";
 import polygonClipping from "polygon-clipping";
 import type { Isolines } from "../api/eclipses.js";
+import { CLASS_SECONDS, DURATION_CLASSES } from "../durationClasses.js";
 import { MAP_FONT, theme, toNumber } from "../theme.js";
 
 // The area from one class edge (the limit or a whole minute) to the next
@@ -17,28 +18,14 @@ type DurationBand = Feature<MultiPolygon, { durationSeconds: number }>;
 export const DURATION_BANDS_SOURCE_ID = "duration-bands";
 export const ISOLINES_SOURCE_ID = "isolines";
 
-// Each class of totality spans a whole minute
-const CLASS_SECONDS = 60;
+const [FIRST_CLASS, ...NEXT_CLASSES] = DURATION_CLASSES;
 
-// One colour per class, from under 1 min to 6 min and over
-const CLASS_COLORS = [
-  theme["--color-path-fill-0"],
-  theme["--color-path-fill-1"],
-  theme["--color-path-fill-2"],
-  theme["--color-path-fill-3"],
-  theme["--color-path-fill-4"],
-  theme["--color-path-fill-5"],
-  theme["--color-path-fill-6"],
-];
-
-// Where each class starts: 0 s, 60 s, … up to the last, open-ended class
-const CLASS_STARTS = CLASS_COLORS.map((_, i) => i * CLASS_SECONDS);
-
+// Each band takes the colour of the class its duration falls in
 const DURATION_COLOR = [
   "step",
   ["get", "durationSeconds"],
-  CLASS_COLORS[0],
-  ...CLASS_COLORS.slice(1).flatMap((color, i) => [CLASS_STARTS[i + 1], color]),
+  theme[FIRST_CLASS.colorToken],
+  ...NEXT_CLASSES.flatMap(({ startSeconds, colorToken }) => [startSeconds, theme[colorToken]]),
 ] as ExpressionSpecification;
 
 const IS_LIMIT: FilterSpecification = ["has", "limit"];
@@ -119,7 +106,8 @@ export function durationBands(isolines: Isolines): DurationBand[] {
   const edges = isolines.features
     .filter(
       ({ properties: { durationSeconds } }) =>
-        CLASS_STARTS.includes(durationSeconds) || durationSeconds === limit,
+        DURATION_CLASSES.some(({ startSeconds }) => startSeconds === durationSeconds) ||
+        durationSeconds === limit,
     )
     .sort((a, b) => a.properties.durationSeconds - b.properties.durationSeconds);
 

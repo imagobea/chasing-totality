@@ -9,7 +9,9 @@ import {
 } from "maplibre-gl";
 import "maplibre-gl/dist/maplibre-gl.css";
 import workerUrl from "maplibre-gl/dist/maplibre-gl-worker.mjs?worker&url";
-import { fetchIsolines } from "../api/eclipses.js";
+import type { FeatureCollection } from "geojson";
+import type { Airports } from "../api/airports.js";
+import type { Isolines } from "../api/eclipses.js";
 import type { Coordinates } from "../utils.js";
 import {
   AIRPORT_ICON_ID,
@@ -29,7 +31,10 @@ import {
 } from "./isolines.js";
 
 type EclipseMapProps = {
-  date: string | null;
+  // The selected eclipse's isolines, null until they arrive
+  isolines: Isolines | null;
+  // The airports around the eclipse's path, null until they arrive or when they can't be had
+  airports: Airports | null;
   // Called with the mouse position as it moves, and null when it leaves the map
   onCursorMove: (cursor: Coordinates | null) => void;
   // Where to put the attribution, outside the map
@@ -42,6 +47,9 @@ setWorkerUrl(workerUrl);
 // Styles as per OpenFreeMap documentation at https://openfreemap.org/quick_start/
 // TODO: careful - map style is chosen here, not by the theme!!
 const MAP_STYLE = "https://tiles.openfreemap.org/styles/fiord";
+
+// What the airports source shows when there are no airports
+const NO_AIRPORTS: FeatureCollection = { type: "FeatureCollection", features: [] };
 
 // Added the first time with its layers, on top or under the layer beforeId picks; swapped in
 // place afterwards
@@ -62,12 +70,18 @@ function showSource(
   for (const layer of layers) map.addLayer(layer, beforeId(layer));
 }
 
+// The airports' first layer, once it's on the map, so our other labels can go under it
+function airportsLayerId(map: MapLibreMap): string | undefined {
+  const id = AIRPORTS_LAYERS[0]?.id;
+  return id && map.getLayer(id) ? id : undefined;
+}
+
 // The base map's first label layer
 function firstSymbolId(map: MapLibreMap): string | undefined {
   return map.getStyle().layers.find((layer) => layer.type === "symbol")?.id;
 }
 
-export function EclipseMap({ date, onCursorMove, attributionRef }: EclipseMapProps) {
+export function EclipseMap({ isolines, airports, onCursorMove, attributionRef }: EclipseMapProps) {
   // Set once the style has loaded and our images are in, since sources and layers can only be
   // added after that
   const [map, setMap] = useState<MapLibreMap | null>(null);
@@ -120,43 +134,41 @@ export function EclipseMap({ date, onCursorMove, attributionRef }: EclipseMapPro
     // A ref object stays the same across renders, so the map is still created once
   }, [attributionRef]);
 
-  // The selected eclipse's isolines and the airports around them, with the map fitted to its
-  // whole path; the user is then free to pan and zoom
+  // The eclipse's isolines, with the map fitted to its whole path; the user is then free to pan
+  // and zoom
   useEffect(() => {
-    if (!map || date === null) return;
+    if (!map || isolines === null) return;
 
-    // Ignore the isolines if another date is picked or the map goes away before they arrive
-    let active = true;
-    fetchIsolines(date)
-      .then((isolines) => {
-        if (!active) return;
-        // Outlines go under the base map's labels; our labels go on top
-        showSource(map, ISOLINES_SOURCE_ID, isolinesSource(isolines), ISOLINES_LAYERS, (layer) =>
-          layer.type === "symbol" ? undefined : firstSymbolId(map),
-        );
-        // Fills go under the outlines. Cutting the bands can throw on odd geometry, and the
-        // isolines are still worth showing without them.
-        try {
-          showSource(
-            map,
-            DURATION_BANDS_SOURCE_ID,
-            durationBandsSource(isolines),
-            DURATION_BANDS_LAYERS,
-            () => ISOLINES_LAYERS[0]?.id,
-          );
-        } catch (error) {
-          console.warn(`Duration bands for ${date} not shown`, error);
-        }
-        // Last, so on top of everything, the base map's labels included
-        showSource(map, AIRPORTS_SOURCE_ID, airportsSource(isolines.bbox), AIRPORTS_LAYERS);
-        map.fitBounds(isolines.bbox);
-      })
-      // The map keeps whatever it was showing
-      .catch((error) => console.warn(`Eclipse ${date} not shown`, error));
-    return () => {
-      active = false;
-    };
-  }, [map, date]);
+    // Outlines go under the base map's labels; our labels go on top, but under the airports
+    showSource(map, ISOLINES_SOURCE_ID, isolinesSource(isolines), ISOLINES_LAYERS, (layer) =>
+      layer.type === "symbol" ? airportsLayerId(map) : firstSymbolId(map),
+    );
+    // Fills go under the outlines. Cutting the bands can throw on odd geometry, and the isolines
+    // are still worth showing without them.
+    try {
+      showSource(
+        map,
+        DURATION_BANDS_SOURCE_ID,
+        durationBandsSource(isolines),
+        DURATION_BANDS_LAYERS,
+        () => ISOLINES_LAYERS[0]?.id,
+      );
+    } catch (error) {
+      console.warn("Duration bands not shown", error);
+    }
+    map.fitBounds(isolines.bbox);
+  }, [map, isolines]);
+
+  // The airports, on top of everything, the base map's labels included; cleared when there are none
+  useEffect(() => {
+    if (!map) return;
+
+    if (airports === null) {
+      map.getSource<GeoJSONSource>(AIRPORTS_SOURCE_ID)?.setData(NO_AIRPORTS);
+      return;
+    }
+    showSource(map, AIRPORTS_SOURCE_ID, airportsSource(airports), AIRPORTS_LAYERS);
+  }, [map, airports]);
 
   return (
     <div

@@ -14,8 +14,8 @@ describe("EclipsePicker", () => {
   it("lists the dates formatted, with the selected one shown", () => {
     render(<EclipsePicker dates={DATES} date="2027-08-02" onChange={() => {}} />);
     expect(screen.getAllByRole("option").map((option) => option.textContent)).toEqual([
-      "2027 · AUG 02",
-      "2028 · JUL 22",
+      "02 AUG 2027",
+      "22 JUL 2028",
     ]);
     expect(picker().value).toBe("2027-08-02");
     expect(picker().disabled).toBe(false);

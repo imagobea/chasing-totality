@@ -58,7 +58,7 @@ Components are described by **role**, not by colour or font.
 
 `EclipsePicker`
 
-- **Trigger:** a button showing the selected eclipse as date, e.g. `2027 · AUG 02`, plus a chevron.
+- **Trigger:** a button showing the selected eclipse as date, e.g. `02 AUG 2027`, plus a chevron.
 - **Dropdown:** one row per eclipse, containing:
   - date
 - **On select:** if we handle eclipse dates as ids, we could set an app-wide `eclipseId`, then every data request would be scoped to it.
@@ -110,14 +110,14 @@ Our fills and lines are inserted **before the first basemap symbol layer**. Our 
 
 `LayersPanel` (bottom-left overlay)
 
-- **Layer toggles**, in this order:
-  1. Totality path
-  2. Airports
-  3. Travel advisories
-- **Each toggle:** a real button with `aria-pressed`, a checkbox mark, a label and a small swatch matching the layer.
-- **Legend: "Totality duration".** One swatch per whole-minute class shown on the map, from `< 1 min` at the limit to the longest class, with end labels `LIMIT · 0s` and `CENTRE · <max>`. `<max>` comes from the eclipse data (6m 23s for 2027).
+A legend that details map layers separated by dividers, in this order:
 
-🧪 Toggles are a nice to have and can come later. Consider the design description for the legend/totality duration as tentative.
+1. **Totality duration.** One row per duration class, longest first: `≥ 7 min`, `6 – 7 min`, … `< 1 min`, each a swatch plus its label. A last row keys the limit line: a short solid line labelled "Totality limit". Rows show every class, whether or not the selected eclipse reaches it.
+2. **Airports**, with the airport icon on the right.
+3. **Travel advisories**, with its hatch swatch on the right.
+
+Each group has a layer name, then a source line under it in small muted text: `<source>, <date>`. Each source links to the dataset. Dates formatted as `06 NOV 2026`, only for data that was retrieved instead of generated.
+
 📦 Travel advisories and airport data need to be integrated.
 
 `SpotPanel` (right overlay)
@@ -228,13 +228,14 @@ Sections in this exact order: will I see it → will the sky be clear → can I 
 | `--color-text-faint`     | disabled, fine print                                     | `#5F6975`               | `#8E8E96`            | `#AAB4C8`            |
 | `--color-accent`         | primary emphasis: selection, key numbers, focus brackets | `#B85400`               | `#FFB547`            | `#FFB547`            |
 | `--color-on-accent`      | text/icons on accent                                     | `#FFFFFF`               | `#0C0C0D`            | `#1E2433`            |
-| `--color-path-fill-0`    | duration band fill, < 1 min                              | —                       | —                    | `#6B3A4E`            |
-| `--color-path-fill-1`    | duration band fill, 1–2 min                              | —                       | —                    | `#8A3F3F`            |
-| `--color-path-fill-2`    | duration band fill, 2–3 min                              | —                       | —                    | `#AD4E34`            |
-| `--color-path-fill-3`    | duration band fill, 3–4 min                              | —                       | —                    | `#CE6A2C`            |
-| `--color-path-fill-4`    | duration band fill, 4–5 min                              | —                       | —                    | `#E88B2E`            |
-| `--color-path-fill-5`    | duration band fill, 5–6 min                              | —                       | —                    | `#F5AE4F`            |
-| `--color-path-fill-6`    | duration band fill, ≥ 6 min                              | —                       | —                    | `#FFD98A`            |
+| `--color-path-fill-0`    | duration band fill, < 1 min                              | —                       | —                    | `#4B245B`            |
+| `--color-path-fill-1`    | duration band fill, 1–2 min                              | —                       | —                    | `#7E2260`            |
+| `--color-path-fill-2`    | duration band fill, 2–3 min                              | —                       | —                    | `#AD244D`            |
+| `--color-path-fill-3`    | duration band fill, 3–4 min                              | —                       | —                    | `#D13C29`            |
+| `--color-path-fill-4`    | duration band fill, 4–5 min                              | —                       | —                    | `#E66310`            |
+| `--color-path-fill-5`    | duration band fill, 5–6 min                              | —                       | —                    | `#F48D0A`            |
+| `--color-path-fill-6`    | duration band fill, 6–7 min                              | —                       | —                    | `#F8BC4C`            |
+| `--color-path-fill-7`    | duration band fill, ≥ 7 min                              | —                       | —                    | `#F9E99A`            |
 | `--color-path-limit`     | outer limit of totality, the only strong line            | —                       | —                    | `#FFC46B`            |
 | `--color-isoline`        | inner isolines, drawn faint                              | —                       | —                    | `#FFF3DC`            |
 | `--color-travel`         | airports, flight links, distance bars                    | `#0B6E86`               | `#63C7DB`            | `#8BE4F2`            |
@@ -243,7 +244,7 @@ Sections in this exact order: will I see it → will the sky be clear → can I 
 | `--color-status-ok`      | API OK dot                                               | `#2E8540`               | `#8FD4A0`            | `#9BE0AE`            |
 | `--color-label-halo`     | halo behind map labels                                   | `#FFFFFF`               | `#0C0C0D`            | `#2E3850`            |
 
-**Duration ramp:** colour by absolute minutes (not % of max); longest = lightest; only the outer limit line is strong. The ramp is set for Fiord only so far (— = not yet chosen).
+**Duration ramp:** colour by absolute minutes (not % of max); longest = lightest; only the outer limit line is strong. Colour shows where it's longer; exact durations come from the whole-minute isoline labels and the spot panel. The ramp is set for Fiord only so far (— = not yet chosen).
 
 On the light theme (Positron) the accent is darker, to keep 4.5:1 text contrast on white; its path colours are not chosen yet.
 
@@ -251,7 +252,7 @@ On the light theme (Positron) the accent is darker, to keep 4.5:1 text contrast 
 
 | Token                     | Current value                         |
 | ------------------------- | ------------------------------------- |
-| `--path-fill-opacity`     | `0.85` per band (bands don't overlap) |
+| `--path-fill-opacity`     | `0.95` per band (bands don't overlap) |
 | `--isoline-opacity`       | `0.35`                                |
 | `--isoline-width`         | `0.75px`                              |
 | `--path-limit-width`      | `1.25px`                              |

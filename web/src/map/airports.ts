@@ -5,7 +5,7 @@ import type {
   LayerSpecification,
   StyleImageMetadata,
 } from "maplibre-gl";
-import { airportsUrl, type Bbox } from "../api/airports.js";
+import type { Airports } from "../api/airports.js";
 // Maki's airport icon (CC0), https://github.com/mapbox/maki
 import airportIconUrl from "../assets/airport.svg";
 import { MAP_FONT, theme, toNumber } from "../theme.js";
@@ -14,9 +14,6 @@ export const AIRPORTS_SOURCE_ID = "airports";
 // Not "airport": the base map's sprite already has an image by that name, and MapLibre keeps
 // the sprite's and ignores ours
 export const AIRPORT_ICON_ID = "maki-airport";
-
-// How far beyond the eclipse's path to look for airports, each way
-const MARGIN_DEGREES = 3;
 
 // Maki icons are drawn on a 15 px grid
 const ICON_SIZE = 15;
@@ -57,19 +54,11 @@ export const AIRPORTS_LAYERS: LayerSpecification[] = [
   },
 ];
 
-// The airports around the eclipse's path, served by the API. The bbox is rounded outwards to
-// whole degrees, which keeps float noise out of the URL. It stops at the poles, and across 180°
-// it carries on past it like the path's.
-export function airportsSource([west, south, east, north]: Bbox): GeoJSONSourceSpecification & {
-  data: string;
+// The airports around the eclipse's path, as fetched from the API
+export function airportsSource(airports: Airports): GeoJSONSourceSpecification & {
+  data: Airports;
 } {
-  const bbox: Bbox = [
-    Math.floor(west - MARGIN_DEGREES),
-    Math.max(-90, Math.floor(south - MARGIN_DEGREES)),
-    Math.ceil(east + MARGIN_DEGREES),
-    Math.min(90, Math.ceil(north + MARGIN_DEGREES)),
-  ];
-  return { type: "geojson", data: airportsUrl(bbox) };
+  return { type: "geojson", data: airports };
 }
 
 // The plane as an image MapLibre can take, once the browser has drawn the SVG

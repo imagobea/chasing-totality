@@ -11,14 +11,15 @@
   --color-text-faint: #aab4c8;
   --color-accent: #ffb547;
   --color-on-accent: #1e2433;
-  /* duration ramp: <1, 1–2, 2–3, 3–4, 4–5, 5–6, ≥6 min. Longest = lightest. */
-  --color-path-fill-0: #6b3a4e;
-  --color-path-fill-1: #8a3f3f;
-  --color-path-fill-2: #ad4e34;
-  --color-path-fill-3: #ce6a2c;
-  --color-path-fill-4: #e88b2e;
-  --color-path-fill-5: #f5ae4f;
-  --color-path-fill-6: #ffd98a;
+  /* duration ramp: <1, 1–2, 2–3, 3–4, 4–5, 5–6, 6–7, ≥7 min. Longest = lightest. */
+  --color-path-fill-0: #4b245b;
+  --color-path-fill-1: #7e2260;
+  --color-path-fill-2: #ad244d;
+  --color-path-fill-3: #d13c29;
+  --color-path-fill-4: #e66310;
+  --color-path-fill-5: #f48d0a;
+  --color-path-fill-6: #f8bc4c;
+  --color-path-fill-7: #f9e99a;
   --color-path-limit: #ffc46b; /* outer limit of totality only */
   --color-isoline: #fff3dc; /* inner isolines, drawn faint */
   --color-travel: #8be4f2;
@@ -27,7 +28,7 @@
   --color-status-ok: #9be0ae;
   --color-label-halo: #2e3850;
 
-  --path-fill-opacity: 0.85;
+  --path-fill-opacity: 0.95;
   --isoline-opacity: 0.35;
   --isoline-width: 0.75px;
   --path-limit-width: 1.25px;

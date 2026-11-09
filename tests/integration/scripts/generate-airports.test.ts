@@ -131,7 +131,7 @@ describe("generate-airports", () => {
       type: "FeatureCollection",
       source: {
         name: "OurAirports",
-        url: "https://ourairports.com/data/",
+        url: "https://github.com/davidmegginson/ourairports-data",
         licence: "Public domain",
       },
       retrieved: RETRIEVED,

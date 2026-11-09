@@ -31,7 +31,7 @@ const OURAIRPORTS_CSV_URL = "https://davidmegginson.github.io/ourairports-data/a
 const OUTPUT = new URL("../data/airports.geojson", import.meta.url);
 const SOURCE = {
   name: "OurAirports",
-  url: "https://ourairports.com/data/",
+  url: "https://github.com/davidmegginson/ourairports-data",
   licence: "Public domain",
 };
 const SIZES: Record<string, Airport["size"]> = { large_airport: "large", medium_airport: "medium" };
