@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import { fetchAirports, type Airports } from "./api/airports.js";
 import { fetchEclipseDates, fetchIsolines, type Isolines } from "./api/eclipses.js";
 import { AppHeader } from "./components/AppHeader.js";
+import { LayersPanel } from "./components/LayersPanel.js";
 import { StatusBar } from "./components/StatusBar.js";
 import { EclipseMap } from "./map/EclipseMap.js";
 import { firstUpcomingEclipse, type Coordinates } from "./utils.js";
@@ -75,12 +76,15 @@ export function App() {
   return (
     <div className="app">
       <AppHeader dates={dates} date={date} onDateChange={setDate} />
-      <EclipseMap
-        isolines={isolines}
-        airports={airports}
-        onCursorMove={setCursor}
-        attributionRef={attributionRef}
-      />
+      <main className="map-stage">
+        <EclipseMap
+          isolines={isolines}
+          airports={airports}
+          onCursorMove={setCursor}
+          attributionRef={attributionRef}
+        />
+        <LayersPanel />
+      </main>
       <StatusBar cursor={cursor} attributionRef={attributionRef} />
     </div>
   );

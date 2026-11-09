@@ -213,6 +213,12 @@ describe("App", () => {
     expect(mapAirports()).toBe("");
   });
 
+  it("shows the layers panel over the map", () => {
+    mockApi(async () => ok([]));
+    render(<App />);
+    expect(screen.getByRole("complementary", { name: "Layers" })).toBeTruthy();
+  });
+
   it("leaves the picker and countdown empty when the dates can't be fetched", async () => {
     mockApi(async () => ({ ok: false, json: async () => ({}) }));
     render(<App />);

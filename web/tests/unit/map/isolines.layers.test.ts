@@ -1,7 +1,6 @@
 import { readFileSync } from "node:fs";
-import { createExpression, featureFilter } from "@maplibre/maplibre-gl-style-spec";
+import { featureFilter } from "@maplibre/maplibre-gl-style-spec";
 import type {
-  FillLayerSpecification,
   LayerSpecification,
   LineLayerSpecification,
   SymbolLayerSpecification,
@@ -14,7 +13,7 @@ import {
   ISOLINES_LAYERS,
   isolinesSource,
 } from "../../../src/map/isolines.js";
-import { theme } from "../../../src/theme.js";
+import { fillToken } from "../../helpers/fillToken.js";
 import { isolines } from "../../helpers/isolines.js";
 
 // Every layer, in the order they're drawn
@@ -27,21 +26,6 @@ function layer<T extends LayerSpecification = LayerSpecification>(id: string): T
 
 // The committed isolines for 2027, as the API serves them
 const ISOLINES_2027 = new URL("../../../../data/isolines/2027-08-02.geojson", import.meta.url);
-
-// The colour token the bands' fill gives a duration, so tests name classes, not colours
-function fillToken(durationSeconds: number): string | undefined {
-  const fill = layer<FillLayerSpecification>("isolines-fill")?.paint?.["fill-color"];
-  const expression = createExpression(fill, "fill-color");
-  if (expression.result !== "success") throw new Error("The fill colour doesn't parse");
-  const color: unknown = expression.value.evaluate(
-    { zoom: 0 },
-    { type: "MultiPolygon", properties: { durationSeconds } },
-  );
-  return Object.keys(theme).find(
-    (token) =>
-      token.startsWith("--color-path-fill-") && theme[token as keyof typeof theme] === color,
-  );
-}
 
 // The isolines a layer draws, by name, out of a 30 s limit and isolines at 60 s and 90 s
 function drawn(id: string): string[] {
