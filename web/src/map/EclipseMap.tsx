@@ -9,7 +9,7 @@ import {
 } from "maplibre-gl";
 import "maplibre-gl/dist/maplibre-gl.css";
 import workerUrl from "maplibre-gl/dist/maplibre-gl-worker.mjs?worker&url";
-import { fetchIsolines } from "../api/eclipses.js";
+import type { Isolines } from "../api/eclipses.js";
 import type { Coordinates } from "../utils.js";
 import {
   AIRPORT_ICON_ID,
@@ -29,7 +29,8 @@ import {
 } from "./isolines.js";
 
 type EclipseMapProps = {
-  date: string | null;
+  // The selected eclipse's isolines, null until they arrive
+  isolines: Isolines | null;
   // Called with the mouse position as it moves, and null when it leaves the map
   onCursorMove: (cursor: Coordinates | null) => void;
   // Where to put the attribution, outside the map
@@ -67,7 +68,7 @@ function firstSymbolId(map: MapLibreMap): string | undefined {
   return map.getStyle().layers.find((layer) => layer.type === "symbol")?.id;
 }
 
-export function EclipseMap({ date, onCursorMove, attributionRef }: EclipseMapProps) {
+export function EclipseMap({ isolines, onCursorMove, attributionRef }: EclipseMapProps) {
   // Set once the style has loaded and our images are in, since sources and layers can only be
   // added after that
   const [map, setMap] = useState<MapLibreMap | null>(null);
@@ -120,43 +121,32 @@ export function EclipseMap({ date, onCursorMove, attributionRef }: EclipseMapPro
     // A ref object stays the same across renders, so the map is still created once
   }, [attributionRef]);
 
-  // The selected eclipse's isolines and the airports around them, with the map fitted to its
-  // whole path; the user is then free to pan and zoom
+  // The eclipse's isolines and the airports around them, with the map fitted to its whole path;
+  // the user is then free to pan and zoom
   useEffect(() => {
-    if (!map || date === null) return;
+    if (!map || isolines === null) return;
 
-    // Ignore the isolines if another date is picked or the map goes away before they arrive
-    let active = true;
-    fetchIsolines(date)
-      .then((isolines) => {
-        if (!active) return;
-        // Outlines go under the base map's labels; our labels go on top
-        showSource(map, ISOLINES_SOURCE_ID, isolinesSource(isolines), ISOLINES_LAYERS, (layer) =>
-          layer.type === "symbol" ? undefined : firstSymbolId(map),
-        );
-        // Fills go under the outlines. Cutting the bands can throw on odd geometry, and the
-        // isolines are still worth showing without them.
-        try {
-          showSource(
-            map,
-            DURATION_BANDS_SOURCE_ID,
-            durationBandsSource(isolines),
-            DURATION_BANDS_LAYERS,
-            () => ISOLINES_LAYERS[0]?.id,
-          );
-        } catch (error) {
-          console.warn(`Duration bands for ${date} not shown`, error);
-        }
-        // Last, so on top of everything, the base map's labels included
-        showSource(map, AIRPORTS_SOURCE_ID, airportsSource(isolines.bbox), AIRPORTS_LAYERS);
-        map.fitBounds(isolines.bbox);
-      })
-      // The map keeps whatever it was showing
-      .catch((error) => console.warn(`Eclipse ${date} not shown`, error));
-    return () => {
-      active = false;
-    };
-  }, [map, date]);
+    // Outlines go under the base map's labels; our labels go on top
+    showSource(map, ISOLINES_SOURCE_ID, isolinesSource(isolines), ISOLINES_LAYERS, (layer) =>
+      layer.type === "symbol" ? undefined : firstSymbolId(map),
+    );
+    // Fills go under the outlines. Cutting the bands can throw on odd geometry, and the isolines
+    // are still worth showing without them.
+    try {
+      showSource(
+        map,
+        DURATION_BANDS_SOURCE_ID,
+        durationBandsSource(isolines),
+        DURATION_BANDS_LAYERS,
+        () => ISOLINES_LAYERS[0]?.id,
+      );
+    } catch (error) {
+      console.warn("Duration bands not shown", error);
+    }
+    // Last, so on top of everything, the base map's labels included
+    showSource(map, AIRPORTS_SOURCE_ID, airportsSource(isolines.bbox), AIRPORTS_LAYERS);
+    map.fitBounds(isolines.bbox);
+  }, [map, isolines]);
 
   return (
     <div
