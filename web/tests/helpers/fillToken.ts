@@ -2,6 +2,7 @@
 
 import { createExpression } from "@maplibre/maplibre-gl-style-spec";
 import type { FillLayerSpecification } from "maplibre-gl";
+import { DURATION_CLASSES } from "../../src/durationClasses.js";
 import { DURATION_BANDS_LAYERS } from "../../src/map/isolines.js";
 import { theme } from "../../src/theme.js";
 
@@ -15,8 +16,5 @@ export function fillToken(durationSeconds: number): string | undefined {
     { zoom: 0 },
     { type: "MultiPolygon", properties: { durationSeconds } },
   );
-  return Object.keys(theme).find(
-    (token) =>
-      token.startsWith("--color-path-fill-") && theme[token as keyof typeof theme] === color,
-  );
+  return DURATION_CLASSES.find(({ colorToken }) => theme[colorToken] === color)?.colorToken;
 }
