@@ -15,22 +15,20 @@ const DURATION_SOURCE = {
   url: "https://eclipse.gsfc.nasa.gov/SEpubs/5MCSE.html",
 };
 
-// A class's whole minutes, as "< 1 min", "1 – 2 min" … "≥ 7 min"
-function durationLabel(index: number): string {
-  const start = DURATION_CLASSES[index]!.startSeconds / CLASS_SECONDS;
-  const next = DURATION_CLASSES[index + 1];
-  if (next === undefined) return `≥ ${start} min`;
+// One row per duration class, longest first, labelled "≥ 7 min", "6 – 7 min" … "< 1 min"
+const DURATION_ROWS = DURATION_CLASSES.map(({ startSeconds, colorToken }, index, classes) => {
+  const start = startSeconds / CLASS_SECONDS;
+  const next = classes[index + 1];
+  if (next === undefined) return { label: `≥ ${start} min`, colorToken };
   const end = next.startSeconds / CLASS_SECONDS;
-  return start === 0 ? `< ${end} min` : `${start} – ${end} min`;
-}
+  return { label: start === 0 ? `< ${end} min` : `${start} – ${end} min`, colorToken };
+}).reverse();
+
+// Rows per column, for two columns; the left one takes the odd row out
+const DURATION_COLUMN_ROWS = Math.ceil(DURATION_ROWS.length / 2);
 
 // The key to the map's layers, over its bottom-left corner
 export function LayersPanel({ airports }: LayersPanelProps) {
-  const durationRows = DURATION_CLASSES.map(({ colorToken }, index) => ({
-    label: durationLabel(index),
-    colorToken,
-  })).reverse();
-
   return (
     <aside className="layers-panel" aria-label="Layers">
       <p className="kicker">Layers</p>
@@ -46,9 +44,9 @@ export function LayersPanel({ airports }: LayersPanelProps) {
         {/* Two columns, filled top to bottom, so longest first still reads down the left */}
         <ul
           className="layer-key duration-key"
-          style={{ "--rows": Math.ceil(durationRows.length / 2) } as CSSProperties}
+          style={{ "--rows": DURATION_COLUMN_ROWS } as CSSProperties}
         >
-          {durationRows.map(({ label, colorToken }) => (
+          {DURATION_ROWS.map(({ label, colorToken }) => (
             <li key={colorToken}>
               <span
                 className="swatch"
