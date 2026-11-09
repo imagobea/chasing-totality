@@ -54,7 +54,7 @@ export const AIRPORTS_LAYERS: LayerSpecification[] = [
   },
 ];
 
-// The airports as a MapLibre source
+// The airports around the eclipse's path, as fetched from the API
 export function airportsSource(airports: Airports): GeoJSONSourceSpecification & {
   data: Airports;
 } {
