@@ -133,7 +133,7 @@ describe("EclipseMap", () => {
   });
 
   it("adds nothing without isolines or airports", async () => {
-    render(<EclipseMap {...mapProps(null, null)} />);
+    render(<EclipseMap {...mapProps(null)} />);
     await loadStyle();
     expect(map.addSource).not.toHaveBeenCalled();
     expect(map.addLayer).not.toHaveBeenCalled();
