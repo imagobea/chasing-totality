@@ -4,7 +4,7 @@ import { theme } from "./theme.js";
 
 type PathFillToken = Extract<keyof typeof theme, `--color-path-fill-${number}`>;
 
-export type DurationClass = {
+type DurationClass = {
   // The class runs from here up to the next class's start; the last one is open-ended
   startSeconds: number;
   colorToken: PathFillToken;
