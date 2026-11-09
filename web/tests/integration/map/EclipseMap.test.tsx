@@ -9,6 +9,7 @@ import {
   AIRPORT_ICON_OPTIONS,
   AIRPORTS_LAYERS,
   AIRPORTS_SOURCE_ID,
+  airportsSource,
   loadAirportIcon,
 } from "../../../src/map/airports.js";
 import { EclipseMap } from "../../../src/map/EclipseMap.js";
@@ -156,10 +157,7 @@ describe("EclipseMap", () => {
     expect(warn).toHaveBeenCalledWith(expect.any(String), error);
     expect(map.addImage).not.toHaveBeenCalled();
     expect(map.addSource).toHaveBeenCalledWith(ISOLINES_SOURCE_ID, isolinesSource(ISOLINES_2027));
-    expect(map.addSource).toHaveBeenCalledWith(AIRPORTS_SOURCE_ID, {
-      type: "geojson",
-      data: AIRPORTS_2027,
-    });
+    expect(map.addSource).toHaveBeenCalledWith(AIRPORTS_SOURCE_ID, airportsSource(AIRPORTS_2027));
   });
 
   it("reports the wrapped cursor position, and null when it leaves the map", () => {
@@ -237,10 +235,7 @@ describe("EclipseMap", () => {
     await loadStyle();
     // The id the airports layer draws, not the base map's own "airport"
     expect(map.addImage).toHaveBeenCalledWith(AIRPORT_ICON_ID, icon, AIRPORT_ICON_OPTIONS);
-    expect(map.addSource).toHaveBeenCalledWith(AIRPORTS_SOURCE_ID, {
-      type: "geojson",
-      data: AIRPORTS_2027,
-    });
+    expect(map.addSource).toHaveBeenCalledWith(AIRPORTS_SOURCE_ID, airportsSource(AIRPORTS_2027));
     // Last and with no beforeId, so they go above the isolines and the base map's labels
     const added = map.addLayer.mock.calls.slice(-AIRPORTS_LAYERS.length);
     expect(added).toEqual(AIRPORTS_LAYERS.map((layer) => [layer, undefined]));
