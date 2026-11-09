@@ -58,7 +58,7 @@ describe("LayersPanel", () => {
   it("credits the airports' source and the day they were retrieved", () => {
     render(<LayersPanel airports={airports("AGP")} />);
     const link = airportsGroup().getByRole("link", { name: "OurAirports" });
-    expect(link.getAttribute("href")).toBe("https://ourairports.com/data/");
+    expect(link.getAttribute("href")).toBe("https://github.com/davidmegginson/ourairports-data");
     expect(airportsGroup().getByRole("paragraph").textContent).toBe("OurAirports, 25 OCT 2026");
   });
 

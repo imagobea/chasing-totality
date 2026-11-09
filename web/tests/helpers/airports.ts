@@ -6,7 +6,11 @@ import type { Airports } from "../../src/api/airports.js";
 export function airports(...iataCodes: string[]): Airports {
   return {
     type: "FeatureCollection",
-    source: { name: "OurAirports", url: "https://ourairports.com/data/", licence: "Public domain" },
+    source: {
+      name: "OurAirports",
+      url: "https://github.com/davidmegginson/ourairports-data",
+      licence: "Public domain",
+    },
     retrieved: "2026-10-25",
     features: iataCodes.map((iata) => ({
       type: "Feature",
