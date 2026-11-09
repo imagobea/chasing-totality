@@ -30,6 +30,7 @@ const map = vi.hoisted(() => ({
   addLayer: vi.fn(),
   addImage: vi.fn(),
   getSource: vi.fn(),
+  getLayer: vi.fn(),
   // The base map's style, down to its first label layer
   getStyle: vi.fn(() => ({ layers: [{ id: "place", type: "symbol" }] })),
   fitBounds: vi.fn(),
@@ -121,6 +122,7 @@ describe("EclipseMap", () => {
     vi.clearAllMocks();
     vi.restoreAllMocks();
     map.getSource.mockReset();
+    map.getLayer.mockReset();
   });
 
   it("adds nothing until the style has loaded", () => {
@@ -272,6 +274,20 @@ describe("EclipseMap", () => {
     rerender(<EclipseMap {...props} airports={AIRPORTS_2027} />);
     const added = map.addLayer.mock.calls.slice(-AIRPORTS_LAYERS.length);
     expect(added).toEqual(AIRPORTS_LAYERS.map((layer) => [layer, undefined]));
+  });
+
+  it("adds the isolines' labels under the airports when the airports arrive first", async () => {
+    const props = mapProps(null, AIRPORTS_2027);
+    const { rerender } = render(<EclipseMap {...props} />);
+    await loadStyle();
+    map.getLayer.mockImplementation((id: string) =>
+      AIRPORTS_LAYERS.find((layer) => layer.id === id),
+    );
+    rerender(<EclipseMap {...props} isolines={ISOLINES_2027} />);
+    const labels = ISOLINES_LAYERS.filter((layer) => layer.type === "symbol");
+    expect(map.addLayer.mock.calls.filter(([layer]) => labels.includes(layer))).toEqual(
+      labels.map((layer) => [layer, AIRPORTS_LAYERS[0]!.id]),
+    );
   });
 
   it("clears the airports when there are none, and adds them back when they return", async () => {

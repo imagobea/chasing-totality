@@ -70,6 +70,12 @@ function showSource(
   for (const layer of layers) map.addLayer(layer, beforeId(layer));
 }
 
+// The airports' first layer, once it's on the map, so our other labels can go under it
+function airportsLayerId(map: MapLibreMap): string | undefined {
+  const id = AIRPORTS_LAYERS[0]?.id;
+  return id && map.getLayer(id) ? id : undefined;
+}
+
 // The base map's first label layer
 function firstSymbolId(map: MapLibreMap): string | undefined {
   return map.getStyle().layers.find((layer) => layer.type === "symbol")?.id;
@@ -133,9 +139,9 @@ export function EclipseMap({ isolines, airports, onCursorMove, attributionRef }:
   useEffect(() => {
     if (!map || isolines === null) return;
 
-    // Outlines go under the base map's labels; our labels go on top
+    // Outlines go under the base map's labels; our labels go on top, but under the airports
     showSource(map, ISOLINES_SOURCE_ID, isolinesSource(isolines), ISOLINES_LAYERS, (layer) =>
-      layer.type === "symbol" ? undefined : firstSymbolId(map),
+      layer.type === "symbol" ? airportsLayerId(map) : firstSymbolId(map),
     );
     // Fills go under the outlines. Cutting the bands can throw on odd geometry, and the isolines
     // are still worth showing without them.
@@ -153,8 +159,7 @@ export function EclipseMap({ isolines, airports, onCursorMove, attributionRef }:
     map.fitBounds(isolines.bbox);
   }, [map, isolines]);
 
-  // The airports, cleared when there are none. App fetches them after the isolines, so they go
-  // last, on top of everything, the base map's labels included.
+  // The airports, on top of everything, the base map's labels included; cleared when there are none
   useEffect(() => {
     if (!map) return;
 
