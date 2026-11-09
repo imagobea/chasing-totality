@@ -146,6 +146,26 @@ body {
   margin: 0 0 var(--space-2);
 }
 
+/* Dividers between the groups */
+.layer-group + .layer-group {
+  margin-top: var(--space-3);
+  padding-top: var(--space-3);
+  border-top: var(--border-width) solid var(--color-divider);
+}
+
+/* The layer's name and source, with its symbol on the right */
+.layer-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-4);
+}
+
+/* Its source is the group's last line, so it needs no space below */
+.layer-heading .layer-source {
+  margin-bottom: 0;
+}
+
 .layer-name {
   margin: 0;
   font-size: var(--text-sm);
@@ -153,7 +173,7 @@ body {
 }
 
 .layer-source {
-  margin: 0 0 var(--space-2);
+  margin: 0 0 var(--space-3);
   color: var(--color-text-muted);
 }
 
@@ -169,6 +189,14 @@ body {
   list-style: none;
 }
 
+/* Filled down each column first; the row count comes from the markup */
+.duration-key {
+  grid-template-rows: repeat(var(--rows), auto);
+  grid-auto-flow: column;
+  column-gap: var(--space-5);
+  margin-bottom: var(--space-3);
+}
+
 .layer-key li {
   display: flex;
   align-items: center;
@@ -181,6 +209,14 @@ body {
   height: var(--space-2);
   background: var(--swatch);
   opacity: var(--path-fill-opacity);
+}
+
+/* The map's plane, in the airports' colour */
+.airport-icon {
+  width: var(--space-4);
+  height: var(--space-4);
+  background: var(--color-travel);
+  mask: url("../assets/airport.svg") center / contain no-repeat;
 }
 
 .limit-line {

@@ -81,6 +81,12 @@ function mapAirports() {
   return within(screen.getByRole("region", { name: "Map" })).getByLabelText("Airports").textContent;
 }
 
+// The airports' source line in the layers panel
+function airportsSourceLine() {
+  const group = within(screen.getByRole("region", { name: "Airports" }));
+  return group.getByRole("paragraph").textContent;
+}
+
 function picker() {
   return screen.getByRole<HTMLSelectElement>("combobox", { name: /eclipse/i });
 }
@@ -184,6 +190,13 @@ describe("App", () => {
     await waitFor(() => expect(mapAirports()).toBe("SYD"));
   });
 
+  it("credits the airports' source in the layers panel once they arrive", async () => {
+    mockApi(async () => ok(["2027-08-02"]));
+    render(<App />);
+    expect(airportsSourceLine()).toBe("—");
+    await waitFor(() => expect(airportsSourceLine()).toBe("OurAirports, 25 Oct 2026"));
+  });
+
   it("ignores airports that arrive after another eclipse's isolines", async () => {
     let answer2027: (answer: unknown) => void = () => {};
     mockApi(async () => ok(["2027-08-02", "2028-07-22"]), {
@@ -211,6 +224,7 @@ describe("App", () => {
     fireEvent.change(picker(), { target: { value: "2028-07-22" } });
     await waitFor(() => expect(warn).toHaveBeenCalledWith(expect.any(String), expect.any(Error)));
     expect(mapAirports()).toBe("");
+    expect(airportsSourceLine()).toBe("—");
   });
 
   it("shows the layers panel over the map", () => {

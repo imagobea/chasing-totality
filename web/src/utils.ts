@@ -16,6 +16,14 @@ export function formatEclipseDate(date: string): string {
   return `${year} · ${MONTHS[Number(month) - 1]} ${day}`;
 }
 
+// "2026-11-06" → "06 Nov 2026", for when data was retrieved, read from the string like the
+// eclipse dates
+export function formatRetrievedDate(date: string): string {
+  const [year, month, day] = date.split("-");
+  const name = MONTHS[Number(month) - 1] ?? "";
+  return `${day} ${name.charAt(0)}${name.slice(1).toLowerCase()} ${year}`;
+}
+
 // Whole days from now's local calendar day to the eclipse date, 0 once it's here or past.
 // Both days are taken as UTC midnights, so time zones and DST can't add or lose a day.
 export function daysUntil(date: string, now = new Date()): number {

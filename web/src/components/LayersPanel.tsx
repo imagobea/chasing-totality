@@ -1,5 +1,13 @@
 import type { CSSProperties } from "react";
+import type { Airports } from "../api/airports.js";
 import { CLASS_SECONDS, DURATION_CLASSES } from "../durationClasses.js";
+import { formatRetrievedDate } from "../utils.js";
+
+type LayersPanelProps = {
+  // The airports on the map, whose source and date the panel credits; null until they arrive or
+  // when they can't be fetched
+  airports: Airports | null;
+};
 
 // Every eclipse's elements come from Espenak & Meeus's canon
 const DURATION_SOURCE = {
@@ -17,7 +25,7 @@ function durationLabel(index: number): string {
 }
 
 // The key to the map's layers, over its bottom-left corner
-export function LayersPanel() {
+export function LayersPanel({ airports }: LayersPanelProps) {
   const durationRows = DURATION_CLASSES.map(({ colorToken }, index) => ({
     label: durationLabel(index),
     colorToken,
@@ -35,7 +43,11 @@ export function LayersPanel() {
             {DURATION_SOURCE.name}
           </a>
         </p>
-        <ul className="layer-key">
+        {/* Two columns, filled top to bottom, so longest first still reads down the left */}
+        <ul
+          className="layer-key duration-key"
+          style={{ "--rows": Math.ceil(durationRows.length / 2) } as CSSProperties}
+        >
           {durationRows.map(({ label, colorToken }) => (
             <li key={colorToken}>
               <span
@@ -46,11 +58,36 @@ export function LayersPanel() {
               {label}
             </li>
           ))}
+        </ul>
+        <ul className="layer-key">
           <li>
             <span className="limit-line" aria-hidden="true" />
             Totality limit
           </li>
         </ul>
+      </section>
+      <section className="layer-group" aria-labelledby="layer-airports">
+        {/* Name and source to the left, the map's symbol centred beside them */}
+        <div className="layer-heading">
+          <div>
+            <h2 id="layer-airports" className="layer-name">
+              Airports
+            </h2>
+            <p className="layer-source">
+              {airports ? (
+                <>
+                  <a href={airports.source.url} target="_blank" rel="noreferrer">
+                    {airports.source.name}
+                  </a>
+                  , {formatRetrievedDate(airports.retrieved)}
+                </>
+              ) : (
+                "—"
+              )}
+            </p>
+          </div>
+          <span className="airport-icon" aria-hidden="true" />
+        </div>
       </section>
     </aside>
   );

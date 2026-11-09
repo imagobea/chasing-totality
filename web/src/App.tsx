@@ -83,7 +83,7 @@ export function App() {
           onCursorMove={setCursor}
           attributionRef={attributionRef}
         />
-        <LayersPanel />
+        <LayersPanel airports={airports} />
       </main>
       <StatusBar cursor={cursor} attributionRef={attributionRef} />
     </div>
