@@ -1,4 +1,5 @@
 import { buildApp } from "./app.js";
+import { DataError } from "./dataHelpers.js";
 
 const port = Number(process.env.PORT) || 3000;
 // 0.0.0.0 so the server is reachable from outside a container
@@ -15,10 +16,10 @@ for (const signal of ["SIGTERM", "SIGINT"] as const) {
   });
 }
 
-// Start the server, or log the error and exit if it fails
+// Start the server, or exit: a broken data file in one line naming it, anything else in full
 try {
   await app.listen({ port, host });
 } catch (error) {
-  app.log.error(error);
+  app.log.error(error instanceof DataError ? error.message : error);
   process.exit(1);
 }

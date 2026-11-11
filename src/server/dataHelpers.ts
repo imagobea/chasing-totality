@@ -9,7 +9,7 @@ const EXTENSION = ".geojson";
 const DATE = /^\d{4}-\d{2}-\d{2}$/;
 
 // define DataError class to handle errors related to data loading
-class DataError extends Error {
+export class DataError extends Error {
   constructor(
     readonly file: string,
     readonly reason: string,
