@@ -1,14 +1,6 @@
 // Route for the airports snapshot written by scripts/generate-airports.ts
 
-import { readFile } from "node:fs/promises";
 import type { FastifyPluginAsync } from "fastify";
-
-type AirportsOptions = { airportsFile: string };
-
-// Only what filtering needs; the rest of the snapshot is passed through as is
-type AirportsSnapshot = {
-  features: { geometry: { coordinates: [longitude: number, latitude: number] } }[];
-};
 
 type Bbox = { west: number; south: number; east: number; north: number };
 
@@ -43,14 +35,14 @@ function contains({ west, south, east, north }: Bbox, [lon, lat]: [number, numbe
   return inLongitude && lat >= south && lat <= north;
 }
 
-export const airports: FastifyPluginAsync<AirportsOptions> = async (app, { airportsFile }) => {
+export const airports: FastifyPluginAsync = async (app) => {
   // Airports with their source and retrieval date, optionally only those inside a bbox
   app.get<{ Querystring: { bbox?: string } }>(
     "/airports",
     { schema: { querystring: BBOX_QUERY } },
     async (request, reply) => {
       const bbox = request.query.bbox === undefined ? undefined : parseBbox(request.query.bbox);
-      const snapshot: AirportsSnapshot = JSON.parse(await readFile(airportsFile, "utf8"));
+      const snapshot = app.data.airports;
       const features = bbox
         ? snapshot.features.filter((feature) => contains(bbox, feature.geometry.coordinates))
         : snapshot.features;

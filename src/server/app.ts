@@ -28,14 +28,14 @@ export function buildApp({
 
   app.setErrorHandler(errorHandler);
 
-  // Liveness only: there is no database or other dependency to check
+  // Answers only once the data has loaded, so it also means ready
   app.get("/health", async () => ({ status: "ok" }));
 
   // Load the application data once, before the server listens, and share it with the routes
-  app.register(dataPlugin, { dataDir });
+  app.register(dataPlugin, { dataDir, airportsFile });
 
   app.register(eclipses);
-  app.register(airports, { airportsFile });
+  app.register(airports);
 
   return app;
 }
