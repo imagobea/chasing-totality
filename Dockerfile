@@ -33,12 +33,7 @@ FROM base AS runtime
 ENV NODE_ENV=production
 RUN pnpm install --frozen-lockfile --prod --filter .
 COPY --from=build --chown=node:node /app/dist ./dist
-# The pre-generated isolines the API serves
 COPY --chown=node:node data ./data
-
-# Node's fetch instead of curl, which the slim image doesn't have
-HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
-  CMD ["node", "-e", "fetch('http://127.0.0.1:' + (process.env.PORT ?? 3000) + '/health').then((r) => process.exit(r.ok ? 0 : 1), () => process.exit(1))"]
 
 EXPOSE 3000
 CMD ["node", "dist/server/main.js"]
