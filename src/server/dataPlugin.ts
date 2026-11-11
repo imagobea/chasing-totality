@@ -24,7 +24,9 @@ declare module "fastify" {
 
 // fp shares app.data with sibling plugins (the routes) instead of keeping it in this scope
 export const dataPlugin = fp<DataPluginOptions>(async (app, { dataDir, airportsFile }) => {
-  const isolines = await loadIsolines(dataDir);
-  const airports = await loadAirports(airportsFile);
+  const [isolines, airports] = await Promise.all([
+    loadIsolines(dataDir),
+    loadAirports(airportsFile),
+  ]);
   app.decorate("data", { isolines, airports });
 });
