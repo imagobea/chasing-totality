@@ -36,7 +36,7 @@ describe("GET /eclipses/:date/isolines", () => {
     const res = await app.inject({ method: "GET", url: "/eclipses/2027-08-02/isolines" });
 
     expect(res.statusCode).toBe(200);
-    expect(res.headers["content-type"]).toBe("application/geo+json");
+    expect(res.headers["content-type"]).toBe("application/geo+json; charset=utf-8");
     expect(res.rawPayload.equals(file)).toBe(true);
   });
 

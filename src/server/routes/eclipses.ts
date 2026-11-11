@@ -25,7 +25,7 @@ export const eclipses: FastifyPluginAsync = async (app) => {
         // Fastify's default handler writes the error body
         throw Object.assign(new Error(`No isolines for ${date}`), { statusCode: 404 });
       }
-      return reply.type("application/geo+json").send(isolines);
+      return reply.type("application/geo+json; charset=utf-8").send(isolines);
     },
   );
 };
