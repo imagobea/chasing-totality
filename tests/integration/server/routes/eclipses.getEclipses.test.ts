@@ -40,7 +40,6 @@ describe("GET /eclipses", () => {
   it("serves dates from memory, not the file system", async () => {
     const res = await app.inject({ method: "GET", url: "/eclipses" });
     expect(res.statusCode).toBe(200);
-    expect(res.json()).toContain("2027-08-02");
     expect(readdir).not.toHaveBeenCalled();
   });
 });

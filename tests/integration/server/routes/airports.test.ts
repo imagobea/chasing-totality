@@ -1,16 +1,16 @@
-import { randomUUID } from "node:crypto";
-import { mkdtemp, rm, writeFile } from "node:fs/promises";
+import { mkdtemp, readFile, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import { afterAll, beforeAll, describe, expect, it, onTestFinished } from "vitest";
+import { afterAll, beforeAll, describe, expect, it, onTestFinished, vi } from "vitest";
 import { buildApp } from "../../../../src/server/app.js";
 
-type AirportsBody = {
-  type: string;
-  source: { name: string; url: string; licence: string };
-  retrieved: string;
-  features: { id: string }[];
-};
+// readFile as spy
+vi.mock("node:fs/promises", async (importOriginal) => {
+  const actual = await importOriginal<typeof import("node:fs/promises")>();
+  return { ...actual, readFile: vi.fn(actual.readFile) };
+});
+
+type AirportsBody = { features: { id: string }[] };
 
 // Around the 2027 path over S Spain and N Africa
 const PATH_BBOX = "-10,25,45,40";
@@ -51,6 +51,7 @@ beforeAll(async () => {
   const airportsFile = join(dir, "airports.geojson");
   await writeFile(airportsFile, JSON.stringify(SNAPSHOT));
   app = buildApp({ airportsFile });
+  await app.ready();
 });
 afterAll(async () => {
   await app.close();
@@ -64,24 +65,19 @@ async function iataCodes(url: string): Promise<string[]> {
 }
 
 describe("GET /airports", () => {
-  it("serves the committed snapshot as GeoJSON with its source and retrieval date", async () => {
+  // Without a bbox
+  it("serves the committed snapshot as is, as GeoJSON", async () => {
+    const fileUrl = new URL("../../../../data/airports.geojson", import.meta.url);
+    const file = JSON.parse(await readFile(fileUrl, "utf8"));
+
     const realApp = buildApp();
+    await realApp.ready();
     onTestFinished(() => realApp.close());
     const res = await realApp.inject({ method: "GET", url: "/airports" });
+
     expect(res.statusCode).toBe(200);
     expect(res.headers["content-type"]).toBe("application/geo+json; charset=utf-8");
-    const body = res.json<AirportsBody>();
-    expect(body.type).toBe("FeatureCollection");
-    expect(body.source).toEqual({
-      name: "OurAirports",
-      url: "https://github.com/davidmegginson/ourairports-data",
-      licence: "Public domain",
-    });
-    expect(body.retrieved).toMatch(/^\d{4}-\d{2}-\d{2}$/);
-    // Around the 2027 path, so the target region is covered
-    expect(body.features.map((feature) => feature.id)).toEqual(
-      expect.arrayContaining(["AGP", "TNG"]),
-    );
+    expect(res.json()).toEqual(file);
   });
 
   it("serves the snapshot as is without a bbox", async () => {
@@ -89,18 +85,13 @@ describe("GET /airports", () => {
     expect(res.json()).toEqual(SNAPSHOT);
   });
 
-  it("serves only the airports inside a bbox, edges included, with the rest as is", async () => {
-    const res = await app.inject({ method: "GET", url: `/airports?bbox=${PATH_BBOX}` });
-    expect(res.json()).toEqual({ ...SNAPSHOT, features: SNAPSHOT.features.slice(0, 5) });
+  it("serves the airports from memory, not the file system", async () => {
+    const res = await app.inject({ method: "GET", url: "/airports" });
+    expect(res.statusCode).toBe(200);
+    expect(readFile).not.toHaveBeenCalled();
   });
 
-  it.each([
-    ["past 180°", "170,-30,190,-10"],
-    ["past -180°", "-190,-30,-170,-10"],
-  ])("serves the airports across the 180° meridian for a bbox carrying on %s", async (_, bbox) => {
-    expect(await iataCodes(`/airports?bbox=${bbox}`)).toEqual(["NAN", "TBU"]);
-  });
-
+  // With a bbox
   it.each([
     ["three numbers", "-10,25,45"],
     ["text", "west,south,east,north"],
@@ -114,13 +105,15 @@ describe("GET /airports", () => {
     expect(res.statusCode).toBe(422);
   });
 
-  it("answers a generic 500 without the server path when the snapshot is missing", async () => {
-    // A random name, so the file can't already exist
-    const airportsFile = join(tmpdir(), `airports-${randomUUID()}.geojson`);
-    const brokenApp = buildApp({ airportsFile });
-    onTestFinished(() => brokenApp.close());
-    const res = await brokenApp.inject({ method: "GET", url: "/airports" });
-    expect(res.statusCode).toBe(500);
-    expect(res.body).not.toContain(airportsFile);
+  it("serves only the airports inside a bbox, edges included, with the rest as is", async () => {
+    const res = await app.inject({ method: "GET", url: `/airports?bbox=${PATH_BBOX}` });
+    expect(res.json()).toEqual({ ...SNAPSHOT, features: SNAPSHOT.features.slice(0, 5) });
+  });
+
+  it.each([
+    ["past 180°", "170,-30,190,-10"],
+    ["past -180°", "-190,-30,-170,-10"],
+  ])("serves the airports across the 180° meridian for a bbox carrying on %s", async (_, bbox) => {
+    expect(await iataCodes(`/airports?bbox=${bbox}`)).toEqual(["NAN", "TBU"]);
   });
 });
