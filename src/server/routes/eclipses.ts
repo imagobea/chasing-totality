@@ -1,8 +1,8 @@
-// Routes for the eclipses we have data for, one <date>.geojson each in dataDir
+// Routes for the eclipses we have data for, answered from the isolines loaded at boot
 
 import type { FastifyPluginAsync } from "fastify";
 
-// A real calendar date as YYYY-MM-DD, which also keeps the file lookup inside dataDir
+// A real calendar date as YYYY-MM-DD
 const DATE_PARAMS = {
   type: "object",
   properties: { date: { type: "string", format: "date" } },
