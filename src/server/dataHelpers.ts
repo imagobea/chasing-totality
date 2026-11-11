@@ -75,7 +75,7 @@ function checkIsolines(json: unknown, file: string): void {
     throw new DataError(file, `invalid bbox: ${JSON.stringify(bbox)}`);
   }
 
-  // The features must be an array of objects
+  // There must be at least one feature
   if (!Array.isArray(features) || features.length === 0) {
     throw new DataError(file, "no features");
   }
