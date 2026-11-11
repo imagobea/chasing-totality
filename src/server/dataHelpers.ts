@@ -1,5 +1,5 @@
 import { readdir, readFile } from "node:fs/promises";
-import { basename, join } from "node:path";
+import { join } from "node:path";
 
 // The airports snapshot, as far as the server reads it; properties are passed through as is
 export type AirportsSnapshot = {
@@ -14,9 +14,8 @@ export type AirportsSnapshot = {
   }[];
 };
 
-// A data file named after its eclipse, e.g. 2027-08-02.geojson
-const DATA_FILE = /^\d{4}-\d{2}-\d{2}\.geojson$/;
-const EXTENSION = ".geojson";
+// A data file named after its eclipse, e.g. 2027-08-02.geojson, capturing the date
+const DATA_FILE = /^(\d{4}-\d{2}-\d{2})\.geojson$/;
 // The airports snapshot's retrieval date
 const DATE = /^\d{4}-\d{2}-\d{2}$/;
 
@@ -142,7 +141,8 @@ export async function loadIsolines(dataDir: string): Promise<Map<string, Buffer>
   // Each file must be named after its eclipse, e.g. 2027-08-02.geojson,
   // and contain valid isolines. We assume dates are real calendar dates.
   for (const file of files) {
-    if (!DATA_FILE.test(file)) {
+    const date = DATA_FILE.exec(file)?.[1];
+    if (!date) {
       throw new DataError(dataDir, `invalid file name ${file}`);
     }
 
@@ -150,7 +150,7 @@ export async function loadIsolines(dataDir: string): Promise<Map<string, Buffer>
     checkIsolines(fileContents.json, file);
 
     // Keyed by date, which is what the routes are asked for
-    isolinesMap.set(basename(file, EXTENSION), fileContents.bytes);
+    isolinesMap.set(date, fileContents.bytes);
   }
 
   return isolinesMap;
