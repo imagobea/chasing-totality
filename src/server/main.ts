@@ -15,4 +15,10 @@ for (const signal of ["SIGTERM", "SIGINT"] as const) {
   });
 }
 
-await app.listen({ port, host });
+// Start the server, or log the error and exit if it fails
+try {
+  await app.listen({ port, host });
+} catch (error) {
+  app.log.error(error);
+  process.exit(1);
+}

@@ -3,6 +3,7 @@ import Fastify, { type FastifyServerOptions } from "fastify";
 import { errorHandler } from "./errorHandler.js";
 import { airports } from "./routes/airports.js";
 import { eclipses } from "./routes/eclipses.js";
+import { dataPlugin } from "./dataPlugin.js";
 
 type AppOptions = {
   // Off when not given, so tests stay silent
@@ -30,7 +31,10 @@ export function buildApp({
   // Liveness only: there is no database or other dependency to check
   app.get("/health", async () => ({ status: "ok" }));
 
-  app.register(eclipses, { dataDir });
+  // Load the application data once, before the server listens, and share it with the routes
+  app.register(dataPlugin, { dataDir });
+
+  app.register(eclipses);
   app.register(airports, { airportsFile });
 
   return app;
