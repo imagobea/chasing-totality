@@ -1,6 +1,18 @@
 import { readdir, readFile } from "node:fs/promises";
 import { basename, join } from "node:path";
-import type { AirportsSnapshot } from "./dataPlugin.js";
+
+// The airports snapshot, as far as the server reads it; properties are passed through as is
+export type AirportsSnapshot = {
+  type: "FeatureCollection";
+  source: { name: string; url: string; licence: string };
+  // YYYY-MM-DD
+  retrieved: string;
+  features: {
+    type: "Feature";
+    geometry: { type: "Point"; coordinates: [longitude: number, latitude: number] };
+    properties: Record<string, unknown>;
+  }[];
+};
 
 // A data file named after its eclipse, e.g. 2027-08-02.geojson
 const DATA_FILE = /^\d{4}-\d{2}-\d{2}\.geojson$/;
