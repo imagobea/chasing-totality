@@ -147,8 +147,10 @@ export async function loadIsolines(dataDir: string): Promise<Map<string, Buffer>
       throw new DataError(dataDir, `invalid file name ${file}`);
     }
 
-    const fileContents = await readJson(join(dataDir, file));
-    checkIsolines(fileContents.json, file);
+    // The full path, so every error names the file the same way
+    const path = join(dataDir, file);
+    const fileContents = await readJson(path);
+    checkIsolines(fileContents.json, path);
 
     // Keyed by date, which is what the routes are asked for
     isolinesMap.set(date, fileContents.bytes);

@@ -25,7 +25,7 @@ const FEATURE = ISOLINES.features[0];
 async function expectRejected(isolines: unknown, reason: string | RegExp) {
   const dataDir = await tempDir({ "2027-08-02.geojson": JSON.stringify(isolines) });
   await expect(loadIsolines(dataDir)).rejects.toMatchObject({
-    file: "2027-08-02.geojson",
+    file: join(dataDir, "2027-08-02.geojson"),
     reason: typeof reason === "string" ? reason : expect.stringMatching(reason),
   });
 }
