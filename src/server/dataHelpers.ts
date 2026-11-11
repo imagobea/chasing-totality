@@ -125,7 +125,7 @@ export async function loadIsolines(dataDir: string): Promise<Map<string, Buffer>
   // There must be at least one file, or the server won't start.
   // We assume no stray files in the dataDir, so a missing file is a broken build.
   if (files.length === 0) {
-    throw new DataError(dataDir, "no <date>.geojson files found");
+    throw new DataError(dataDir, "empty folder");
   }
 
   // Each file must be named after its eclipse, e.g. 2027-08-02.geojson,
