@@ -132,7 +132,8 @@ function checkAirports(json: unknown, file: string): asserts json is AirportsSna
 export async function loadIsolines(dataDir: string): Promise<Map<string, Buffer>> {
   const isolinesMap = new Map<string, Buffer>();
 
-  const files = await listDir(dataDir);
+  // Sorted, so the eclipses are kept in date order whatever order the folder lists them in
+  const files = (await listDir(dataDir)).sort();
   // There must be at least one eclipse, or the server won't start
   if (files.length === 0) {
     throw new DataError(dataDir, "empty folder");

@@ -117,7 +117,7 @@ describe("loadIsolines", () => {
       "2028-07-22.geojson": bytes2028,
     });
     const isolines = await loadIsolines(dataDir);
-    expect([...isolines.keys()].sort()).toEqual(["2027-08-02", "2028-07-22"]);
+    expect([...isolines.keys()]).toEqual(["2027-08-02", "2028-07-22"]);
     expect(isolines.get("2027-08-02")?.toString()).toBe(bytes2027);
     expect(isolines.get("2028-07-22")?.toString()).toBe(bytes2028);
   });
