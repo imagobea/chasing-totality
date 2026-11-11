@@ -20,7 +20,7 @@ const EXTENSION = ".geojson";
 // The airports snapshot's retrieval date
 const DATE = /^\d{4}-\d{2}-\d{2}$/;
 
-// define DataError class to handle errors related to data loading
+// A broken or missing data file, named, with what is wrong with it
 export class DataError extends Error {
   constructor(
     readonly file: string,
@@ -134,8 +134,7 @@ export async function loadIsolines(dataDir: string): Promise<Map<string, Buffer>
   const isolinesMap = new Map<string, Buffer>();
 
   const files = await listDir(dataDir);
-  // There must be at least one file, or the server won't start.
-  // We assume no stray files in the dataDir, so a missing file is a broken build.
+  // There must be at least one eclipse, or the server won't start
   if (files.length === 0) {
     throw new DataError(dataDir, "empty folder");
   }
