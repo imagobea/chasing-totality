@@ -30,8 +30,8 @@ describe("GET /eclipses", () => {
     ] as never);
 
     const shuffledApp = buildApp();
-    await shuffledApp.ready();
     onTestFinished(() => shuffledApp.close());
+    await shuffledApp.ready();
 
     const res = await shuffledApp.inject({ method: "GET", url: "/eclipses" });
     expect(res.json()).toEqual(["2026-08-12", "2027-08-02", "2028-07-22"]);

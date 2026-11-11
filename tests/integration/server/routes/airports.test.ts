@@ -71,8 +71,8 @@ describe("GET /airports", () => {
     const file = JSON.parse(await readFile(fileUrl, "utf8"));
 
     const realApp = buildApp();
-    await realApp.ready();
     onTestFinished(() => realApp.close());
+    await realApp.ready();
     const res = await realApp.inject({ method: "GET", url: "/airports" });
 
     expect(res.statusCode).toBe(200);
