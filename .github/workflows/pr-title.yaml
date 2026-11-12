@@ -21,5 +21,8 @@ jobs:
             fix
             chore
             docs
-            test
             refactor
+            test
+            perf
+            style
+            improvement
