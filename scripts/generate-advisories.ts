@@ -158,6 +158,13 @@ const KNOWN_NOT_DRAWN = ["gibraltar"];
 
 const wait = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 
+// On stderr, so a slow run doesn't look stuck and stdout keeps only the summary
+function warnRetry(url: string, reason: string, attempt: number) {
+  console.warn(
+    `${url} ${reason}, retrying in ${RETRY_DELAY_MS / 1000} s (${attempt + 1} of ${RETRIES})`,
+  );
+}
+
 // GETs JSON one request at a time, retrying a few times; fails on anything but a 200. Redirects
 // count as failures too: a moved page is worth a look before it's trusted.
 async function fetchJson<T>(url: string): Promise<T> {
@@ -170,7 +177,10 @@ async function fetchJson<T>(url: string): Promise<T> {
       response = await fetch(url, { headers: { "User-Agent": USER_AGENT }, redirect: "manual" });
     } catch (error) {
       // A network error is worth retrying, like a busy server
-      if (attempt < RETRIES) continue;
+      if (attempt < RETRIES) {
+        warnRetry(url, `failed (${error})`, attempt);
+        continue;
+      }
       throw new Error(`${url} failed: ${error}`, { cause: error });
     }
 
@@ -178,6 +188,7 @@ async function fetchJson<T>(url: string): Promise<T> {
     if (!RETRYABLE.includes(response.status) || attempt >= RETRIES) {
       throw new Error(`${url} answered ${response.status} ${response.statusText}`);
     }
+    warnRetry(url, `answered ${response.status}`, attempt);
   }
 }
 
@@ -189,6 +200,10 @@ async function fetchPages(): Promise<FcdoPage[]> {
   if (!paths.length) throw new Error("The FCDO index lists no pages");
   if (new Set(paths).size !== paths.length) throw new Error("The FCDO index lists a page twice");
 
+  // Progress on stderr: in a terminal, one line that counts up; elsewhere, one line, not hundreds
+  const live = process.stderr.isTTY;
+  if (!live) console.error(`Fetching ${paths.length} FCDO pages…`);
+
   // One after the other, never in parallel, to stay polite
   const pages: FcdoPage[] = [];
   for (const path of paths) {
@@ -197,7 +212,13 @@ async function fetchPages(): Promise<FcdoPage[]> {
       throw new Error(`${path} is withdrawn`);
     }
     pages.push(page);
+
+    // \x1b[K clears what a longer slug left behind
+    const slug = path.split("/").at(-1);
+    if (live) process.stderr.write(`\rPages ${pages.length}/${paths.length} (${slug})\x1b[K`);
   }
+
+  if (live) process.stderr.write("\r\x1b[K");
   return pages;
 }
 
@@ -407,8 +428,14 @@ function toAdvisoriesGeoJson(matches: Match[], retrieved: string): AdvisoriesSna
   return { type: "FeatureCollection", sources: SOURCES, retrieved, features };
 }
 
-// Pages scanned and matched by how, counts per state, and shapes with no page, for review
-function runSummary(pages: FcdoPage[], shapes: NaturalEarthShape[], matches: Match[]): string {
+// Pages scanned and how long the downloads took, matched by how, counts per state, and shapes
+// with no page, for review
+function runSummary(
+  pages: FcdoPage[],
+  shapes: NaturalEarthShape[],
+  matches: Match[],
+  seconds: number,
+): string {
   // "a 2, b 1", in order of first appearance
   const count = <T>(items: T[], key: (item: T) => string) => {
     const counts = new Map<string, number>();
@@ -420,7 +447,7 @@ function runSummary(pages: FcdoPage[], shapes: NaturalEarthShape[], matches: Mat
   const noPage = shapes.filter((shape) => !matched.has(shape)).map((s) => s.properties.NAME);
 
   return [
-    `Pages: ${pages.length} scanned, ${KNOWN_NOT_DRAWN.length} known not drawn (${KNOWN_NOT_DRAWN.join(", ")})`,
+    `Pages: ${pages.length} scanned in ${seconds.toFixed(1)} s, ${KNOWN_NOT_DRAWN.length} known not drawn (${KNOWN_NOT_DRAWN.join(", ")})`,
     `States per page: ${count(pages, (page) => stateOf(page.details.alert_status))}`,
     `Shapes per match: ${count(matches, (match) => match.how ?? "direct")}`,
     `Shapes with no page (${noPage.length}): ${noPage.sort().join(", ")}`,
@@ -430,10 +457,12 @@ function runSummary(pages: FcdoPage[], shapes: NaturalEarthShape[], matches: Mat
 async function main() {
   // Step 1: fetch every FCDO page in the index, dated in UTC whatever the local time zone
   const retrieved = new Date().toISOString().slice(0, 10);
+  const started = performance.now();
   const pages = await fetchPages();
 
-  // Step 2: download Natural Earth's shapes
+  // Step 2: download Natural Earth's shapes; the downloads are the wait, so they're timed
   const shapes = await fetchShapes();
+  const seconds = (performance.now() - started) / 1000;
 
   // Step 3: match each page to its shapes
   const matches = matchShapes(pages, shapes);
@@ -443,7 +472,7 @@ async function main() {
 
   // Step 5: write the snapshot over the committed one, then report the run for review
   writeFileSync(OUTPUT, `${JSON.stringify(snapshot)}\n`);
-  console.log(`${runSummary(pages, shapes, matches)}\nWrote ${OUTPUT.pathname}`);
+  console.log(`${runSummary(pages, shapes, matches, seconds)}\nWrote ${OUTPUT.pathname}`);
 }
 
 await main();

@@ -233,6 +233,8 @@ beforeEach(() => {
   vi.useFakeTimers({ toFake: ["Date", "setTimeout"] });
   vi.setSystemTime(RETRIEVED);
   vi.spyOn(console, "log").mockImplementation(() => {});
+  vi.spyOn(console, "warn").mockImplementation(() => {});
+  vi.spyOn(console, "error").mockImplementation(() => {});
 });
 
 afterEach(() => {
@@ -344,9 +346,14 @@ describe("generate-advisories", () => {
   });
 
   // Fetching
-  it("retries a failed request, then carries on", async () => {
+  it("retries a failed request with a warning, then carries on", async () => {
     const retried = await generate(world(), { [`${INDEX_URL}/spain`]: [0, 503, 429] });
     expect(byName(retried.features, "Spain")).toBeDefined();
+    expect(vi.mocked(console.warn).mock.calls.map(([message]) => message)).toEqual([
+      expect.stringMatching(/\/spain failed \(.+\), retrying in 2 s \(1 of 3\)$/),
+      expect.stringMatching(/\/spain answered 503, retrying in 2 s \(2 of 3\)$/),
+      expect.stringMatching(/\/spain answered 429, retrying in 2 s \(3 of 3\)$/),
+    ]);
   });
 
   it("requests one page at a time, at most 5 a second, with a generic client name and no redirects", async () => {
@@ -498,13 +505,13 @@ describe("generate-advisories", () => {
   });
 
   // Run summary
-  it("reports matches by how, counts per state and shapes with no page", async () => {
+  it("reports download time, matches by how, counts per state and shapes with no page", async () => {
     const data = world();
     data.shapes.push(shape("England"));
     await generate(data);
     const [summary] = vi.mocked(console.log).mock.lastCall ?? [];
     expect(String(summary).split("\n")).toEqual([
-      "Pages: 22 scanned, 1 known not drawn (gibraltar)",
+      expect.stringMatching(/^Pages: 22 scanned in \d+\.\d s, 1 known not drawn \(gibraltar\)$/),
       "States per page: none 22",
       "Shapes per match: alias 13, direct 10, coverage_alias 9",
       "Shapes with no page (2): Christmas I., England",
