@@ -12,6 +12,12 @@ vi.mock("node:fs", () => ({ writeFileSync: vi.fn() }));
 
 type World = { pages: Page[]; shapes: Shape[] };
 
+// The parts of fetch the script uses, with init so the tests can read the request options
+type Fetch = (
+  url: string,
+  init?: RequestInit,
+) => Promise<Pick<Response, "status" | "statusText" | "json">>;
+
 type Feature = {
   id: number;
   properties: {
@@ -155,7 +161,7 @@ function stubFetch({ pages, shapes }: World, statuses: Record<string, number[]> 
     statusText: status === 200 ? "OK" : "Error",
     json: async () => body,
   });
-  const fetch = vi.fn(async (url: string) => {
+  const fetch = vi.fn<Fetch>(async (url) => {
     const status = statuses[url]?.shift();
     if (status === 0) throw new TypeError("fetch failed");
     if (status && status !== 200) return answer(status);
@@ -366,7 +372,7 @@ describe("generate-advisories", () => {
 
     const gaps = times.slice(1).map((time, i) => time - times[i]);
     expect(Math.min(...gaps)).toBeGreaterThanOrEqual(200);
-    for (const [, init] of fetch.mock.calls as unknown as [string, RequestInit][]) {
+    for (const [, init] of fetch.mock.calls) {
       expect(init).toEqual({
         headers: { "User-Agent": "advisories-snapshot" },
         redirect: "manual",
