@@ -12,7 +12,7 @@ import { writeFileSync } from "node:fs";
 // publishing-api repo (content_schemas/dist/formats/travel_advice)
 type FcdoCountry = { name: string; slug: string; synonyms: string[] };
 
-type FcdoPage = {
+export type FcdoPage = {
   base_path: string;
   public_updated_at: string;
   withdrawn_notice?: Record<string, unknown>;
@@ -27,13 +27,14 @@ type FcdoPage = {
 
 type FcdoIndex = { links: { children: { base_path: string }[] } };
 
-type Position = [longitude: number, latitude: number];
+export type Position = [longitude: number, latitude: number];
 
 type Geometry =
   | { type: "Polygon"; coordinates: Position[][] }
   | { type: "MultiPolygon"; coordinates: Position[][][] };
 
-type NaturalEarthShape = {
+export type NaturalEarthShape = {
+  type: "Feature";
   properties: {
     NE_ID: number;
     NAME: string;

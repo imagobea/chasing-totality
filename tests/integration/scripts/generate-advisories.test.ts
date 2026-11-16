@@ -1,35 +1,14 @@
 import { writeFileSync } from "node:fs";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import type {
+  FcdoPage as Page,
+  NaturalEarthShape as Shape,
+  Position,
+} from "../../../scripts/generate-advisories.js";
 
 // The script writes its snapshot with writeFileSync; the mock keeps it off disk for the tests to
 // read
 vi.mock("node:fs", () => ({ writeFileSync: vi.fn() }));
-
-type Page = {
-  base_path: string;
-  public_updated_at: string;
-  withdrawn_notice?: Record<string, unknown>;
-  details: {
-    country: { name: string; slug: string; synonyms: string[] };
-    alert_status: string[];
-    reviewed_at: string;
-    change_description: string;
-    parts: { title: string; body: string }[];
-  };
-};
-
-type Shape = {
-  type: "Feature";
-  properties: {
-    NE_ID: number;
-    NAME: string;
-    NAME_LONG: string;
-    ADMIN: string;
-    ADM0_A3: string;
-    NOTE_BRK: string | null;
-  };
-  geometry: { type: "Polygon" | "MultiPolygon"; coordinates: unknown };
-};
 
 type World = { pages: Page[]; shapes: Shape[] };
 
@@ -130,7 +109,7 @@ function page(
 function shape(
   name: string,
   overrides: Partial<Shape["properties"]> = {},
-  coordinates?: unknown,
+  coordinates?: Position[][],
 ): Shape {
   const id = nextId++;
   return {
