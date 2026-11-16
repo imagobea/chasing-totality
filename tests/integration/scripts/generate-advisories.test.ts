@@ -273,6 +273,13 @@ describe("generate-advisories", () => {
       /avoid_some_travel/,
     ],
     [
+      "a page known not to be drawn has an unknown alert status",
+      withPage("gibraltar", () =>
+        page("gibraltar", "Gibraltar", { alertStatus: ["avoid_some_travel"] }),
+      ),
+      /avoid_some_travel/,
+    ],
+    [
       "Natural Earth has no shapes",
       worldWith((w) => {
         w.shapes = [];

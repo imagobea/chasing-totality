@@ -192,7 +192,7 @@ async function fetchJson<T>(url: string): Promise<T> {
 }
 
 // The index's page paths, then each page, in index order. Fails if the index is empty or lists a
-// page twice, or if a page is withdrawn.
+// page twice, or if a page is withdrawn or has an unknown status.
 async function fetchPages(): Promise<FcdoPage[]> {
   const index = await fetchJson<FcdoIndex>(`${CONTENT_API}${INDEX_PATH}`);
   const paths = index.links.children.map((child) => child.base_path);
@@ -210,6 +210,8 @@ async function fetchPages(): Promise<FcdoPage[]> {
     if (page.withdrawn_notice && Object.keys(page.withdrawn_notice).length) {
       throw new Error(`${path} is withdrawn`);
     }
+    // Checked here, not when drawn: a page with no shape would only be read after the write
+    stateOf(page.details.alert_status);
     pages.push(page);
 
     // \x1b[K clears what a longer slug left behind
