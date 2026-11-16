@@ -129,7 +129,7 @@ const STATES: Record<string, Exclude<State, "none">> = {
 // Matching exceptions, keyed by FCDO slug, with shapes by Natural Earth NAME. See the plan's
 // table: each one is checked on every run, and a stale one stops it.
 const ALIASES: Record<string, string[]> = {
-  myanmar: ["Myanmar"],
+  "myanmar": ["Myanmar"],
   "pitcairn-island": ["Pitcairn Is."],
   "st-helena-ascension-and-tristan-da-cunha": ["Saint Helena"],
   "antarctica-british-antarctic-territory": ["Antarctica"],
@@ -143,17 +143,17 @@ const ALIASES: Record<string, string[]> = {
 };
 // Extra shapes a page covers, each with the text the page must still contain
 const COVERAGE_ALIASES: Record<string, { shape: string; mentions: string }[]> = {
-  somalia: [{ shape: "Somaliland", mentions: "Somaliland" }],
-  cyprus: [{ shape: "N. Cyprus", mentions: "north of Cyprus" }],
-  denmark: [{ shape: "Faeroe Is.", mentions: "Faroe Islands" }],
-  usa: [
+  "somalia": [{ shape: "Somaliland", mentions: "Somaliland" }],
+  "cyprus": [{ shape: "N. Cyprus", mentions: "north of Cyprus" }],
+  "denmark": [{ shape: "Faeroe Is.", mentions: "Faroe Islands" }],
+  "usa": [
     { shape: "U.S. Virgin Is.", mentions: "US Virgin Islands" },
     { shape: "N. Mariana Is.", mentions: "Northern Mariana Islands" },
   ],
-  tanzania: [{ shape: "Zanzibar", mentions: "Zanzibar" }],
-  italy: [{ shape: "Vatican", mentions: "Vatican" }],
+  "tanzania": [{ shape: "Zanzibar", mentions: "Zanzibar" }],
+  "italy": [{ shape: "Vatican", mentions: "Vatican" }],
   "papua-new-guinea": [{ shape: "Bougainville", mentions: "Bougainville" }],
-  norway: [{ shape: "Svalbard Is.", mentions: "Svalbard" }],
+  "norway": [{ shape: "Svalbard Is.", mentions: "Svalbard" }],
 };
 // Synonym matches to ignore: Kiribati's Christmas Island is Kiritimati, not Australia's island
 const BLOCKED: Record<string, string[]> = { kiribati: ["Christmas I."] };
