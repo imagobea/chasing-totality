@@ -112,6 +112,9 @@ const RETRIES = 3;
 const RETRY_DELAY_MS = 2000;
 const RETRYABLE = [429, 500, 502, 503, 504]; // any other status fails at once
 
+// Back to the start of the terminal line and clear it, for progress that overwrites itself
+const CLEAR_LINE = "\r\x1b[K";
+
 // 3 decimals is ~110 m, far finer than Natural Earth's 1:50m borders
 const COORDINATE_DECIMALS = 3;
 
@@ -161,6 +164,8 @@ const wait = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 
 // On stderr, so a slow run doesn't look stuck and stdout keeps only the summary
 function warnRetry(url: string, reason: string, attempt: number) {
+  // On its own line, not after the progress line, which has no newline
+  if (process.stderr.isTTY) process.stderr.write(CLEAR_LINE);
   console.warn(
     `${url} ${reason}, retrying in ${RETRY_DELAY_MS / 1000} s (${attempt + 1} of ${RETRIES})`,
   );
@@ -205,21 +210,24 @@ async function fetchPages(): Promise<FcdoPage[]> {
 
   // One after the other, never in parallel, to stay polite
   const pages: FcdoPage[] = [];
-  for (const path of paths) {
-    const page = await fetchJson<FcdoPage>(`${CONTENT_API}${path}`);
-    if (page.withdrawn_notice && Object.keys(page.withdrawn_notice).length) {
-      throw new Error(`${path} is withdrawn`);
+  try {
+    for (const path of paths) {
+      const page = await fetchJson<FcdoPage>(`${CONTENT_API}${path}`);
+      if (page.withdrawn_notice && Object.keys(page.withdrawn_notice).length) {
+        throw new Error(`${path} is withdrawn`);
+      }
+      // Checked here, not when drawn: a page with no shape would only be read after the write
+      stateOf(page.details.alert_status);
+      pages.push(page);
+
+      const slug = path.split("/").at(-1);
+      if (live)
+        process.stderr.write(`${CLEAR_LINE}Pages ${pages.length}/${paths.length} (${slug})`);
     }
-    // Checked here, not when drawn: a page with no shape would only be read after the write
-    stateOf(page.details.alert_status);
-    pages.push(page);
-
-    // \x1b[K clears what a longer slug left behind
-    const slug = path.split("/").at(-1);
-    if (live) process.stderr.write(`\rPages ${pages.length}/${paths.length} (${slug})\x1b[K`);
+  } finally {
+    // Cleared on failure too, so the error starts on a clean line
+    if (live) process.stderr.write(CLEAR_LINE);
   }
-
-  if (live) process.stderr.write("\r\x1b[K");
   return pages;
 }
 
