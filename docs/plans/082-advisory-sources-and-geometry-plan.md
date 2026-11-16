@@ -149,6 +149,10 @@ Our own fields sit next to two groups that keep the source's field names. `match
 
 - Places on the 2027 path (Spain, Morocco, Western Sahara, Algeria, Tunisia, Libya, Egypt, Saudi Arabia, Yemen, Somalia incl. Somaliland) get the expected states.
 
+## Deviations and findings
+
+- 17 Natural Earth shapes have no UK page, so they're blank on the map: the UK and Crown Dependencies (no advice for home), remote territories (Christmas I., Cocos Is., Norfolk Island, Ashmore and Cartier Is., Heard I. and McDonald Is., Fr. S. Antarctic Lands, Jan Mayen I.) and parts Natural Earth splits off (Åland, Vojvodina, Siachen Glacier). Left as is; a coverage alias can claim one if it becomes a problem.
+
 ## Optional tooling
 
 No MCP needed.
