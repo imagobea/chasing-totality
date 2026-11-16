@@ -24,45 +24,50 @@ Part of #32, builds on #33 (airports). Travel advisories need an official, regul
 - **Master list:** the UK index decides which places have a status. Natural Earth only supplies shapes.
 - **States:** whole, parts or none. "Avoid all" and "all but essential" count as one level. If a place has both, whole wins.
 - **Snapshot:** every matched shape, "none" included, so SpotPanel can name any place and link to its UK page. Shapes with no UK page are left out. Each place has its state, how it was matched, the UK page's own fields (status, last major update, last review, latest change note) with a link to the page, and the shape's Natural Earth name and code. The file records both sources, their licences and the retrieval date. See the format below.
-- **Matching:** UK name and synonyms against Natural Earth names, with the exceptions in the table below. Fixed in the script; any mismatch stops the run.
+- **Matching:** UK name and synonyms against Natural Earth names, ignoring case, accents and punctuation, with the exceptions in the table below. A country Natural Earth splits into parts (Belgium, Bosnia and Herzegovina, Antigua and Barbuda, Palestine) matches all of them. Fixed in the script; any mismatch stops the run.
 - **All or none:** any failure means no snapshot. The script stops on:
-  - a response other than 200
+  - a response other than 200, redirects included
   - a withdrawn page
   - an unknown status
   - an unmatched UK entry
-  - a stale alias
+  - a stale alias, or one that repeats a name or synonym match
   - a shape claimed twice
   - fetched pages not equal to the index count
   - a shape that collapses when rounded
     Review this if it becomes a problem.
 - **Run summary:** pages scanned and matched (direct, synonym, alias, coverage alias, not drawn), counts per state, and shapes with no UK page listed for review.
 - **Polite fetching:** one request at a time, under the API's 10 per second limit, with a few retries and a generic client name.
-- **Attribution:** OGL v3 credit text, a licence link, and nothing that implies endorsement.
+- **Attribution:** OGL v3 credit text, a license link, and nothing that implies endorsement.
 
 ### Matching exceptions
 
-| UK entry                                  | Natural Earth                                               | Why                              | Handling        |
-| ----------------------------------------- | ----------------------------------------------------------- | -------------------------------- | --------------- |
-| Myanmar (Burma)                           | Myanmar                                                     | Name differs                     | Alias           |
-| Pitcairn Island                           | Pitcairn Islands                                            | Name differs                     | Alias           |
-| St Helena, Ascension and Tristan da Cunha | Saint Helena                                                | Name differs                     | Alias           |
-| Antarctica/British Antarctic Territory    | Antarctica                                                  | Name differs                     | Alias           |
-| Bonaire/St Eustatius/Saba                 | Caribbean Netherlands                                       | Name differs                     | Alias           |
-| St Pierre & Miquelon                      | Saint Pierre and Miquelon                                   | Name differs                     | Alias           |
-| Cook Islands, Tokelau and Niue            | Cook Islands, Tokelau, Niue                                 | One page, several shapes         | Alias           |
-| St Martin and St Barthélemy               | Saint Martin, Saint Barthelemy                              | One page, several shapes         | Alias           |
-| Somalia                                   | Somalia, Somaliland                                         | Page covers a separate shape     | Coverage alias  |
-| Cyprus                                    | Cyprus, Northern Cyprus                                     | Page covers a separate shape     | Coverage alias  |
-| Denmark                                   | Denmark, Faeroe Islands                                     | Page covers a separate shape     | Coverage alias  |
-| USA                                       | USA, United States Virgin Islands, Northern Mariana Islands | Page covers separate shapes      | Coverage alias  |
-| Tanzania                                  | Tanzania, Zanzibar                                          | Page covers a separate shape     | Coverage alias  |
-| Italy                                     | Italy, Vatican                                              | Page covers a separate shape     | Coverage alias  |
-| Kiribati                                  | Not Christmas Island                                        | Synonym names Australia's island | Blocked         |
-| Gibraltar                                 | —                                                           | Too small for 1:50m              | Known not drawn |
+| UK entry                                     | Natural Earth                                               | Why                              | Handling        |
+| -------------------------------------------- | ----------------------------------------------------------- | -------------------------------- | --------------- |
+| Myanmar (Burma)                              | Myanmar                                                     | Name differs                     | Alias           |
+| Pitcairn Island                              | Pitcairn Islands                                            | Name differs                     | Alias           |
+| St Helena, Ascension and Tristan da Cunha    | Saint Helena                                                | Name differs                     | Alias           |
+| Antarctica/British Antarctic Territory       | Antarctica                                                  | Name differs                     | Alias           |
+| Bonaire/St Eustatius/Saba                    | Caribbean Netherlands                                       | Name differs                     | Alias           |
+| St Pierre & Miquelon                         | Saint Pierre and Miquelon                                   | Name differs                     | Alias           |
+| Cook Islands, Tokelau and Niue               | Cook Islands, Tokelau, Niue                                 | One page, several shapes         | Alias           |
+| St Lucia                                     | Saint Lucia                                                 | Name differs                     | Alias           |
+| St Vincent and the Grenadines                | Saint Vincent and the Grenadines                            | Name differs                     | Alias           |
+| Cape Verde                                   | Cabo Verde                                                  | Name differs                     | Alias           |
+| South Georgia and the South Sandwich Islands | South Georgia and the Islands                               | Name differs                     | Alias           |
+| Somalia                                      | Somalia, Somaliland                                         | Page covers a separate shape     | Coverage alias  |
+| Cyprus                                       | Cyprus, Northern Cyprus                                     | Page covers a separate shape     | Coverage alias  |
+| Denmark                                      | Denmark, Faeroe Islands                                     | Page covers a separate shape     | Coverage alias  |
+| USA                                          | USA, United States Virgin Islands, Northern Mariana Islands | Page covers separate shapes      | Coverage alias  |
+| Tanzania                                     | Tanzania, Zanzibar                                          | Page covers a separate shape     | Coverage alias  |
+| Italy                                        | Italy, Vatican                                              | Page covers a separate shape     | Coverage alias  |
+| Papua New Guinea                             | Papua New Guinea, Bougainville                              | Page covers a separate shape     | Coverage alias  |
+| Norway                                       | Norway, Svalbard                                            | Page covers a separate shape     | Coverage alias  |
+| Kiribati                                     | Not Christmas Island                                        | Synonym names Australia's island | Blocked         |
+| Gibraltar                                    | —                                                           | Too small for 1:50m              | Known not drawn |
 
 A coverage alias gives the extra shape its page's status. Each one is read by hand before it's added, and the run stops if the page no longer mentions the place.
 
-Some UK synonyms name a separate shape, so the page claims it without an exception: Puerto Rico, Guam and American Samoa (USA), Greenland (Denmark), Madeira and Azores (Portugal). Synonyms that are just another name for the page's own shape (United States, Czech Republic, Sint Maarten) count as direct matches.
+Some UK synonyms name a separate shape, so the page claims it without an exception: Puerto Rico, Guam and American Samoa (USA), Greenland (Denmark), Madeira and Azores (Portugal), St Martin (St Martin and St Barthélemy). Synonyms that are just another name for the page's own shape (United States, Czech Republic, Sint Maarten, St Barthelemy) count as direct matches.
 
 ### Snapshot format
 
