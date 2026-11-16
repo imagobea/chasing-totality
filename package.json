@@ -36,9 +36,10 @@
     "dev": "tsx watch --include \"data/**/*.geojson\" --env-file-if-exists=.env src/server/main.ts",
     "build": "tsc -p tsconfig.build.json",
     "start": "node --env-file-if-exists=.env dist/server/main.js",
-    "fixtures:jsex": "tsx scripts/generate-jsex-fixtures.ts",
+    "data:advisories": "tsx scripts/generate-advisories.ts",
     "data:airports": "tsx scripts/generate-airports.ts",
-    "data:isolines": "tsx scripts/generate-isolines.ts"
+    "data:isolines": "tsx scripts/generate-isolines.ts",
+    "fixtures:jsex": "tsx scripts/generate-jsex-fixtures.ts"
   },
   "packageManager": "pnpm@10.18.2",
   "devDependencies": {
