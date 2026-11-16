@@ -172,23 +172,21 @@ async function fetchJson<T>(url: string): Promise<T> {
     // Every request waits its turn; a retry waits longer
     await wait(attempt ? RETRY_DELAY_MS : REQUEST_GAP_MS);
 
-    let response: Response;
+    let response: Response | undefined;
+    let error: unknown;
     try {
       response = await fetch(url, { headers: { "User-Agent": USER_AGENT }, redirect: "manual" });
-    } catch (error) {
-      // A network error is worth retrying, like a busy server
-      if (attempt < RETRIES) {
-        warnRetry(url, `failed (${error})`, attempt);
-        continue;
-      }
-      throw new Error(`${url} failed: ${error}`, { cause: error });
+    } catch (caught) {
+      error = caught;
     }
+    if (response?.status === 200) return (await response.json()) as T;
 
-    if (response.status === 200) return (await response.json()) as T;
-    if (!RETRYABLE.includes(response.status) || attempt >= RETRIES) {
-      throw new Error(`${url} answered ${response.status} ${response.statusText}`);
+    // A network error is worth retrying, like a busy server; a status not in RETRYABLE isn't
+    const reason = response ? `answered ${response.status}` : `failed (${error})`;
+    if ((response && !RETRYABLE.includes(response.status)) || attempt >= RETRIES) {
+      throw new Error(`${url} ${reason}`, { cause: error });
     }
-    warnRetry(url, `answered ${response.status}`, attempt);
+    warnRetry(url, reason, attempt);
   }
 }
 
