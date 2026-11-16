@@ -196,6 +196,16 @@ async function fetchJson<T>(url: string): Promise<T> {
   }
 }
 
+// Our state from the FCDO's alert_status: whole beats parts. Fails on an unknown value.
+function stateOf(alertStatus: string[]): State {
+  const unknown = alertStatus.filter((status) => !Object.hasOwn(STATES, status));
+  if (unknown.length) throw new Error(`Unknown FCDO alert status ${unknown.join(", ")}`);
+
+  const states = alertStatus.map((status) => STATES[status]);
+  if (states.includes("whole")) return "whole";
+  return states.includes("parts") ? "parts" : "none";
+}
+
 // The index's page paths, then each page, in index order. Fails if the index is empty or lists a
 // page twice, or if a page is withdrawn or has an unknown status.
 async function fetchPages(): Promise<FcdoPage[]> {
@@ -246,25 +256,6 @@ function snakeCase(text: string): string {
     .toLowerCase()
     .replace(/[^a-z0-9]+/g, "_")
     .replace(/^_|_$/g, "");
-}
-
-// Looks shapes up by NAME or NAME_LONG in snake_case, so "Eswatini" finds "eSwatini". Fails if
-// two shapes share a NAME, since one would silently go unmatched.
-function shapeFinder(shapes: NaturalEarthShape[]): Find {
-  const byName = new Map<string, NaturalEarthShape>();
-  for (const shape of shapes) byName.set(snakeCase(shape.properties.NAME_LONG), shape);
-
-  // NAMEs go in after every NAME_LONG, so a shape's own NAME always wins over another's NAME_LONG
-  const named = new Set<string>();
-  for (const shape of shapes) {
-    const name = snakeCase(shape.properties.NAME);
-    if (named.has(name))
-      throw new Error(`Two Natural Earth shapes are named ${shape.properties.NAME}`);
-    named.add(name);
-    byName.set(name, shape);
-  }
-
-  return (name) => byName.get(snakeCase(name));
 }
 
 // The shape named like the page or, failing that, every part of a country Natural Earth splits up
@@ -349,6 +340,25 @@ function matchPage(page: FcdoPage, shapes: NaturalEarthShape[], find: Find): Mat
   return matches;
 }
 
+// Looks shapes up by NAME or NAME_LONG in snake_case, so "Eswatini" finds "eSwatini". Fails if
+// two shapes share a NAME, since one would silently go unmatched.
+function shapeFinder(shapes: NaturalEarthShape[]): Find {
+  const byName = new Map<string, NaturalEarthShape>();
+  for (const shape of shapes) byName.set(snakeCase(shape.properties.NAME_LONG), shape);
+
+  // NAMEs go in after every NAME_LONG, so a shape's own NAME always wins over another's NAME_LONG
+  const named = new Set<string>();
+  for (const shape of shapes) {
+    const name = snakeCase(shape.properties.NAME);
+    if (named.has(name))
+      throw new Error(`Two Natural Earth shapes are named ${shape.properties.NAME}`);
+    named.add(name);
+    byName.set(name, shape);
+  }
+
+  return (name) => byName.get(snakeCase(name));
+}
+
 // Pairs each page with its shapes. Fails on an exception for a page that no longer exists, or on a
 // shape claimed by two pages.
 function matchShapes(pages: FcdoPage[], shapes: NaturalEarthShape[]): Match[] {
@@ -370,16 +380,6 @@ function matchShapes(pages: FcdoPage[], shapes: NaturalEarthShape[]): Match[] {
   }
 
   return matches;
-}
-
-// Our state from the FCDO's alert_status: whole beats parts. Fails on an unknown value.
-function stateOf(alertStatus: string[]): State {
-  const unknown = alertStatus.filter((status) => !Object.hasOwn(STATES, status));
-  if (unknown.length) throw new Error(`Unknown FCDO alert status ${unknown.join(", ")}`);
-
-  const states = alertStatus.map((status) => STATES[status]);
-  if (states.includes("whole")) return "whole";
-  return states.includes("parts") ? "parts" : "none";
 }
 
 // `<how>__<page slug>__<shape name>` in snake_case, or null for a direct match
