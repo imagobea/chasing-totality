@@ -198,13 +198,18 @@ function byName(all: Feature[], name: string): Feature | undefined {
   return all.find((feature) => feature.properties.naturalEarth.NAME === name);
 }
 
-// The world with one page changed
-function withPage(slug: string, change: (p: Page) => Page): World {
+// A fresh world, changed by the edit
+function worldWith(edit: (data: World) => void): World {
   const data = world();
-  return {
-    ...data,
-    pages: data.pages.map((p) => (p.details.country.slug === slug ? change(p) : p)),
-  };
+  edit(data);
+  return data;
+}
+
+// A fresh world with one page changed
+function withPage(slug: string, change: (p: Page) => Page): World {
+  return worldWith((data) => {
+    data.pages = data.pages.map((p) => (p.details.country.slug === slug ? change(p) : p));
+  });
 }
 
 beforeEach(() => {
@@ -239,10 +244,16 @@ describe("generate-advisories", () => {
   });
 
   it.each([
-    ["the index lists no pages", { pages: [], shapes: world().shapes }, /no pages/],
+    [
+      "the index lists no pages",
+      worldWith((w) => {
+        w.pages = [];
+      }),
+      /no pages/,
+    ],
     [
       "the index lists a page twice",
-      { ...world(), pages: [...world().pages, page("spain", "Spain")] },
+      worldWith((w) => w.pages.push(page("spain", "Spain"))),
       /twice/,
     ],
     [
@@ -255,30 +266,39 @@ describe("generate-advisories", () => {
       withPage("spain", () => page("spain", "Spain", { alertStatus: ["avoid_some_travel"] })),
       /avoid_some_travel/,
     ],
-    ["Natural Earth has no shapes", { pages: world().pages, shapes: [] }, /no shapes/],
+    [
+      "Natural Earth has no shapes",
+      worldWith((w) => {
+        w.shapes = [];
+      }),
+      /no shapes/,
+    ],
     [
       "a page matches no shape",
-      { ...world(), pages: [...world().pages, page("atlantis", "Atlantis")] },
+      worldWith((w) => w.pages.push(page("atlantis", "Atlantis"))),
       /atlantis/,
     ],
     [
       "an exception names a page that no longer exists",
-      { ...world(), pages: world().pages.filter((p) => p.details.country.slug !== "myanmar") },
+      worldWith((w) => {
+        w.pages = w.pages.filter((p) => p.details.country.slug !== "myanmar");
+      }),
       /myanmar/,
     ],
     [
       "an exception names a shape that no longer exists",
-      { ...world(), shapes: world().shapes.filter((s) => s.properties.NAME !== "Tokelau") },
+      worldWith((w) => {
+        w.shapes = w.shapes.filter((s) => s.properties.NAME !== "Tokelau");
+      }),
       /Tokelau/,
     ],
     [
       "an exception repeats a name match",
-      {
-        ...world(),
-        shapes: world().shapes.map((s) =>
+      worldWith((w) => {
+        w.shapes = w.shapes.map((s) =>
           s.properties.NAME === "Saint Lucia" ? shape("Saint Lucia", { NAME_LONG: "St Lucia" }) : s,
-        ),
-      },
+        );
+      }),
       /already matched/,
     ],
     [
@@ -293,20 +313,19 @@ describe("generate-advisories", () => {
     ],
     [
       "a page known not to be drawn now matches a shape",
-      { ...world(), shapes: [...world().shapes, shape("Gibraltar")] },
+      worldWith((w) => w.shapes.push(shape("Gibraltar"))),
       /gibraltar/,
     ],
     [
       "a shape is claimed by two pages",
-      { ...world(), pages: [...world().pages, page("somaliland", "Somaliland")] },
+      worldWith((w) => w.pages.push(page("somaliland", "Somaliland"))),
       /claimed/,
     ],
     [
       "a ring collapses once rounded",
-      {
-        ...world(),
-        shapes: [
-          ...world().shapes.filter((s) => s.properties.NAME !== "Spain"),
+      worldWith((w) => {
+        w.shapes = w.shapes.filter((s) => s.properties.NAME !== "Spain");
+        w.shapes.push(
           shape("Spain", {}, [
             [
               [0, 0],
@@ -315,8 +334,8 @@ describe("generate-advisories", () => {
               [0, 0],
             ],
           ]),
-        ],
-      },
+        );
+      }),
       /collapses/,
     ],
   ])("fails when %s", async (_, data, error) => {
@@ -370,18 +389,19 @@ describe("generate-advisories", () => {
 
   // Matching
   it("matches a page by name, long name or the shapes of a split country", async () => {
-    const data = world();
-    data.pages.push(
-      page("eswatini", "Eswatini"),
-      page("bosnia-and-herzegovina", "Bosnia and Herzegovina"),
-      page("belgium", "Belgium"),
-    );
-    data.shapes.push(
-      shape("eSwatini"),
-      shape("Bosnia and Herz.", { NAME_LONG: "Bosnia and Herzegovina" }),
-      shape("Flemish", { ADMIN: "Belgium" }),
-      shape("Walloon", { ADMIN: "Belgium" }),
-    );
+    const data = worldWith((w) => {
+      w.pages.push(
+        page("eswatini", "Eswatini"),
+        page("bosnia-and-herzegovina", "Bosnia and Herzegovina"),
+        page("belgium", "Belgium"),
+      );
+      w.shapes.push(
+        shape("eSwatini"),
+        shape("Bosnia and Herz.", { NAME_LONG: "Bosnia and Herzegovina" }),
+        shape("Flemish", { ADMIN: "Belgium" }),
+        shape("Walloon", { ADMIN: "Belgium" }),
+      );
+    });
     const all = await features(data);
     for (const name of ["eSwatini", "Bosnia and Herz.", "Flemish", "Walloon"]) {
       expect(byName(all, name)?.properties.match).toBeNull();
@@ -395,14 +415,12 @@ describe("generate-advisories", () => {
   });
 
   it("claims a separate shape a synonym names", async () => {
-    const data = withPage("usa", (p) => ({
-      ...p,
-      details: {
-        ...p.details,
-        country: { ...p.details.country, synonyms: ["United States", "Puerto Rico"] },
-      },
-    }));
-    data.shapes.push(shape("Puerto Rico"));
+    const data = worldWith((w) => {
+      w.pages
+        .find((p) => p.details.country.slug === "usa")!
+        .details.country.synonyms.push("Puerto Rico");
+      w.shapes.push(shape("Puerto Rico"));
+    });
     expect(byName(await features(data), "Puerto Rico")?.properties.match).toBe(
       "synonym__usa__puerto_rico",
     );
@@ -420,9 +438,7 @@ describe("generate-advisories", () => {
   });
 
   it("leaves out blocked synonyms, pages known not to be drawn and shapes with no page", async () => {
-    const data = world();
-    data.shapes.push(shape("England"));
-    const all = await features(data);
+    const all = await features(worldWith((w) => w.shapes.push(shape("England"))));
     expect(byName(all, "Christmas I.")).toBeUndefined();
     expect(byName(all, "England")).toBeUndefined();
     expect(all.some((f) => f.properties.fcdo.country.slug === "gibraltar")).toBe(false);
@@ -430,19 +446,20 @@ describe("generate-advisories", () => {
 
   // Snapshot
   it("rounds coordinates to 3 decimals and drops repeated points", async () => {
-    const data = world();
-    data.shapes = data.shapes.filter((s) => s.properties.NAME !== "Spain");
-    data.shapes.push(
-      shape("Spain", {}, [
-        [
-          [-5.60441, 36.01],
-          [-5.60449, 36.01],
-          [-4.4, 36.7],
-          [-3.7, 40.4],
-          [-5.60441, 36.01],
-        ],
-      ]),
-    );
+    const data = worldWith((w) => {
+      w.shapes = w.shapes.filter((s) => s.properties.NAME !== "Spain");
+      w.shapes.push(
+        shape("Spain", {}, [
+          [
+            [-5.60441, 36.01],
+            [-5.60449, 36.01],
+            [-4.4, 36.7],
+            [-3.7, 40.4],
+            [-5.60441, 36.01],
+          ],
+        ]),
+      );
+    });
     expect(byName(await features(data), "Spain")?.geometry.coordinates).toEqual([
       [
         [-5.604, 36.01],
@@ -455,9 +472,7 @@ describe("generate-advisories", () => {
 
   it("writes a feature per matched shape, keyed by NE_ID and sorted by it", async () => {
     // Spain's page comes first and its shape last, so page order isn't NE_ID order
-    const data = world();
-    data.pages.unshift(data.pages.pop()!);
-    const snapshot = await generate(data);
+    const snapshot = await generate(worldWith((w) => w.pages.unshift(w.pages.pop()!)));
     const ids = snapshot.features.map((f) => f.id);
     expect(ids).toEqual([...ids].sort((a, b) => a - b));
     expect(snapshot.sources).toHaveLength(2);
@@ -485,9 +500,7 @@ describe("generate-advisories", () => {
 
   // Run summary
   it("reports download time, matches by how, counts per state and shapes with no page", async () => {
-    const data = world();
-    data.shapes.push(shape("England"));
-    await generate(data);
+    await generate(worldWith((w) => w.shapes.push(shape("England"))));
     const [summary] = vi.mocked(console.log).mock.lastCall ?? [];
     expect(String(summary).split("\n")).toEqual([
       expect.stringMatching(/^Pages: 22 scanned in \d+\.\d s, 1 known not drawn \(gibraltar\)$/),
