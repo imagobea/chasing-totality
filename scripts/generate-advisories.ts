@@ -240,14 +240,22 @@ function snakeCase(text: string): string {
     .replace(/^_|_$/g, "");
 }
 
-// Looks shapes up by NAME or NAME_LONG in snake_case, so "Eswatini" finds "eSwatini"
+// Looks shapes up by NAME or NAME_LONG in snake_case, so "Eswatini" finds "eSwatini". Fails if
+// two shapes share a NAME, since one would silently go unmatched.
 function shapeFinder(shapes: NaturalEarthShape[]): Find {
   const byName = new Map<string, NaturalEarthShape>();
+  for (const shape of shapes) byName.set(snakeCase(shape.properties.NAME_LONG), shape);
+
+  // NAMEs go in after every NAME_LONG, so a shape's own NAME always wins over another's NAME_LONG
+  const named = new Set<string>();
   for (const shape of shapes) {
-    byName.set(snakeCase(shape.properties.NAME_LONG), shape);
-    // Set last, so a shape's own NAME wins over another's NAME_LONG
-    byName.set(snakeCase(shape.properties.NAME), shape);
+    const name = snakeCase(shape.properties.NAME);
+    if (named.has(name))
+      throw new Error(`Two Natural Earth shapes are named ${shape.properties.NAME}`);
+    named.add(name);
+    byName.set(name, shape);
   }
+
   return (name) => byName.get(snakeCase(name));
 }
 

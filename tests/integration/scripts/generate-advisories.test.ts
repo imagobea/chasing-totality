@@ -286,6 +286,7 @@ describe("generate-advisories", () => {
       }),
       /no shapes/,
     ],
+    ["two shapes share a name", worldWith((w) => w.shapes.push(shape("Spain"))), /Spain/],
     [
       "a page matches no shape",
       worldWith((w) => w.pages.push(page("atlantis", "Atlantis"))),
@@ -419,6 +420,16 @@ describe("generate-advisories", () => {
     for (const name of ["eSwatini", "Bosnia and Herz.", "Flemish", "Walloon"]) {
       expect(byName(all, name)?.properties.match).toBeNull();
     }
+  });
+
+  it("prefers a shape's own name over another shape's long name", async () => {
+    const data = worldWith((w) => {
+      w.pages.push(page("congo", "Congo"));
+      w.shapes.push(shape("Congo"), shape("Dem. Rep. Congo", { NAME_LONG: "Congo" }));
+    });
+    const all = await features(data);
+    expect(byName(all, "Congo")?.properties.fcdo.country.slug).toBe("congo");
+    expect(byName(all, "Dem. Rep. Congo")).toBeUndefined();
   });
 
   it("matches a synonym that renames the page's own shape as a direct match", async () => {
