@@ -16,7 +16,7 @@ export type AirportsSnapshot = {
 
 // A data file named after its eclipse, e.g. 2027-08-02.geojson, capturing the date
 const DATA_FILE = /^(\d{4}-\d{2}-\d{2})\.geojson$/;
-// The airports snapshot's retrieval date
+// A snapshot's retrieval date
 const DATE = /^\d{4}-\d{2}-\d{2}$/;
 
 // A broken or missing data file, named, with what is wrong with it
@@ -32,6 +32,20 @@ export class DataError extends Error {
 
 function isObject(value: unknown): value is Record<string, unknown> {
   return typeof value === "object" && value !== null && !Array.isArray(value);
+}
+
+// A data source with a name, url and licence, as snapshots credit them
+function isSource(value: unknown): boolean {
+  return (
+    isObject(value) && ["name", "url", "licence"].every((key) => typeof value[key] === "string")
+  );
+}
+
+// Check a snapshot's retrieval date, YYYY-MM-DD
+function checkRetrieved(retrieved: unknown, file: string): void {
+  if (typeof retrieved !== "string" || !DATE.test(retrieved)) {
+    throw new DataError(file, `invalid retrieved date: ${JSON.stringify(retrieved)}`);
+  }
 }
 
 // List the files in a directory, or throw a DataError if it fails
@@ -97,17 +111,12 @@ function checkAirports(json: unknown, file: string): asserts json is AirportsSna
   const { source, retrieved, features } = json;
 
   // Where the airports come from
-  if (
-    !isObject(source) ||
-    !["name", "url", "licence"].every((key) => typeof source[key] === "string")
-  ) {
+  if (!isSource(source)) {
     throw new DataError(file, "source needs a name, url and licence");
   }
 
   // The day they were retrieved
-  if (typeof retrieved !== "string" || !DATE.test(retrieved)) {
-    throw new DataError(file, `invalid retrieved date: ${JSON.stringify(retrieved)}`);
-  }
+  checkRetrieved(retrieved, file);
 
   if (!Array.isArray(features) || features.length === 0) {
     throw new DataError(file, "no features");
