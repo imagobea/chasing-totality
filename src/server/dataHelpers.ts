@@ -206,7 +206,7 @@ export async function loadIsolines(dataDir: string): Promise<Map<string, Buffer>
   return isolinesMap;
 }
 
-// The airports snapshot, as its JSON, since both the server and the route need to read it to get the points and their properties
+// The airports snapshot as its JSON, since the route filters its points by bbox
 export async function loadAirports(airportsFile: string): Promise<AirportsSnapshot> {
   const { json } = await readJson(airportsFile);
   checkAirports(json, airportsFile);
