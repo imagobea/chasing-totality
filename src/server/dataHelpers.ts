@@ -16,8 +16,11 @@ export type AirportsSnapshot = {
 
 // A data file named after its eclipse, e.g. 2027-08-02.geojson, capturing the date
 const DATA_FILE = /^(\d{4}-\d{2}-\d{2})\.geojson$/;
-// The airports snapshot's retrieval date
+// A snapshot's retrieval date
 const DATE = /^\d{4}-\d{2}-\d{2}$/;
+// An advisory's level, from the UK's travel advice: avoid all or all but essential travel to the
+// whole place, to parts of it, or neither
+const ADVISORY_STATES = ["whole", "parts", "none"];
 
 // A broken or missing data file, named, with what is wrong with it
 export class DataError extends Error {
@@ -32,6 +35,20 @@ export class DataError extends Error {
 
 function isObject(value: unknown): value is Record<string, unknown> {
   return typeof value === "object" && value !== null && !Array.isArray(value);
+}
+
+// A data source with a name, url and licence, as snapshots credit them
+function isSource(value: unknown): boolean {
+  return (
+    isObject(value) && ["name", "url", "licence"].every((key) => typeof value[key] === "string")
+  );
+}
+
+// Check a snapshot's retrieval date, YYYY-MM-DD
+function checkRetrieved(retrieved: unknown, file: string): void {
+  if (typeof retrieved !== "string" || !DATE.test(retrieved)) {
+    throw new DataError(file, `invalid retrieved date: ${JSON.stringify(retrieved)}`);
+  }
 }
 
 // List the files in a directory, or throw a DataError if it fails
@@ -97,17 +114,12 @@ function checkAirports(json: unknown, file: string): asserts json is AirportsSna
   const { source, retrieved, features } = json;
 
   // Where the airports come from
-  if (
-    !isObject(source) ||
-    !["name", "url", "licence"].every((key) => typeof source[key] === "string")
-  ) {
+  if (!isSource(source)) {
     throw new DataError(file, "source needs a name, url and licence");
   }
 
   // The day they were retrieved
-  if (typeof retrieved !== "string" || !DATE.test(retrieved)) {
-    throw new DataError(file, `invalid retrieved date: ${JSON.stringify(retrieved)}`);
-  }
+  checkRetrieved(retrieved, file);
 
   if (!Array.isArray(features) || features.length === 0) {
     throw new DataError(file, "no features");
@@ -129,6 +141,41 @@ function checkAirports(json: unknown, file: string): asserts json is AirportsSna
   }
 }
 
+// Check that the advisories JSON is a snapshot of places with a known state and a polygon shape,
+// with its sources and retrieval date
+function checkAdvisories(json: unknown, file: string): void {
+  if (!isObject(json) || json.type !== "FeatureCollection") {
+    throw new DataError(file, "not a FeatureCollection");
+  }
+  const { sources, retrieved, features } = json;
+
+  // Where the advisories and the shapes come from
+  if (!Array.isArray(sources) || sources.length === 0 || !sources.every(isSource)) {
+    throw new DataError(file, "sources need a name, url and licence each");
+  }
+
+  // The day they were retrieved
+  checkRetrieved(retrieved, file);
+
+  if (!Array.isArray(features) || features.length === 0) {
+    throw new DataError(file, "no features");
+  }
+
+  // Each feature must have a known state and a polygon shape
+  for (const [i, feature] of (features as unknown[]).entries()) {
+    const props = isObject(feature) ? feature.properties : undefined;
+    const state = isObject(props) ? props.state : undefined;
+    if (typeof state !== "string" || !ADVISORY_STATES.includes(state)) {
+      throw new DataError(file, `feature ${i} has an unknown state: ${JSON.stringify(state)}`);
+    }
+    const geometry = isObject(feature) ? feature.geometry : undefined;
+    if (!isObject(geometry) || !["Polygon", "MultiPolygon"].includes(String(geometry.type))) {
+      throw new DataError(file, `feature ${i} is not a polygon`);
+    }
+  }
+}
+
+// The isolines snapshots, keyed by eclipse date, as their bytes, since the route sends them as is
 export async function loadIsolines(dataDir: string): Promise<Map<string, Buffer>> {
   const isolinesMap = new Map<string, Buffer>();
 
@@ -159,8 +206,16 @@ export async function loadIsolines(dataDir: string): Promise<Map<string, Buffer>
   return isolinesMap;
 }
 
+// The airports snapshot as its JSON, since the route filters its points by bbox
 export async function loadAirports(airportsFile: string): Promise<AirportsSnapshot> {
   const { json } = await readJson(airportsFile);
   checkAirports(json, airportsFile);
   return json;
+}
+
+// The advisories snapshot as its bytes, since the route sends it as is
+export async function loadAdvisories(advisoriesFile: string): Promise<Buffer> {
+  const { bytes, json } = await readJson(advisoriesFile);
+  checkAdvisories(json, advisoriesFile);
+  return bytes;
 }

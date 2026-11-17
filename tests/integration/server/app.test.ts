@@ -2,7 +2,7 @@ import { join } from "node:path";
 import { describe, expect, it, onTestFinished } from "vitest";
 import { buildApp } from "../../../src/server/app.js";
 import { DataError } from "../../../src/server/dataHelpers.js";
-import { tempDir } from "../../helpers/server.js";
+import { dataDirWithout } from "../../helpers/server.js";
 
 describe("buildApp", () => {
   // On the committed data, so it also shows that it loads
@@ -15,25 +15,18 @@ describe("buildApp", () => {
     expect(res.json()).toEqual({ status: "ok" });
   });
 
-  it("doesn't get ready when the eclipse data folder is missing", async () => {
-    const dataDir = join(await tempDir(), "isolines");
+  it.each([
+    ["eclipse data folder", "isolines"],
+    ["airports file", "airports.geojson"],
+    ["advisories file", "advisories.geojson"],
+  ])("doesn't get ready when the %s is missing", async (_, name) => {
+    const dataDir = await dataDirWithout(name);
     const app = buildApp({ dataDir });
     onTestFinished(() => app.close());
 
     // ready() rejects with DataError
     const ready = app.ready();
     await expect(ready).rejects.toBeInstanceOf(DataError);
-    await expect(ready).rejects.toMatchObject({ file: dataDir });
-  });
-
-  it("doesn't get ready when the airports file is missing", async () => {
-    const airportsFile = join(await tempDir(), "airports.geojson");
-    const app = buildApp({ airportsFile });
-    onTestFinished(() => app.close());
-
-    // ready() rejects with DataError
-    const ready = app.ready();
-    await expect(ready).rejects.toBeInstanceOf(DataError);
-    await expect(ready).rejects.toMatchObject({ file: airportsFile });
+    await expect(ready).rejects.toMatchObject({ file: join(dataDir, name) });
   });
 });

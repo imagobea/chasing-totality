@@ -1,4 +1,4 @@
-import { mkdtemp, readFile, rm, writeFile } from "node:fs/promises";
+import { cp, mkdtemp, readFile, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { afterAll, beforeAll, describe, expect, it, onTestFinished, vi } from "vitest";
@@ -43,14 +43,15 @@ function airport(iata: string, lon: number, lat: number) {
   };
 }
 
-// An app over a temp copy of SNAPSHOT, shared by the tests that read it
+// An app over a temp copy of the committed data with SNAPSHOT as its airports, shared by the tests
+// that read it
 let app: ReturnType<typeof buildApp>;
 let dir: string;
 beforeAll(async () => {
   dir = await mkdtemp(join(tmpdir(), "airports-"));
-  const airportsFile = join(dir, "airports.geojson");
-  await writeFile(airportsFile, JSON.stringify(SNAPSHOT));
-  app = buildApp({ airportsFile });
+  await cp(new URL("../../../../data/", import.meta.url), dir, { recursive: true });
+  await writeFile(join(dir, "airports.geojson"), JSON.stringify(SNAPSHOT));
+  app = buildApp({ dataDir: dir });
   await app.ready();
 });
 afterAll(async () => {
