@@ -15,36 +15,18 @@ describe("buildApp", () => {
     expect(res.json()).toEqual({ status: "ok" });
   });
 
-  it("doesn't get ready when the eclipse data folder is missing", async () => {
-    const dataDir = await dataDirWithout("isolines");
+  it.each([
+    ["eclipse data folder", "isolines"],
+    ["airports file", "airports.geojson"],
+    ["advisories file", "advisories.geojson"],
+  ])("doesn't get ready when the %s is missing", async (_, name) => {
+    const dataDir = await dataDirWithout(name);
     const app = buildApp({ dataDir });
     onTestFinished(() => app.close());
 
     // ready() rejects with DataError
     const ready = app.ready();
     await expect(ready).rejects.toBeInstanceOf(DataError);
-    await expect(ready).rejects.toMatchObject({ file: join(dataDir, "isolines") });
-  });
-
-  it("doesn't get ready when the airports file is missing", async () => {
-    const dataDir = await dataDirWithout("airports.geojson");
-    const app = buildApp({ dataDir });
-    onTestFinished(() => app.close());
-
-    // ready() rejects with DataError
-    const ready = app.ready();
-    await expect(ready).rejects.toBeInstanceOf(DataError);
-    await expect(ready).rejects.toMatchObject({ file: join(dataDir, "airports.geojson") });
-  });
-
-  it("doesn't get ready when the advisories file is missing", async () => {
-    const dataDir = await dataDirWithout("advisories.geojson");
-    const app = buildApp({ dataDir });
-    onTestFinished(() => app.close());
-
-    // ready() rejects with DataError
-    const ready = app.ready();
-    await expect(ready).rejects.toBeInstanceOf(DataError);
-    await expect(ready).rejects.toMatchObject({ file: join(dataDir, "advisories.geojson") });
+    await expect(ready).rejects.toMatchObject({ file: join(dataDir, name) });
   });
 });
