@@ -31,7 +31,8 @@ const map = vi.hoisted(() => ({
   addLayer: vi.fn(),
   addImage: vi.fn(),
   getSource: vi.fn(),
-  getLayer: vi.fn(),
+  // Knows the layers added so far, as MapLibre does
+  getLayer: vi.fn((id: string) => map.addLayer.mock.calls.find(([layer]) => layer.id === id)?.[0]),
   // The base map's style, down to its first label layer
   getStyle: vi.fn(() => ({ layers: [{ id: "place", type: "symbol" }] })),
   fitBounds: vi.fn(),
@@ -275,9 +276,6 @@ describe("EclipseMap", () => {
     const props = mapProps(null, AIRPORTS_2027);
     const { rerender } = render(<EclipseMap {...props} />);
     await loadStyle();
-    map.getLayer.mockImplementation((id: string) =>
-      AIRPORTS_LAYERS.find((layer) => layer.id === id),
-    );
     rerender(<EclipseMap {...props} isolines={ISOLINES_2027} />);
     const labels = ISOLINES_LAYERS.filter((layer) => layer.type === "symbol");
     expect(map.addLayer.mock.calls.filter(([layer]) => labels.includes(layer))).toEqual(
