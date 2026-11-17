@@ -9,12 +9,18 @@ import { mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { eclipses } from "../src/engine/eclipse/elements/index.js";
 import { parseNasaPath, type LatLon, type PathRow } from "../src/engine/eclipse/nasaPath.js";
 import { pathArea, unwrapPath } from "../src/engine/isolines/area.js";
-import { durationContours, durationThresholds } from "../src/engine/isolines/contours.js";
+import {
+  durationContours,
+  durationThresholds,
+  type IsolineCollection,
+} from "../src/engine/isolines/contours.js";
 import { durationGrid } from "../src/engine/isolines/grid.js";
 
 const STEP_DEGREES = 0.05; // grid spacing, ~5 km
 const MARGIN_DEGREES = 1; // around NASA's path, so its edges and ends aren't cut
 const THRESHOLD_STEP_SECONDS = 30;
+// 4 decimals is ~11 m, well under the ~5 km grid the isolines are traced on
+const COORDINATE_DECIMALS = 4;
 const DATA_DIR = new URL("../data/isolines/", import.meta.url);
 const COMPARE_DIR = new URL("../out/", import.meta.url);
 const NASA_LINES = [
@@ -50,6 +56,28 @@ function nasaLines(rows: PathRow[]) {
   };
 }
 
+function round(value: number): number {
+  return Number(value.toFixed(COORDINATE_DECIMALS));
+}
+
+// The isolines with their coordinates and bbox rounded, to keep the file small
+function roundIsolines(isolines: IsolineCollection): IsolineCollection {
+  const [west, south, east, north] = isolines.bbox;
+  return {
+    ...isolines,
+    bbox: [round(west), round(south), round(east), round(north)],
+    features: isolines.features.map((feature) => ({
+      ...feature,
+      geometry: {
+        ...feature.geometry,
+        coordinates: feature.geometry.coordinates.map((polygon) =>
+          polygon.map((ring) => ring.map(([lon, lat]) => [round(lon), round(lat)])),
+        ),
+      },
+    })),
+  };
+}
+
 function main() {
   // Step 1: the eclipse's Besselian elements and NASA's path table, by date
   const date = process.argv[2] ?? "";
@@ -70,10 +98,10 @@ function main() {
   const isolines = durationContours(grid, durationThresholds(grid, THRESHOLD_STEP_SECONDS));
   const seconds = (performance.now() - started) / 1000;
 
-  // Step 4: write the isolines to data/isolines/ and NASA's lines to out/
+  // Step 4: write the isolines, rounded, to data/isolines/ and NASA's lines to out/
   const output = new URL(`${date}.geojson`, DATA_DIR);
   const comparison = new URL(`${date}-nasa-path.geojson`, COMPARE_DIR);
-  const json = `${JSON.stringify(isolines)}\n`;
+  const json = `${JSON.stringify(roundIsolines(isolines))}\n`;
   writeFileSync(output, json);
   mkdirSync(COMPARE_DIR, { recursive: true });
   writeFileSync(comparison, JSON.stringify(nasaLines(rows)));
