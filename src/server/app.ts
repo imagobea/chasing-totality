@@ -8,7 +8,8 @@ import { dataPlugin } from "./dataPlugin.js";
 type AppOptions = {
   // Off when not given, so tests stay silent
   logger?: FastifyServerOptions["logger"];
-  // The data folder: isolines/<date>.geojson, one per eclipse, and airports.geojson
+  // The data folder: isolines/<date>.geojson, one per eclipse, airports.geojson and
+  // advisories.geojson
   dataDir?: string;
 };
 

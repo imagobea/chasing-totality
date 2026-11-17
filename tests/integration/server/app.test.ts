@@ -36,4 +36,15 @@ describe("buildApp", () => {
     await expect(ready).rejects.toBeInstanceOf(DataError);
     await expect(ready).rejects.toMatchObject({ file: join(dataDir, "airports.geojson") });
   });
+
+  it("doesn't get ready when the advisories file is missing", async () => {
+    const dataDir = await dataDirWithout("advisories.geojson");
+    const app = buildApp({ dataDir });
+    onTestFinished(() => app.close());
+
+    // ready() rejects with DataError
+    const ready = app.ready();
+    await expect(ready).rejects.toBeInstanceOf(DataError);
+    await expect(ready).rejects.toMatchObject({ file: join(dataDir, "advisories.geojson") });
+  });
 });
