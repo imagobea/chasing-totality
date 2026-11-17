@@ -46,7 +46,7 @@ export const airports: FastifyPluginAsync = async (app) => {
       const features = bbox
         ? snapshot.features.filter((feature) => contains(bbox, feature.geometry.coordinates))
         : snapshot.features;
-      return reply.type("application/geo+json").send({ ...snapshot, features });
+      return reply.type("application/geo+json; charset=utf-8").send({ ...snapshot, features });
     },
   );
 };
