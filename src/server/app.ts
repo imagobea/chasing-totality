@@ -1,6 +1,7 @@
 import { fileURLToPath } from "node:url";
 import Fastify, { type FastifyServerOptions } from "fastify";
 import { errorHandler } from "./errorHandler.js";
+import { advisories } from "./routes/advisories.js";
 import { airports } from "./routes/airports.js";
 import { eclipses } from "./routes/eclipses.js";
 import { dataPlugin } from "./dataPlugin.js";
@@ -30,6 +31,7 @@ export function buildApp({ logger = false, dataDir = DATA_DIR }: AppOptions = {}
 
   app.register(eclipses);
   app.register(airports);
+  app.register(advisories);
 
   return app;
 }
