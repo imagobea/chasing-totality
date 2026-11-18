@@ -41,6 +41,7 @@ export const theme = {
   "--advisory-hatch-whole-spacing": "5px",
   "--advisory-hatch-parts-width": "1.5px",
   "--advisory-hatch-parts-spacing": "16px",
+  "--advisory-outline-width": "1px",
   "--label-halo-width": "1.5",
 
   "--font-display": '"Michroma", sans-serif',

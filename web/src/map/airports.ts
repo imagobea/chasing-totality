@@ -11,6 +11,8 @@ import airportIconUrl from "../assets/airport.svg";
 import { MAP_FONT, theme, toNumber } from "../theme.js";
 
 export const AIRPORTS_SOURCE_ID = "airports";
+// Travel layers, airports and advisories, show only from this zoom in
+export const TRAVEL_MINZOOM = 5;
 // Not "airport": the base map's sprite already has an image by that name, and MapLibre keeps
 // the sprite's and ignores ours
 export const AIRPORT_ICON_ID = "maki-airport";
@@ -32,7 +34,7 @@ export const AIRPORTS_LAYERS: LayerSpecification[] = [
     id: "airports",
     type: "symbol",
     source: AIRPORTS_SOURCE_ID,
-    minzoom: 5,
+    minzoom: TRAVEL_MINZOOM,
     layout: {
       "icon-image": AIRPORT_ICON_ID,
       "text-field": ["get", "iata"],

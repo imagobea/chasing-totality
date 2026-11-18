@@ -1,6 +1,9 @@
-// Advisories as MapLibre data: the hatch patterns that draw them
+// Advisories as MapLibre data: the hatch patterns and the layers that draw them
 
+import type { ExpressionSpecification, LayerSpecification } from "maplibre-gl";
+import type { AdvisoryState } from "../api/advisories.js";
 import { theme, toNumber } from "../theme.js";
+import { TRAVEL_MINZOOM } from "./airports.js";
 
 // A hatch's stripes in CSS pixels: how thick each one is, and how far apart, centre to centre
 type Hatch = { width: number; spacing: number };
@@ -18,11 +21,54 @@ export const ADVISORY_HATCHES = {
     width: toNumber(theme["--advisory-hatch-parts-width"]),
     spacing: toNumber(theme["--advisory-hatch-parts-spacing"]),
   },
-} satisfies Record<string, Hatch>;
+} satisfies Record<Exclude<AdvisoryState, "none">, Hatch>;
+
+export const ADVISORIES_SOURCE_ID = "advisories";
+// Prefixed, since MapLibre keeps the base map's sprite image over ours when the names clash
+const HATCH_IMAGE_PREFIX = "advisory-hatch-";
+
+// Outline dashes and gaps, in line widths
+const OUTLINE_DASHES = [3, 2];
+
+// Places the UK advises against travel to, in whole or in parts; places with no advice aren't drawn
+const IS_ADVISED: ExpressionSpecification = ["!=", ["get", "state"], "none"];
+
+// Under the duration bands, as in DESIGN.md's layer stack: each place hatched by its state, then a
+// dashed outline, so they never rely on colour alone
+export const ADVISORIES_LAYERS: LayerSpecification[] = [
+  {
+    id: "advisories-fill",
+    type: "fill",
+    source: ADVISORIES_SOURCE_ID,
+    minzoom: TRAVEL_MINZOOM,
+    filter: IS_ADVISED,
+    paint: {
+      "fill-pattern": ["concat", HATCH_IMAGE_PREFIX, ["get", "state"]],
+      "fill-opacity": toNumber(theme["--advisory-fill-opacity"]),
+    },
+  },
+  {
+    id: "advisories-outline",
+    type: "line",
+    source: ADVISORIES_SOURCE_ID,
+    minzoom: TRAVEL_MINZOOM,
+    filter: IS_ADVISED,
+    paint: {
+      "line-color": theme["--color-advisory"],
+      "line-width": toNumber(theme["--advisory-outline-width"]),
+      "line-dasharray": OUTLINE_DASHES,
+    },
+  },
+];
 
 // The red, green and blue of a #rrggbb colour
 function rgb(hex: string): number[] {
   return [1, 3, 5].map((i) => Number.parseInt(hex.slice(i, i + 2), 16));
+}
+
+// The id the map knows a state's hatch by
+export function hatchImageId(state: keyof typeof ADVISORY_HATCHES): string {
+  return `${HATCH_IMAGE_PREFIX}${state}`;
 }
 
 // A square tile of 45° stripes in the given colour, in device pixels. Its side is the spacing
