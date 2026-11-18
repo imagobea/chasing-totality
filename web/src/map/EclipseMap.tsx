@@ -10,9 +10,16 @@ import {
 import "maplibre-gl/dist/maplibre-gl.css";
 import workerUrl from "maplibre-gl/dist/maplibre-gl-worker.mjs?worker&url";
 import type { FeatureCollection } from "geojson";
+import type { Advisories } from "../api/advisories.js";
 import type { Airports } from "../api/airports.js";
 import type { Isolines } from "../api/eclipses.js";
 import type { Coordinates } from "../utils.js";
+import {
+  ADVISORIES_LAYERS,
+  ADVISORIES_SOURCE_ID,
+  advisoriesSource,
+  hatchImages,
+} from "./advisories.js";
 import {
   AIRPORT_ICON_ID,
   AIRPORT_ICON_OPTIONS,
@@ -36,6 +43,8 @@ type EclipseMapProps = {
   isolines: Isolines | null;
   // The airports around the eclipse's path, null until they arrive or when they can't be had
   airports: Airports | null;
+  // Every place's travel advisory, null until they arrive or when they can't be had
+  advisories: Advisories | null;
   // Called with the mouse position as it moves, and null when it leaves the map
   onCursorMove: (cursor: Coordinates | null) => void;
   // Where to put the attribution, outside the map
@@ -70,7 +79,13 @@ function showSource(
   for (const layer of layers) map.addLayer(layer, beforeId(map, layer));
 }
 
-export function EclipseMap({ isolines, airports, onCursorMove, attributionRef }: EclipseMapProps) {
+export function EclipseMap({
+  isolines,
+  airports,
+  advisories,
+  onCursorMove,
+  attributionRef,
+}: EclipseMapProps) {
   // Set once the style has loaded and our images are in, since sources and layers can only be
   // added after that
   const [map, setMap] = useState<MapLibreMap | null>(null);
@@ -91,6 +106,10 @@ export function EclipseMap({ isolines, airports, onCursorMove, attributionRef }:
     // Ignore the icon if the map goes away before it loads
     let removed = false;
     map.on("load", () => {
+      // Drawn here, so the advisories' hatches are in before the map counts as ready
+      for (const [id, pattern] of hatchImages(devicePixelRatio)) {
+        map.addImage(id, pattern, { pixelRatio: devicePixelRatio });
+      }
       loadAirportIcon()
         .then((icon) => {
           if (!removed) map.addImage(AIRPORT_ICON_ID, icon, AIRPORT_ICON_OPTIONS);
@@ -154,6 +173,12 @@ export function EclipseMap({ isolines, airports, onCursorMove, attributionRef }:
     }
     showSource(map, AIRPORTS_SOURCE_ID, airportsSource(airports), AIRPORTS_LAYERS);
   }, [map, airports]);
+
+  // The advisories, once they arrive; they don't change with the eclipse
+  useEffect(() => {
+    if (!map || advisories === null) return;
+    showSource(map, ADVISORIES_SOURCE_ID, advisoriesSource(advisories), ADVISORIES_LAYERS);
+  }, [map, advisories]);
 
   return (
     <div

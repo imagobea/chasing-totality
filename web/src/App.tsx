@@ -83,6 +83,7 @@ export function App() {
         <EclipseMap
           isolines={isolines}
           airports={airports}
+          advisories={null}
           onCursorMove={setCursor}
           attributionRef={attributionRef}
         />

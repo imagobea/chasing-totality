@@ -2,8 +2,15 @@ import { act, cleanup, render } from "@testing-library/react";
 import { AttributionControl, MapLibreMap } from "maplibre-gl";
 import polygonClipping from "polygon-clipping";
 import { afterEach, describe, expect, it, vi } from "vitest";
+import type { Advisories } from "../../../src/api/advisories.js";
 import type { Airports } from "../../../src/api/airports.js";
 import type { Isolines } from "../../../src/api/eclipses.js";
+import {
+  ADVISORIES_LAYERS,
+  ADVISORIES_SOURCE_ID,
+  advisoriesSource,
+  hatchImageId,
+} from "../../../src/map/advisories.js";
 import {
   AIRPORT_ICON_ID,
   AIRPORT_ICON_OPTIONS,
@@ -21,6 +28,7 @@ import {
   ISOLINES_SOURCE_ID,
   isolinesSource,
 } from "../../../src/map/isolines.js";
+import { advisories } from "../../helpers/advisories.js";
 import { airports } from "../../helpers/airports.js";
 import { isolines } from "../../helpers/isolines.js";
 
@@ -89,6 +97,9 @@ const ISOLINES_2028: Isolines = {
 const AIRPORTS_2027 = airports("AGP", "LXR");
 const AIRPORTS_2028 = airports("SYD");
 
+// Places worldwide, as App passes them
+const ADVISORIES = advisories("whole", "parts", "none");
+
 // The layers added from one source, in the order they were added
 function layersFrom(sourceId: string) {
   return map.addLayer.mock.calls
@@ -109,10 +120,15 @@ async function loadStyle() {
 }
 
 // The props App passes, with a fresh slot for the attribution
-function mapProps(isolines: Isolines | null, airports: Airports | null = null) {
+function mapProps(
+  isolines: Isolines | null,
+  airports: Airports | null = null,
+  advisories: Advisories | null = null,
+) {
   return {
     isolines,
     airports,
+    advisories,
     onCursorMove: vi.fn(),
     attributionRef: { current: document.createElement("div") },
   };
@@ -133,7 +149,7 @@ describe("EclipseMap", () => {
     expect(map.addLayer).not.toHaveBeenCalled();
   });
 
-  it("adds nothing without isolines or airports", async () => {
+  it("adds nothing without isolines, airports or advisories", async () => {
     render(<EclipseMap {...mapProps(null)} />);
     await loadStyle();
     expect(map.addSource).not.toHaveBeenCalled();
@@ -145,7 +161,7 @@ describe("EclipseMap", () => {
     fire("load");
     unmount();
     await act(async () => {});
-    expect(map.addImage).not.toHaveBeenCalled();
+    expect(map.addImage).not.toHaveBeenCalledWith(AIRPORT_ICON_ID, icon, AIRPORT_ICON_OPTIONS);
     expect(map.addSource).not.toHaveBeenCalled();
   });
 
@@ -156,7 +172,7 @@ describe("EclipseMap", () => {
     render(<EclipseMap {...mapProps(ISOLINES_2027, AIRPORTS_2027)} />);
     await loadStyle();
     expect(warn).toHaveBeenCalledWith(expect.any(String), error);
-    expect(map.addImage).not.toHaveBeenCalled();
+    expect(map.addImage).not.toHaveBeenCalledWith(AIRPORT_ICON_ID, icon, AIRPORT_ICON_OPTIONS);
     expect(map.addSource).toHaveBeenCalledWith(ISOLINES_SOURCE_ID, isolinesSource(ISOLINES_2027));
     expect(map.addSource).toHaveBeenCalledWith(AIRPORTS_SOURCE_ID, airportsSource(AIRPORTS_2027));
   });
@@ -242,6 +258,30 @@ describe("EclipseMap", () => {
     expect(added).toEqual(AIRPORTS_LAYERS.map((layer) => [layer, undefined]));
   });
 
+  it("adds the advisories with their hatches, which are in before the map is ready", async () => {
+    render(<EclipseMap {...mapProps(null, null, ADVISORIES)} />);
+    await loadStyle();
+    const hatches = map.addImage.mock.calls.filter(([id]) =>
+      [hatchImageId("whole"), hatchImageId("parts")].includes(id),
+    );
+    expect(hatches).toHaveLength(2);
+    expect(map.addSource).toHaveBeenCalledWith(ADVISORIES_SOURCE_ID, advisoriesSource(ADVISORIES));
+    expect(layersFrom(ADVISORIES_SOURCE_ID)).toEqual(ADVISORIES_LAYERS);
+    // Every hatch is in before the first layer that draws one
+    expect(Math.max(...map.addImage.mock.invocationCallOrder)).toBeLessThan(
+      Math.min(...map.addLayer.mock.invocationCallOrder),
+    );
+  });
+
+  it("adds the advisories under the bands when they arrive after the isolines", async () => {
+    const props = mapProps(ISOLINES_2027);
+    const { rerender } = render(<EclipseMap {...props} />);
+    await loadStyle();
+    rerender(<EclipseMap {...props} advisories={ADVISORIES} />);
+    const added = map.addLayer.mock.calls.slice(-ADVISORIES_LAYERS.length);
+    expect(added).toEqual(ADVISORIES_LAYERS.map((layer) => [layer, DURATION_BANDS_LAYERS[0]!.id]));
+  });
+
   it("fits the map to the whole path of each eclipse picked", async () => {
     const props = mapProps(ISOLINES_2027);
     const { rerender } = render(<EclipseMap {...props} />);
@@ -308,7 +348,7 @@ describe("EclipseMap", () => {
     }
     expect(layersFrom(ISOLINES_SOURCE_ID)).toEqual(ISOLINES_LAYERS);
     expect(layersFrom(AIRPORTS_SOURCE_ID)).toEqual(AIRPORTS_LAYERS);
-    expect(map.addImage).toHaveBeenCalledOnce();
+    expect(map.addImage.mock.calls.filter(([id]) => id === AIRPORT_ICON_ID)).toHaveLength(1);
     expect(MapLibreMap).toHaveBeenCalledOnce();
   });
 });

@@ -1,7 +1,11 @@
 // Advisories as MapLibre data: the hatch patterns and the layers that draw them
 
-import type { ExpressionSpecification, LayerSpecification } from "maplibre-gl";
-import type { AdvisoryState } from "../api/advisories.js";
+import type {
+  ExpressionSpecification,
+  GeoJSONSourceSpecification,
+  LayerSpecification,
+} from "maplibre-gl";
+import type { Advisories, AdvisoryState } from "../api/advisories.js";
 import { theme, toNumber } from "../theme.js";
 import { TRAVEL_MINZOOM } from "./airports.js";
 
@@ -94,4 +98,19 @@ export function hatchPattern(
     }
   }
   return { width: side, height: side, data };
+}
+
+// Each state's hatch in the advisory colour at the screen's pixel ratio, by the id the fill asks for
+export function hatchImages(pixelRatio: number): [id: string, pattern: Pattern][] {
+  return (Object.keys(ADVISORY_HATCHES) as (keyof typeof ADVISORY_HATCHES)[]).map((state) => [
+    hatchImageId(state),
+    hatchPattern(ADVISORY_HATCHES[state], theme["--color-advisory"], pixelRatio),
+  ]);
+}
+
+// Every place, as fetched from the API
+export function advisoriesSource(advisories: Advisories): GeoJSONSourceSpecification & {
+  data: Advisories;
+} {
+  return { type: "geojson", data: advisories };
 }
