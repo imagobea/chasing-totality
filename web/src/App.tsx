@@ -109,7 +109,7 @@ export function App() {
           onZoomChange={setZoom}
           attributionRef={attributionRef}
         />
-        <LayersPanel airports={airports} />
+        <LayersPanel airports={airports} advisories={advisories} />
       </main>
       <StatusBar cursor={cursor} zoom={zoom} attributionRef={attributionRef} />
     </div>

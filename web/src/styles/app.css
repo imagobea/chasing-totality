@@ -181,6 +181,21 @@ body {
   color: inherit;
 }
 
+.layer-source a:hover {
+  color: var(--color-text);
+}
+
+/* Tucked under the source line it belongs to */
+.layer-source:has(+ .layer-credit) {
+  margin-bottom: var(--space-1);
+}
+
+/* Wraps to the panel's width instead of widening it */
+.layer-credit {
+  width: 0;
+  min-width: 100%;
+}
+
 .layer-key {
   display: grid;
   gap: var(--space-1);
@@ -219,6 +234,19 @@ body {
   mask: url("../assets/airport.svg") center / contain no-repeat;
 }
 
+/* Hatched and outlined like the map's advisories, at the spacing each row sets */
+.hatch {
+  width: var(--space-4);
+  height: var(--space-2);
+  border: var(--advisory-outline-width) dashed var(--color-advisory);
+  background: repeating-linear-gradient(
+    45deg,
+    color-mix(in srgb, var(--color-advisory) calc(var(--advisory-fill-opacity) * 100%), transparent)
+      0 var(--hatch-width),
+    transparent var(--hatch-width) var(--hatch-spacing)
+  );
+}
+
 .limit-line {
   width: var(--space-4);
   border-top: var(--path-limit-width) solid var(--color-path-limit);
@@ -252,8 +280,10 @@ body {
   background: none;
 }
 
+/* Underlined like the legend's links, instead of only on hover */
 .attribution .maplibregl-ctrl-attrib a {
   color: var(--color-text-muted);
+  text-decoration: underline;
 }
 
 .attribution .maplibregl-ctrl-attrib a:hover {
