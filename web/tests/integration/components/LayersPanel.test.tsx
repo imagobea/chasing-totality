@@ -59,11 +59,11 @@ describe("LayersPanel", () => {
     expect(swatchToken(row)).toBe(fillToken(durationSeconds));
   });
 
-  it("credits the NASA eclipse catalogue, with no date", () => {
+  it("credits Espenak & Meeus at NASA's GSFC, with no date", () => {
     render(<LayersPanel airports={null} advisories={null} />);
-    const link = durationGroup().getByRole("link", { name: "NASA eclipse catalogue" });
+    const link = durationGroup().getByRole("link", { name: "Espenak & Meeus, NASA's GSFC" });
     expect(link.getAttribute("href")).toBe("https://eclipse.gsfc.nasa.gov/SEpubs/5MCSE.html");
-    expect(link.parentElement?.textContent).toBe("NASA eclipse catalogue");
+    expect(link.parentElement?.textContent).toBe("Espenak & Meeus, NASA's GSFC");
   });
 
   it("credits the airports' source and the day they were retrieved", () => {

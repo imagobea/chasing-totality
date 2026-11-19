@@ -15,7 +15,7 @@ type LayersPanelProps = {
 
 // Every eclipse's elements come from Espenak & Meeus's canon
 const DURATION_SOURCE = {
-  name: "NASA eclipse catalogue",
+  name: "Espenak & Meeus, NASA's GSFC",
   url: "https://eclipse.gsfc.nasa.gov/SEpubs/5MCSE.html",
 };
 
