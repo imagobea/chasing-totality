@@ -47,6 +47,8 @@ type EclipseMapProps = {
   advisories: Advisories | null;
   // Called with the mouse position as it moves, and null when it leaves the map
   onCursorMove: (cursor: Coordinates | null) => void;
+  // Called with the zoom once the map has loaded, and again as it changes
+  onZoomChange: (zoom: number) => void;
   // Where to put the attribution, outside the map
   attributionRef: RefObject<HTMLElement | null>;
 };
@@ -84,6 +86,7 @@ export function EclipseMap({
   airports,
   advisories,
   onCursorMove,
+  onZoomChange,
   attributionRef,
 }: EclipseMapProps) {
   // Set once the style has loaded and our images are in, since sources and layers can only be
@@ -92,6 +95,7 @@ export function EclipseMap({
   const mapContainerRef = useRef<HTMLDivElement>(null);
   // Always calls the latest callback, without recreating the map when it changes
   const reportCursor = useEffectEvent((cursor: Coordinates | null) => onCursorMove(cursor));
+  const reportZoom = useEffectEvent((zoom: number) => onZoomChange(zoom));
 
   // One map for the component's lifetime, whatever the date
   useEffect(() => {
@@ -106,6 +110,7 @@ export function EclipseMap({
     // Ignore the icon if the map goes away before it loads
     let removed = false;
     map.on("load", () => {
+      reportZoom(map.getZoom());
       // Drawn here, so the advisories' hatches are in before the map counts as ready
       for (const [id, pattern] of hatchImages(devicePixelRatio)) {
         map.addImage(id, pattern, { pixelRatio: devicePixelRatio });
@@ -123,6 +128,7 @@ export function EclipseMap({
     // Wrapped, so panning past the antimeridian still reads -180 to 180
     map.on("mousemove", (event) => reportCursor(event.lngLat.wrap()));
     map.on("mouseout", () => reportCursor(null));
+    map.on("zoom", () => reportZoom(map.getZoom()));
 
     // MapLibre's own control, so the credits follow the style and sources. Mounted by hand
     // through its public onAdd/onRemove, because it goes outside the map.

@@ -44,6 +44,7 @@ const map = vi.hoisted(() => ({
   // The base map's style, down to its first label layer
   getStyle: vi.fn(() => ({ layers: [{ id: "place", type: "symbol" }] })),
   fitBounds: vi.fn(),
+  getZoom: vi.fn(() => 2),
   remove: vi.fn(),
   setProjection: vi.fn(),
 }));
@@ -130,6 +131,7 @@ function mapProps(
     airports,
     advisories,
     onCursorMove: vi.fn(),
+    onZoomChange: vi.fn(),
     attributionRef: { current: document.createElement("div") },
   };
 }
@@ -185,6 +187,17 @@ describe("EclipseMap", () => {
     expect(onCursorMove).toHaveBeenLastCalledWith(wrapped);
     fire("mouseout");
     expect(onCursorMove).toHaveBeenLastCalledWith(null);
+  });
+
+  it("reports the zoom once loaded, and again as it changes", async () => {
+    const onZoomChange = vi.fn();
+    render(<EclipseMap {...mapProps(null)} onZoomChange={onZoomChange} />);
+    expect(onZoomChange).not.toHaveBeenCalled();
+    await loadStyle();
+    expect(onZoomChange).toHaveBeenLastCalledWith(2);
+    map.getZoom.mockReturnValueOnce(5.83);
+    fire("zoom");
+    expect(onZoomChange).toHaveBeenLastCalledWith(5.83);
   });
 
   it("puts the attribution in the given slot", () => {

@@ -19,6 +19,8 @@ export function App() {
   // Where the mouse is on the map, null when it's off the map
   // TODO: every mouse move re-renders the whole app; move cursor state out of App when panels land
   const [cursor, setCursor] = useState<Coordinates | null>(null);
+  // The map's zoom, null until the map has loaded
+  const [zoom, setZoom] = useState<number | null>(null);
   const attributionRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -85,11 +87,12 @@ export function App() {
           airports={airports}
           advisories={null}
           onCursorMove={setCursor}
+          onZoomChange={setZoom}
           attributionRef={attributionRef}
         />
         <LayersPanel airports={airports} />
       </main>
-      <StatusBar cursor={cursor} attributionRef={attributionRef} />
+      <StatusBar cursor={cursor} zoom={zoom} attributionRef={attributionRef} />
     </div>
   );
 }
