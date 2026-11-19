@@ -97,7 +97,7 @@ Components are described by **role**, not by colour or font.
 Map layer stack (bottom → top):
 
 1. Basemap fills (land, water, roads), from the style.
-2. **Advisories:** hatched `fill-pattern` (image added via `map.addImage`) plus a dashed outline.
+2. **Advisories:** hatched `fill-pattern` (image added via `map.addImage`) plus a dashed outline, from the same zoom as airports. The hatch follows the UK advice: dense for the whole place, sparse for parts of it, none when there's no advice.
 3. **Isoline fills:** one band per whole minute of totality, non-overlapping, each a flat colour from the duration ramp (longest = lightest).
 4. **Isoline lines:** faint inner isolines every 30 s, and one strong line for the limit of totality.
 5. Basemap labels, kept readable maybe with halos.
@@ -250,14 +250,19 @@ On the light theme (Positron) the accent is darker, to keep 4.5:1 text contrast 
 
 #### Map-layer paint (provisional, same for all themes)
 
-| Token                     | Current value                         |
-| ------------------------- | ------------------------------------- |
-| `--path-fill-opacity`     | `0.95` per band (bands don't overlap) |
-| `--isoline-opacity`       | `0.35`                                |
-| `--isoline-width`         | `0.75px`                              |
-| `--path-limit-width`      | `1.25px`                              |
-| `--advisory-fill-opacity` | `0.55` (hatch)                        |
-| `--label-halo-width`      | `1.5` (MapLibre `text-halo-width`)    |
+| Token                            | Current value                         |
+| -------------------------------- | ------------------------------------- |
+| `--path-fill-opacity`            | `0.95` per band (bands don't overlap) |
+| `--isoline-opacity`              | `0.35`                                |
+| `--isoline-width`                | `0.75px`                              |
+| `--path-limit-width`             | `1.25px`                              |
+| `--advisory-fill-opacity`        | `0.55` (hatch)                        |
+| `--advisory-hatch-whole-width`   | `2px` (45° stripes, whole place)      |
+| `--advisory-hatch-whole-spacing` | `5px`                                 |
+| `--advisory-hatch-parts-width`   | `1.5px` (45° stripes, parts of it)    |
+| `--advisory-hatch-parts-spacing` | `16px`                                |
+| `--advisory-outline-width`       | `1px` (dashed)                        |
+| `--label-halo-width`             | `1.5` (MapLibre `text-halo-width`)    |
 
 MapLibre paint properties can't read CSS variables. Mirror these tokens in a small JS theme object, e.g. `theme.ts`, that both CSS generation and map layers import. That keeps one source of truth.
 

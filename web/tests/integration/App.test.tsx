@@ -1,23 +1,30 @@
 import { act, cleanup, fireEvent, render, screen, waitFor, within } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import type { Advisories } from "../../src/api/advisories.js";
 import type { Airports } from "../../src/api/airports.js";
 import type { Isolines } from "../../src/api/eclipses.js";
 import { App } from "../../src/App.js";
+import { advisories } from "../helpers/advisories.js";
 import { airports } from "../helpers/airports.js";
 
 // The map has its own tests and needs WebGL, so a stand-in shows the bbox of the isolines it was
-// given, which tells the eclipses apart, and the IATA codes of its airports
+// given, which tells the eclipses apart, the IATA codes of its airports and its advisories' states
 vi.mock("../../src/map/EclipseMap.js", () => ({
   EclipseMap: ({
     isolines,
     airports,
+    advisories,
   }: {
     isolines: Isolines | null;
     airports: Airports | null;
+    advisories: Advisories | null;
   }) => (
     <div role="region" aria-label="Map">
       <p aria-label="Isolines">{isolines?.bbox.join(",")}</p>
       <p aria-label="Airports">{airports?.features.map(({ id }) => id).join(",")}</p>
+      <p aria-label="Advisories">
+        {advisories?.features.map(({ properties }) => properties.state).join(",")}
+      </p>
     </div>
   ),
 }));
@@ -38,6 +45,9 @@ const AIRPORTS: Record<string, Airports> = {
   [AIRPORTS_BBOX_2028]: airports("SYD"),
 };
 
+// What the API serves for every place's advisory
+const ADVISORIES = advisories("whole", "parts", "none");
+
 const ISOLINES_URL = /^\/api\/eclipses\/(.+)\/isolines$/;
 const AIRPORTS_URL = /^\/api\/airports\?bbox=(.+)$/;
 
@@ -51,22 +61,26 @@ function okOrNotFound(body: unknown) {
   return body === undefined ? { ok: false, status: 404 } : ok(body);
 }
 
-// Answers /api/eclipses with the given handler, each date's isolines and each bbox's airports
-// with the given handlers or ISOLINES and AIRPORTS, and the health check with ok
+// Answers /api/eclipses with the given handler, each date's isolines, each bbox's airports and
+// the advisories with the given handlers or ISOLINES, AIRPORTS and ADVISORIES, and the health
+// check with ok
 function mockApi(
   eclipses: () => Promise<unknown>,
   {
     isolines = async (date) => okOrNotFound(ISOLINES[date]),
     airports = async (bbox) => okOrNotFound(AIRPORTS[bbox]),
+    advisories = async () => ok(ADVISORIES),
   }: {
     isolines?: (date: string) => Promise<unknown>;
     airports?: (bbox: string) => Promise<unknown>;
+    advisories?: () => Promise<unknown>;
   } = {},
 ) {
   vi.stubGlobal(
     "fetch",
     vi.fn(async (url: string) => {
       if (url === "/api/eclipses") return eclipses();
+      if (url === "/api/advisories") return advisories();
       const date = ISOLINES_URL.exec(url)?.[1];
       if (date) return isolines(date);
       const bbox = AIRPORTS_URL.exec(url)?.[1];
@@ -88,6 +102,12 @@ function mapIsolines() {
 // The IATA codes of the airports on the map
 function mapAirports() {
   return within(screen.getByRole("region", { name: "Map" })).getByLabelText("Airports").textContent;
+}
+
+// The states of the advisories on the map
+function mapAdvisories() {
+  return within(screen.getByRole("region", { name: "Map" })).getByLabelText("Advisories")
+    .textContent;
 }
 
 // The airports' source line in the layers panel
@@ -244,6 +264,28 @@ describe("App", () => {
     await waitFor(() => expect(warn).toHaveBeenCalledWith(expect.any(String), expect.any(Error)));
     expect(mapAirports()).toBe("");
     expect(airportsSourceLine()).toBe("—");
+  });
+
+  it("shows every place's advisory on the map, fetched once whatever the eclipse", async () => {
+    mockApi(async () => ok(["2027-08-02", "2028-07-22"]));
+    render(<App />);
+    await waitFor(() => expect(mapAdvisories()).toBe("whole,parts,none"));
+    fireEvent.change(picker(), { target: { value: "2028-07-22" } });
+    await waitFor(() => expect(mapIsolines()).toBe(shownIsolines("2028-07-22")));
+    expect(mapAdvisories()).toBe("whole,parts,none");
+    expect(vi.mocked(fetch).mock.calls.filter(([url]) => url === "/api/advisories")).toHaveLength(
+      1,
+    );
+  });
+
+  it("warns and shows no advisories when they can't be fetched", async () => {
+    const warn = vi.spyOn(console, "warn").mockImplementation(() => {});
+    mockApi(async () => ok(["2027-08-02"]), {
+      advisories: async () => ({ ok: false, status: 500 }),
+    });
+    render(<App />);
+    await waitFor(() => expect(warn).toHaveBeenCalledWith(expect.any(String), expect.any(Error)));
+    expect(mapAdvisories()).toBe("");
   });
 
   it("shows the layers panel over the map", () => {

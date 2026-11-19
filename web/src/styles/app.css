@@ -237,7 +237,7 @@ body {
   letter-spacing: var(--tracking-kicker);
 }
 
-.cursor {
+.readout {
   margin: 0;
   text-transform: uppercase;
 }

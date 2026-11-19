@@ -9,6 +9,7 @@ import type { Airports } from "../api/airports.js";
 // Maki's airport icon (CC0), https://github.com/mapbox/maki
 import airportIconUrl from "../assets/airport.svg";
 import { MAP_FONT, theme, toNumber } from "../theme.js";
+import { TRAVEL_MINZOOM } from "./constants.js";
 
 export const AIRPORTS_SOURCE_ID = "airports";
 // Not "airport": the base map's sprite already has an image by that name, and MapLibre keeps
@@ -32,7 +33,7 @@ export const AIRPORTS_LAYERS: LayerSpecification[] = [
     id: "airports",
     type: "symbol",
     source: AIRPORTS_SOURCE_ID,
-    minzoom: 5,
+    minzoom: TRAVEL_MINZOOM,
     layout: {
       "icon-image": AIRPORT_ICON_ID,
       "text-field": ["get", "iata"],

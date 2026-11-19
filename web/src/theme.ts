@@ -35,6 +35,13 @@ export const theme = {
   "--isoline-width": "0.75px",
   "--path-limit-width": "1.25px",
   "--advisory-fill-opacity": "0.55",
+  // Advisory hatches: stripe width and spacing, centre to centre. Dense for the whole place, sparse
+  // for parts of it.
+  "--advisory-hatch-whole-width": "2px",
+  "--advisory-hatch-whole-spacing": "5px",
+  "--advisory-hatch-parts-width": "1.5px",
+  "--advisory-hatch-parts-spacing": "16px",
+  "--advisory-outline-width": "1px",
   "--label-halo-width": "1.5",
 
   "--font-display": '"Michroma", sans-serif',

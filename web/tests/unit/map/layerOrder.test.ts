@@ -1,10 +1,13 @@
 import type { LayerSpecification, MapLibreMap } from "maplibre-gl";
 import { describe, expect, it } from "vitest";
+import { ADVISORIES_LAYERS } from "../../../src/map/advisories.js";
 import { AIRPORTS_LAYERS } from "../../../src/map/airports.js";
 import { DURATION_BANDS_LAYERS, ISOLINES_LAYERS } from "../../../src/map/isolines.js";
 import { beforeId } from "../../../src/map/layerOrder.js";
 
-// Our layers, bottom to top: bands, inner isolines, limit, then labels and airports on top
+// Our layers, bottom to top: advisories, bands, inner isolines, limit, then labels and airports on
+// top
+const [ADVISORIES] = ADVISORIES_LAYERS;
 const [BANDS] = DURATION_BANDS_LAYERS;
 const [LINE, LIMIT, LABEL] = ISOLINES_LAYERS;
 const [AIRPORTS] = AIRPORTS_LAYERS;
@@ -36,6 +39,10 @@ describe("beforeId", () => {
     ["the next one when the one right above it is missing", [LIMIT!], LIMIT!.id],
   ])("puts a fill or line under %s of ours", (_, ours, expected) => {
     expect(beforeId(mapWith(ours), BANDS!)).toBe(expected);
+  });
+
+  it("puts advisories under the bands", () => {
+    expect(beforeId(mapWith([BANDS!]), ADVISORIES!)).toBe(BANDS!.id);
   });
 
   it("puts a fill or line under the base map's first label when none of ours is above it", () => {

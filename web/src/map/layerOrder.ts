@@ -1,6 +1,7 @@
 // Where each of our layers goes in the map's layer stack, as in DESIGN.md
 
 import type { LayerSpecification, MapLibreMap } from "maplibre-gl";
+import { ADVISORIES_LAYERS } from "./advisories.js";
 import { AIRPORTS_LAYERS } from "./airports.js";
 import { DURATION_BANDS_LAYERS, ISOLINES_LAYERS } from "./isolines.js";
 
@@ -9,7 +10,8 @@ type LayeredMap = Pick<MapLibreMap, "getLayer" | "getStyle">;
 
 // Our layers, bottom to top. Fills and lines go under the base map's labels, symbols on top.
 const LAYER_STACK: LayerSpecification[] = [
-  ...DURATION_BANDS_LAYERS, // bottom
+  ...ADVISORIES_LAYERS, // bottom
+  ...DURATION_BANDS_LAYERS,
   ...ISOLINES_LAYERS,
   ...AIRPORTS_LAYERS,
 ];
