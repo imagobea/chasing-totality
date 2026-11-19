@@ -280,8 +280,10 @@ body {
   background: none;
 }
 
+/* Underlined like the legend's links, instead of only on hover */
 .attribution .maplibregl-ctrl-attrib a {
   color: var(--color-text-muted);
+  text-decoration: underline;
 }
 
 .attribution .maplibregl-ctrl-attrib a:hover {
