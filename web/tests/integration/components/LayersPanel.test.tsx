@@ -1,9 +1,15 @@
+import { readFileSync } from "node:fs";
+import { join } from "node:path";
 import { cleanup, render, screen, within } from "@testing-library/react";
 import { afterEach, describe, expect, it } from "vitest";
+import type { Advisories } from "../../../src/api/advisories.js";
 import { LayersPanel } from "../../../src/components/LayersPanel.js";
 import { advisories } from "../../helpers/advisories.js";
 import { airports } from "../../helpers/airports.js";
 import { fillToken } from "../../helpers/fillToken.js";
+
+// A path, since jsdom gives import.meta.url an http scheme
+const ADVISORIES_FILE = join(import.meta.dirname, "../../../../data/advisories.geojson");
 
 // Each duration class's row, longest first, with a duration inside it
 const DURATION_ROWS: [label: string, durationSeconds: number][] = [
@@ -80,12 +86,6 @@ describe("LayersPanel", () => {
     expect(airportsGroup().queryByRole("link")).toBeNull();
   });
 
-  it("keys both hatched advisory states, the whole country first", () => {
-    render(<LayersPanel airports={null} advisories={null} />);
-    const rows = advisoriesGroup().getAllByRole("listitem");
-    expect(rows.map((row) => row.textContent)).toEqual(["Whole country", "Some areas"]);
-  });
-
   it("credits the advice and the day it was retrieved, not the public domain shapes", () => {
     render(<LayersPanel airports={null} advisories={advisories()} />);
     const link = advisoriesGroup().getByRole("link", { name: "UK FCDO travel advice" });
@@ -105,9 +105,24 @@ describe("LayersPanel", () => {
     );
   });
 
+  it("credits the committed snapshot's advice under the Open Government Licence", () => {
+    const snapshot = JSON.parse(readFileSync(ADVISORIES_FILE, "utf8")) as Advisories;
+    render(<LayersPanel airports={null} advisories={snapshot} />);
+    const link = advisoriesGroup().getByRole("link", { name: "Open Government Licence v3.0" });
+    expect(link.parentElement?.textContent).toBe(
+      "Contains public sector information licensed under the Open Government Licence v3.0",
+    );
+  });
+
   it("shows — for the advisories' sources until they arrive, or when they can't be fetched", () => {
     render(<LayersPanel airports={null} advisories={null} />);
     expect(advisoriesGroup().getByRole("paragraph").textContent).toBe("—");
     expect(advisoriesGroup().queryByRole("link")).toBeNull();
+  });
+
+  it("keys both hatched advisory states, the whole country first", () => {
+    render(<LayersPanel airports={null} advisories={null} />);
+    const rows = advisoriesGroup().getAllByRole("listitem");
+    expect(rows.map((row) => row.textContent)).toEqual(["Whole country", "Some areas"]);
   });
 });

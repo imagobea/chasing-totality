@@ -288,6 +288,16 @@ describe("App", () => {
     expect(mapAdvisories()).toBe("");
   });
 
+  it("credits the advice in the layers panel once the advisories arrive", async () => {
+    mockApi(async () => ok(["2027-08-02"]));
+    render(<App />);
+    const group = within(screen.getByRole("region", { name: "Travel advisories" }));
+    expect(group.getByRole("paragraph").textContent).toBe("—");
+    await waitFor(() =>
+      expect(group.getByRole("link", { name: "UK FCDO travel advice" })).toBeTruthy(),
+    );
+  });
+
   it("shows the layers panel over the map", () => {
     mockApi(async () => ok([]));
     render(<App />);
