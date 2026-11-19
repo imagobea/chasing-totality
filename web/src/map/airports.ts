@@ -12,7 +12,7 @@ import { MAP_FONT, theme, toNumber } from "../theme.js";
 
 export const AIRPORTS_SOURCE_ID = "airports";
 // Travel layers, airports and advisories, show only from this zoom in
-export const TRAVEL_MINZOOM = 5;
+export const TRAVEL_MINZOOM = 4;
 // Not "airport": the base map's sprite already has an image by that name, and MapLibre keeps
 // the sprite's and ignores ours
 export const AIRPORT_ICON_ID = "maki-airport";
