@@ -20,7 +20,8 @@ export function App() {
   // Every place's travel advisory, null until they arrive or when they can't be fetched
   const [advisories, setAdvisories] = useState<Advisories | null>(null);
   // Where the mouse is on the map, null when it's off the map
-  // TODO: every mouse move re-renders the whole app; move cursor state out of App when panels land
+  // TODO: every mouse move and zoom frame re-renders the whole app; move cursor and zoom state out
+  // of App when panels land
   const [cursor, setCursor] = useState<Coordinates | null>(null);
   // The map's zoom, null until the map has loaded
   const [zoom, setZoom] = useState<number | null>(null);
