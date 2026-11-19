@@ -1,5 +1,5 @@
 import { Fragment, type CSSProperties } from "react";
-import type { Advisories, AdvisoryState } from "../api/advisories.js";
+import type { Advisories, AdvisorySource, AdvisoryState } from "../api/advisories.js";
 import type { Airports } from "../api/airports.js";
 import { CLASS_SECONDS, DURATION_CLASSES } from "../durationClasses.js";
 import { formatDate } from "../utils.js";
@@ -46,8 +46,8 @@ const ADVISORY_ROWS: { state: Exclude<AdvisoryState, "none">; label: string }[] 
 
 // Whether a source's licence asks for a credit, as the advice's does; public domain shapes don't
 function isCredited(
-  source: Advisories["sources"][number],
-): source is Advisories["sources"][number] & { licenceUrl: string; attribution: string } {
+  source: AdvisorySource,
+): source is AdvisorySource & { licenceUrl: string; attribution: string } {
   return source.licenceUrl !== undefined && source.attribution !== undefined;
 }
 
