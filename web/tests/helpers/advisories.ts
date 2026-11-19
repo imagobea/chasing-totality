@@ -11,6 +11,9 @@ export function advisories(...states: AdvisoryState[]): Advisories {
         name: "UK FCDO travel advice",
         url: "https://www.gov.uk/foreign-travel-advice",
         licence: "Open Government Licence v3.0",
+        licenceUrl: "https://www.nationalarchives.gov.uk/doc/open-government-licence/version/3/",
+        attribution:
+          "Contains public sector information licensed under the Open Government Licence v3.0.",
       },
       { name: "Natural Earth", url: "https://www.naturalearthdata.com", licence: "Public domain" },
     ],

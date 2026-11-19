@@ -181,6 +181,21 @@ body {
   color: inherit;
 }
 
+.layer-source a:hover {
+  color: var(--color-text);
+}
+
+/* Tucked under the source line it belongs to */
+.layer-source:has(+ .layer-credit) {
+  margin-bottom: var(--space-1);
+}
+
+/* Wraps to the panel's width instead of widening it */
+.layer-credit {
+  width: 0;
+  min-width: 100%;
+}
+
 .layer-key {
   display: grid;
   gap: var(--space-1);

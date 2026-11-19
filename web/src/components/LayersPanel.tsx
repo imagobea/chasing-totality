@@ -37,6 +37,13 @@ const ADVISORY_ROWS: { state: Exclude<AdvisoryState, "none">; label: string }[] 
   { state: "parts", label: "Some areas" },
 ];
 
+// Whether a source's licence asks for a credit, as the advice's does; public domain shapes don't
+function isCredited(
+  source: Advisories["sources"][number],
+): source is Advisories["sources"][number] & { licenceUrl: string; attribution: string } {
+  return source.licenceUrl !== undefined && source.attribution !== undefined;
+}
+
 // The key to the map's layers, over its bottom-left corner
 export function LayersPanel({ airports, advisories }: LayersPanelProps) {
   return (
@@ -101,23 +108,33 @@ export function LayersPanel({ airports, advisories }: LayersPanelProps) {
         <h2 id="layer-advisories" className="layer-name">
           Travel advisories
         </h2>
-        <p className="layer-source">
-          {advisories ? (
-            <>
-              {advisories.sources.map(({ name, url }, index) => (
+        {advisories ? (
+          advisories.sources
+            .filter(isCredited)
+            .map(({ name, url, licence, licenceUrl, attribution }) => {
+              // Without its full stop, like the panel's other one-sentence lines
+              const [before, after] = attribution.replace(/\.$/, "").split(licence);
+              return (
                 <Fragment key={url}>
-                  {index > 0 && " · "}
-                  <a href={url} target="_blank" rel="noreferrer">
-                    {name}
-                  </a>
+                  <p className="layer-source">
+                    <a href={url} target="_blank" rel="noreferrer">
+                      {name}
+                    </a>
+                    , {formatDate(advisories.retrieved)}
+                  </p>
+                  <p className="layer-source layer-credit">
+                    {before}
+                    <a href={licenceUrl} target="_blank" rel="noreferrer">
+                      {licence}
+                    </a>
+                    {after}
+                  </p>
                 </Fragment>
-              ))}
-              , {formatDate(advisories.retrieved)}
-            </>
-          ) : (
-            "—"
-          )}
-        </p>
+              );
+            })
+        ) : (
+          <p className="layer-source">—</p>
+        )}
         <ul className="layer-key">
           {ADVISORY_ROWS.map(({ state, label }) => (
             <li key={state}>

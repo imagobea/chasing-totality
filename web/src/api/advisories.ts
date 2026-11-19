@@ -13,9 +13,16 @@ type Advisory = {
 };
 
 // Every place as GeoJSON, with where the advice and shapes come from and the day they were
-// retrieved, as YYYY-MM-DD
+// retrieved, as YYYY-MM-DD. A source whose licence asks for a credit has its text and the licence's
+// link.
 export type Advisories = FeatureCollection<Polygon | MultiPolygon, Advisory> & {
-  sources: { name: string; url: string; licence: string }[];
+  sources: {
+    name: string;
+    url: string;
+    licence: string;
+    licenceUrl?: string;
+    attribution?: string;
+  }[];
   retrieved: string;
 };
 

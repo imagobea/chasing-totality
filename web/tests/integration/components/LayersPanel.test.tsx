@@ -86,14 +86,22 @@ describe("LayersPanel", () => {
     expect(rows.map((row) => row.textContent)).toEqual(["Whole country", "Some areas"]);
   });
 
-  it("credits every advisories source and the day they were retrieved", () => {
+  it("credits the advice and the day it was retrieved, not the public domain shapes", () => {
     render(<LayersPanel airports={null} advisories={advisories()} />);
-    const fcdo = advisoriesGroup().getByRole("link", { name: "UK FCDO travel advice" });
-    const naturalEarth = advisoriesGroup().getByRole("link", { name: "Natural Earth" });
-    expect(fcdo.getAttribute("href")).toBe("https://www.gov.uk/foreign-travel-advice");
-    expect(naturalEarth.getAttribute("href")).toBe("https://www.naturalearthdata.com");
-    expect(advisoriesGroup().getByRole("paragraph").textContent).toBe(
-      "UK FCDO travel advice · Natural Earth, 16 NOV 2026",
+    const link = advisoriesGroup().getByRole("link", { name: "UK FCDO travel advice" });
+    expect(link.getAttribute("href")).toBe("https://www.gov.uk/foreign-travel-advice");
+    expect(link.parentElement?.textContent).toBe("UK FCDO travel advice, 16 NOV 2026");
+    expect(advisoriesGroup().queryByRole("link", { name: "Natural Earth" })).toBeNull();
+  });
+
+  it("credits the advice under the Open Government Licence, linked to it", () => {
+    render(<LayersPanel airports={null} advisories={advisories()} />);
+    const link = advisoriesGroup().getByRole("link", { name: "Open Government Licence v3.0" });
+    expect(link.getAttribute("href")).toBe(
+      "https://www.nationalarchives.gov.uk/doc/open-government-licence/version/3/",
+    );
+    expect(link.parentElement?.textContent).toBe(
+      "Contains public sector information licensed under the Open Government Licence v3.0",
     );
   });
 
