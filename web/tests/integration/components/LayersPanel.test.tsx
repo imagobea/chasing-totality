@@ -24,6 +24,10 @@ function airportsGroup() {
   return within(screen.getByRole("region", { name: "Airports" }));
 }
 
+function advisoriesGroup() {
+  return within(screen.getByRole("region", { name: "Travel advisories" }));
+}
+
 // The token a row's swatch is painted with
 function swatchToken(row: HTMLElement): string | undefined {
   const color = row.querySelector<HTMLElement>(".swatch")?.style.getPropertyValue("--swatch");
@@ -71,5 +75,11 @@ describe("LayersPanel", () => {
     render(<LayersPanel airports={null} />);
     expect(airportsGroup().getByRole("paragraph").textContent).toBe("—");
     expect(airportsGroup().queryByRole("link")).toBeNull();
+  });
+
+  it("keys both hatched advisory states, the whole country first", () => {
+    render(<LayersPanel airports={null} />);
+    const rows = advisoriesGroup().getAllByRole("listitem");
+    expect(rows.map((row) => row.textContent)).toEqual(["Whole country", "Some areas"]);
   });
 });

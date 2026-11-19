@@ -1,4 +1,5 @@
 import type { CSSProperties } from "react";
+import type { AdvisoryState } from "../api/advisories.js";
 import type { Airports } from "../api/airports.js";
 import { CLASS_SECONDS, DURATION_CLASSES } from "../durationClasses.js";
 import { formatDate } from "../utils.js";
@@ -26,6 +27,12 @@ const DURATION_ROWS = DURATION_CLASSES.map(({ startSeconds, colorToken }, index,
 
 // Rows per column, for two columns; the left one takes the odd row out
 const DURATION_COLUMN_ROWS = Math.ceil(DURATION_ROWS.length / 2);
+
+// One row per hatched advisory state, densest first, as the map draws them
+const ADVISORY_ROWS: { state: Exclude<AdvisoryState, "none">; label: string }[] = [
+  { state: "whole", label: "Whole country" },
+  { state: "parts", label: "Some areas" },
+];
 
 // The key to the map's layers, over its bottom-left corner
 export function LayersPanel({ airports }: LayersPanelProps) {
@@ -86,6 +93,28 @@ export function LayersPanel({ airports }: LayersPanelProps) {
           </div>
           <span className="airport-icon" aria-hidden="true" />
         </div>
+      </section>
+      <section className="layer-group" aria-labelledby="layer-advisories">
+        <h2 id="layer-advisories" className="layer-name">
+          Travel advisories
+        </h2>
+        <ul className="layer-key">
+          {ADVISORY_ROWS.map(({ state, label }) => (
+            <li key={state}>
+              <span
+                className="hatch"
+                style={
+                  {
+                    "--hatch-width": `var(--advisory-hatch-${state}-width)`,
+                    "--hatch-spacing": `var(--advisory-hatch-${state}-spacing)`,
+                  } as CSSProperties
+                }
+                aria-hidden="true"
+              />
+              {label}
+            </li>
+          ))}
+        </ul>
       </section>
     </aside>
   );
