@@ -1,6 +1,7 @@
 import { cleanup, render, screen, within } from "@testing-library/react";
 import { afterEach, describe, expect, it } from "vitest";
 import { LayersPanel } from "../../../src/components/LayersPanel.js";
+import { advisories } from "../../helpers/advisories.js";
 import { airports } from "../../helpers/airports.js";
 import { fillToken } from "../../helpers/fillToken.js";
 
@@ -38,7 +39,7 @@ describe("LayersPanel", () => {
   afterEach(cleanup);
 
   it("keys every duration class, longest first", () => {
-    render(<LayersPanel airports={null} />);
+    render(<LayersPanel airports={null} advisories={null} />);
     const rows = durationGroup().getAllByRole("listitem");
     expect(rows.map((row) => row.textContent)).toEqual([
       ...DURATION_ROWS.map(([label]) => label),
@@ -47,39 +48,58 @@ describe("LayersPanel", () => {
   });
 
   it.each(DURATION_ROWS)("paints %s in the map's colour for %i s", (label, durationSeconds) => {
-    render(<LayersPanel airports={null} />);
+    render(<LayersPanel airports={null} advisories={null} />);
     const row = durationGroup().getByText(label).closest("li")!;
     expect(swatchToken(row)).toBe(fillToken(durationSeconds));
   });
 
   it("credits the NASA eclipse catalogue, with no date", () => {
-    render(<LayersPanel airports={null} />);
+    render(<LayersPanel airports={null} advisories={null} />);
     const link = durationGroup().getByRole("link", { name: "NASA eclipse catalogue" });
     expect(link.getAttribute("href")).toBe("https://eclipse.gsfc.nasa.gov/SEpubs/5MCSE.html");
     expect(link.parentElement?.textContent).toBe("NASA eclipse catalogue");
   });
 
   it("credits the airports' source and the day they were retrieved", () => {
-    render(<LayersPanel airports={airports("AGP")} />);
+    render(<LayersPanel airports={airports("AGP")} advisories={null} />);
     const link = airportsGroup().getByRole("link", { name: "OurAirports" });
     expect(link.getAttribute("href")).toBe("https://github.com/davidmegginson/ourairports-data");
     expect(airportsGroup().getByRole("paragraph").textContent).toBe("OurAirports, 25 OCT 2026");
   });
 
   it("writes the retrieval day with two digits", () => {
-    render(<LayersPanel airports={{ ...airports("AGP"), retrieved: "2026-11-06" }} />);
+    render(
+      <LayersPanel airports={{ ...airports("AGP"), retrieved: "2026-11-06" }} advisories={null} />,
+    );
     expect(airportsGroup().getByRole("paragraph").textContent).toBe("OurAirports, 06 NOV 2026");
   });
 
   it("shows — for the airports' source until they arrive, or when they can't be fetched", () => {
-    render(<LayersPanel airports={null} />);
+    render(<LayersPanel airports={null} advisories={null} />);
     expect(airportsGroup().getByRole("paragraph").textContent).toBe("—");
     expect(airportsGroup().queryByRole("link")).toBeNull();
   });
 
   it("keys both hatched advisory states, the whole country first", () => {
-    render(<LayersPanel airports={null} />);
+    render(<LayersPanel airports={null} advisories={null} />);
     const rows = advisoriesGroup().getAllByRole("listitem");
     expect(rows.map((row) => row.textContent)).toEqual(["Whole country", "Some areas"]);
+  });
+
+  it("credits every advisories source and the day they were retrieved", () => {
+    render(<LayersPanel airports={null} advisories={advisories()} />);
+    const fcdo = advisoriesGroup().getByRole("link", { name: "UK FCDO travel advice" });
+    const naturalEarth = advisoriesGroup().getByRole("link", { name: "Natural Earth" });
+    expect(fcdo.getAttribute("href")).toBe("https://www.gov.uk/foreign-travel-advice");
+    expect(naturalEarth.getAttribute("href")).toBe("https://www.naturalearthdata.com");
+    expect(advisoriesGroup().getByRole("paragraph").textContent).toBe(
+      "UK FCDO travel advice · Natural Earth, 16 NOV 2026",
+    );
+  });
+
+  it("shows — for the advisories' sources until they arrive, or when they can't be fetched", () => {
+    render(<LayersPanel airports={null} advisories={null} />);
+    expect(advisoriesGroup().getByRole("paragraph").textContent).toBe("—");
+    expect(advisoriesGroup().queryByRole("link")).toBeNull();
   });
 });

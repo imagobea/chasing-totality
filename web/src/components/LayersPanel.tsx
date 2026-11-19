@@ -1,5 +1,5 @@
-import type { CSSProperties } from "react";
-import type { AdvisoryState } from "../api/advisories.js";
+import { Fragment, type CSSProperties } from "react";
+import type { Advisories, AdvisoryState } from "../api/advisories.js";
 import type { Airports } from "../api/airports.js";
 import { CLASS_SECONDS, DURATION_CLASSES } from "../durationClasses.js";
 import { formatDate } from "../utils.js";
@@ -8,6 +8,9 @@ type LayersPanelProps = {
   // The airports on the map, whose source and date the panel credits; null until they arrive or
   // when they can't be fetched
   airports: Airports | null;
+  // The advisories on the map, whose sources and date the panel credits; null until they arrive or
+  // when they can't be fetched
+  advisories: Advisories | null;
 };
 
 // Every eclipse's elements come from Espenak & Meeus's canon
@@ -35,7 +38,7 @@ const ADVISORY_ROWS: { state: Exclude<AdvisoryState, "none">; label: string }[] 
 ];
 
 // The key to the map's layers, over its bottom-left corner
-export function LayersPanel({ airports }: LayersPanelProps) {
+export function LayersPanel({ airports, advisories }: LayersPanelProps) {
   return (
     <aside className="layers-panel" aria-label="Layers">
       <p className="kicker">Layers</p>
@@ -98,6 +101,23 @@ export function LayersPanel({ airports }: LayersPanelProps) {
         <h2 id="layer-advisories" className="layer-name">
           Travel advisories
         </h2>
+        <p className="layer-source">
+          {advisories ? (
+            <>
+              {advisories.sources.map(({ name, url }, index) => (
+                <Fragment key={url}>
+                  {index > 0 && " · "}
+                  <a href={url} target="_blank" rel="noreferrer">
+                    {name}
+                  </a>
+                </Fragment>
+              ))}
+              , {formatDate(advisories.retrieved)}
+            </>
+          ) : (
+            "—"
+          )}
+        </p>
         <ul className="layer-key">
           {ADVISORY_ROWS.map(({ state, label }) => (
             <li key={state}>
