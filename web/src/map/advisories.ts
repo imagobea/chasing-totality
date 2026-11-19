@@ -7,7 +7,7 @@ import type {
 } from "maplibre-gl";
 import type { Advisories, AdvisoryState } from "../api/advisories.js";
 import { theme, toNumber } from "../theme.js";
-import { TRAVEL_MINZOOM } from "./airports.js";
+import { TRAVEL_MINZOOM } from "./constants.js";
 
 // A hatch's stripes in CSS pixels: how thick each one is, and how far apart, centre to centre
 type Hatch = { width: number; spacing: number };
