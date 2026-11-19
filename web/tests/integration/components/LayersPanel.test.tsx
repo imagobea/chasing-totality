@@ -120,6 +120,14 @@ describe("LayersPanel", () => {
     expect(advisoriesGroup().queryByRole("link")).toBeNull();
   });
 
+  it("shows — for the advisories' sources when none asks for a credit", () => {
+    const fcdoUncredited = { ...advisories().sources[0]!, licenceUrl: undefined };
+    render(
+      <LayersPanel airports={null} advisories={{ ...advisories(), sources: [fcdoUncredited] }} />,
+    );
+    expect(advisoriesGroup().getByRole("paragraph").textContent).toBe("—");
+  });
+
   it("keys both hatched advisory states, the whole country first", () => {
     render(<LayersPanel airports={null} advisories={null} />);
     const rows = advisoriesGroup().getAllByRole("listitem");

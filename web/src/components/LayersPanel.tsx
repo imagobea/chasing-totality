@@ -46,6 +46,8 @@ function isCredited(
 
 // The key to the map's layers, over its bottom-left corner
 export function LayersPanel({ airports, advisories }: LayersPanelProps) {
+  const creditedSources = advisories?.sources.filter(isCredited) ?? [];
+
   return (
     <aside className="layers-panel" aria-label="Layers">
       <p className="kicker">Layers</p>
@@ -108,30 +110,29 @@ export function LayersPanel({ airports, advisories }: LayersPanelProps) {
         <h2 id="layer-advisories" className="layer-name">
           Travel advisories
         </h2>
-        {advisories ? (
-          advisories.sources
-            .filter(isCredited)
-            .map(({ name, url, licence, licenceUrl, attribution }) => {
-              // Without its full stop, like the panel's other one-sentence lines
-              const [before, after] = attribution.replace(/\.$/, "").split(licence);
-              return (
-                <Fragment key={url}>
-                  <p className="layer-source">
-                    <a href={url} target="_blank" rel="noreferrer">
-                      {name}
-                    </a>
-                    , {formatDate(advisories.retrieved)}
-                  </p>
-                  <p className="layer-source layer-credit">
-                    {before}
-                    <a href={licenceUrl} target="_blank" rel="noreferrer">
-                      {licence}
-                    </a>
-                    {after}
-                  </p>
-                </Fragment>
-              );
-            })
+        {/* — like the airports' line until there's a source to credit */}
+        {advisories && creditedSources.length > 0 ? (
+          creditedSources.map(({ name, url, licence, licenceUrl, attribution }) => {
+            // Without its full stop, like the panel's other one-sentence lines
+            const [before, after] = attribution.replace(/\.$/, "").split(licence);
+            return (
+              <Fragment key={url}>
+                <p className="layer-source">
+                  <a href={url} target="_blank" rel="noreferrer">
+                    {name}
+                  </a>
+                  , {formatDate(advisories.retrieved)}
+                </p>
+                <p className="layer-source layer-credit">
+                  {before}
+                  <a href={licenceUrl} target="_blank" rel="noreferrer">
+                    {licence}
+                  </a>
+                  {after}
+                </p>
+              </Fragment>
+            );
+          })
         ) : (
           <p className="layer-source">—</p>
         )}

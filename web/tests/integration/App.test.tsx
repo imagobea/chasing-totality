@@ -116,6 +116,12 @@ function airportsSourceLine() {
   return group.getByRole("paragraph").textContent;
 }
 
+// The advisories' source line in the layers panel, above the credit once they arrive
+function advisoriesSourceLine() {
+  const group = within(screen.getByRole("region", { name: "Travel advisories" }));
+  return group.getAllByRole("paragraph")[0]?.textContent;
+}
+
 function picker() {
   return screen.getByRole<HTMLSelectElement>("combobox", { name: /eclipse/i });
 }
@@ -278,6 +284,13 @@ describe("App", () => {
     );
   });
 
+  it("credits the advisories' source in the layers panel once they arrive", async () => {
+    mockApi(async () => ok(["2027-08-02"]));
+    render(<App />);
+    expect(advisoriesSourceLine()).toBe("—");
+    await waitFor(() => expect(advisoriesSourceLine()).toBe("UK FCDO travel advice, 16 NOV 2026"));
+  });
+
   it("warns and shows no advisories when they can't be fetched", async () => {
     const warn = vi.spyOn(console, "warn").mockImplementation(() => {});
     mockApi(async () => ok(["2027-08-02"]), {
@@ -286,16 +299,7 @@ describe("App", () => {
     render(<App />);
     await waitFor(() => expect(warn).toHaveBeenCalledWith(expect.any(String), expect.any(Error)));
     expect(mapAdvisories()).toBe("");
-  });
-
-  it("credits the advice in the layers panel once the advisories arrive", async () => {
-    mockApi(async () => ok(["2027-08-02"]));
-    render(<App />);
-    const group = within(screen.getByRole("region", { name: "Travel advisories" }));
-    expect(group.getByRole("paragraph").textContent).toBe("—");
-    await waitFor(() =>
-      expect(group.getByRole("link", { name: "UK FCDO travel advice" })).toBeTruthy(),
-    );
+    expect(advisoriesSourceLine()).toBe("—");
   });
 
   it("shows the layers panel over the map", () => {
