@@ -13,6 +13,13 @@ type LayersPanelProps = {
   advisories: Advisories | null;
 };
 
+type SourceLineProps = {
+  // Where a layer's data comes from; null until it arrives or when it can't be fetched
+  source: { name: string; url: string } | null;
+  // The day the data was retrieved, as YYYY-MM-DD; none for data we generate
+  retrieved?: string;
+};
+
 // Every eclipse's elements come from Espenak & Meeus's canon
 const DURATION_SOURCE = {
   name: "Espenak & Meeus, NASA's GSFC",
@@ -44,6 +51,24 @@ function isCredited(
   return source.licenceUrl !== undefined && source.attribution !== undefined;
 }
 
+// A layer's source, linked to its dataset, with the day it was retrieved; — until there's one
+function SourceLine({ source, retrieved }: SourceLineProps) {
+  return (
+    <p className="layer-source">
+      {source ? (
+        <>
+          <a href={source.url} target="_blank" rel="noreferrer">
+            {source.name}
+          </a>
+          {retrieved && `, ${formatDate(retrieved)}`}
+        </>
+      ) : (
+        "—"
+      )}
+    </p>
+  );
+}
+
 // The key to the map's layers, over its bottom-left corner
 export function LayersPanel({ airports, advisories }: LayersPanelProps) {
   const creditedSources = advisories?.sources.filter(isCredited) ?? [];
@@ -55,11 +80,7 @@ export function LayersPanel({ airports, advisories }: LayersPanelProps) {
         <h2 id="layer-duration" className="layer-name">
           Totality duration
         </h2>
-        <p className="layer-source">
-          <a href={DURATION_SOURCE.url} target="_blank" rel="noreferrer">
-            {DURATION_SOURCE.name}
-          </a>
-        </p>
+        <SourceLine source={DURATION_SOURCE} />
         {/* Two columns, filled top to bottom, so longest first still reads down the left */}
         <ul
           className="layer-key duration-key"
@@ -90,18 +111,7 @@ export function LayersPanel({ airports, advisories }: LayersPanelProps) {
             <h2 id="layer-airports" className="layer-name">
               Airports
             </h2>
-            <p className="layer-source">
-              {airports ? (
-                <>
-                  <a href={airports.source.url} target="_blank" rel="noreferrer">
-                    {airports.source.name}
-                  </a>
-                  , {formatDate(airports.retrieved)}
-                </>
-              ) : (
-                "—"
-              )}
-            </p>
+            <SourceLine source={airports?.source ?? null} retrieved={airports?.retrieved} />
           </div>
           <span className="airport-icon" aria-hidden="true" />
         </div>
@@ -112,17 +122,13 @@ export function LayersPanel({ airports, advisories }: LayersPanelProps) {
         </h2>
         {/* — like the airports' line until there's a source to credit */}
         {advisories && creditedSources.length > 0 ? (
-          creditedSources.map(({ name, url, licence, licenceUrl, attribution }) => {
+          creditedSources.map((source) => {
+            const { url, licence, licenceUrl, attribution } = source;
             // Without its full stop, like the panel's other one-sentence lines
             const [before, after] = attribution.replace(/\.$/, "").split(licence);
             return (
               <Fragment key={url}>
-                <p className="layer-source">
-                  <a href={url} target="_blank" rel="noreferrer">
-                    {name}
-                  </a>
-                  , {formatDate(advisories.retrieved)}
-                </p>
+                <SourceLine source={source} retrieved={advisories.retrieved} />
                 <p className="layer-source layer-credit">
                   {before}
                   <a href={licenceUrl} target="_blank" rel="noreferrer">
@@ -134,7 +140,7 @@ export function LayersPanel({ airports, advisories }: LayersPanelProps) {
             );
           })
         ) : (
-          <p className="layer-source">—</p>
+          <SourceLine source={null} />
         )}
         <ul className="layer-key">
           {ADVISORY_ROWS.map(({ state, label }) => (
