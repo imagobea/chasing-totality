@@ -28,27 +28,16 @@ describe("createMapStatusStore", () => {
     expect(store.get()).not.toBe(before);
   });
 
-  it("calls every listener on each change", () => {
-    const store = createMapStatusStore();
-    const first = vi.fn();
-    const second = vi.fn();
-    store.subscribe(first);
-    store.subscribe(second);
-    store.set({ zoom: 5 });
-    store.set({ cursor: null });
-    expect(first).toHaveBeenCalledTimes(2);
-    expect(second).toHaveBeenCalledTimes(2);
-  });
-
-  it("stops calling a listener once it unsubscribes, and keeps calling the others", () => {
+  it("calls every listener on each change, until it unsubscribes", () => {
     const store = createMapStatusStore();
     const gone = vi.fn();
     const kept = vi.fn();
     const unsubscribe = store.subscribe(gone);
     store.subscribe(kept);
-    unsubscribe();
     store.set({ zoom: 5 });
-    expect(gone).not.toHaveBeenCalled();
-    expect(kept).toHaveBeenCalledOnce();
+    unsubscribe();
+    store.set({ cursor: null });
+    expect(gone).toHaveBeenCalledOnce();
+    expect(kept).toHaveBeenCalledTimes(2);
   });
 });
