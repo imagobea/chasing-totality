@@ -120,12 +120,43 @@ describe("LayersPanel", () => {
     expect(advisoriesGroup().queryByRole("link")).toBeNull();
   });
 
-  it("shows — for the advisories' sources when none asks for a credit", () => {
+  it("credits only the advice by its fields, even when the shapes' source comes first, credited", () => {
+    const [fcdo, naturalEarth] = advisories().sources;
+    const naturalEarthCredited = {
+      ...naturalEarth!,
+      licence: "Some licence",
+      licenceUrl: "https://example.com/licence",
+      attribution: "Shapes under Some licence.",
+    };
+    render(
+      <LayersPanel
+        airports={null}
+        advisories={{ ...advisories(), sources: [naturalEarthCredited, fcdo!] }}
+      />,
+    );
+    const names = advisoriesGroup()
+      .getAllByRole("link")
+      .map((link) => link.textContent);
+    expect(names).toEqual(["UK FCDO travel advice", "Open Government Licence v3.0"]);
+  });
+
+  it("shows the advice's source without a credit line when it has no credit", () => {
     const fcdoUncredited = { ...advisories().sources[0]!, licenceUrl: undefined };
     render(
       <LayersPanel airports={null} advisories={{ ...advisories(), sources: [fcdoUncredited] }} />,
     );
+    expect(advisoriesGroup().getByRole("paragraph").textContent).toBe(
+      "UK FCDO travel advice, 16 NOV 2026",
+    );
+  });
+
+  it("shows — for the advisories' sources when none supplies the advice", () => {
+    const naturalEarth = advisories().sources[1]!;
+    render(
+      <LayersPanel airports={null} advisories={{ ...advisories(), sources: [naturalEarth] }} />,
+    );
     expect(advisoriesGroup().getByRole("paragraph").textContent).toBe("—");
+    expect(advisoriesGroup().queryByRole("link")).toBeNull();
   });
 
   it("keys both hatched advisory states, the whole country first", () => {

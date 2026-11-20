@@ -12,9 +12,10 @@ type Advisory = {
   state: AdvisoryState;
 };
 
-// Where the advice or the shapes come from. A source whose licence asks for a credit has its text
-// and the licence's link.
+// Where the advice or the shapes come from, labelled with the group of place fields it supplies. A
+// source whose licence asks for a credit has its text and the licence's link.
 export type AdvisorySource = {
+  fields: string;
   name: string;
   url: string;
   licence: string;
