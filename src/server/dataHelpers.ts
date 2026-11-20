@@ -154,6 +154,11 @@ function checkAdvisories(json: unknown, file: string): void {
     throw new DataError(file, "sources need a name, url and licence each");
   }
 
+  // Each labelled with the group of place fields it supplies
+  if (!sources.every((source) => typeof source.fields === "string")) {
+    throw new DataError(file, "sources need the fields they supply each");
+  }
+
   // The day they were retrieved
   checkRetrieved(retrieved, file);
 
