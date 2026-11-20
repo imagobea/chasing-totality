@@ -87,7 +87,7 @@ const INDEX_PATH = "/foreign-travel-advice";
 const PAGE_URL = "https://www.gov.uk";
 const NATURAL_EARTH_COMMIT = "f1890d9f152c896d250a77557a5751a93d494776"; // tag v5.1.2
 const NATURAL_EARTH_URL = `https://raw.githubusercontent.com/nvkelso/natural-earth-vector/${NATURAL_EARTH_COMMIT}/geojson/ne_50m_admin_0_map_units.geojson`;
-// The fields that each source contributes to the snapshot, for attribution
+// The details that each source contributes to the snapshot, for attribution
 const SOURCES: Record<string, string>[] = [
   {
     fields: "fcdo",
