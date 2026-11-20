@@ -193,7 +193,10 @@ async function generate(data: World, statuses?: Record<string, number[]>) {
   stubFetch(data, statuses);
   await run();
   const [, text] = vi.mocked(writeFileSync).mock.lastCall ?? [];
-  return JSON.parse(String(text)) as { features: Feature[] } & Record<string, unknown>;
+  return JSON.parse(String(text)) as {
+    features: Feature[];
+    sources: { fields: string }[];
+  } & Record<string, unknown>;
 }
 
 async function features(data: World): Promise<Feature[]> {
@@ -502,6 +505,7 @@ describe("generate-advisories", () => {
     expect(snapshot.sources).toHaveLength(2);
     expect(snapshot.retrieved).toBe(RETRIEVED);
     const spain = byName(snapshot.features, "Spain");
+    for (const { fields } of snapshot.sources) expect(spain?.properties).toHaveProperty(fields);
     expect(spain).toEqual({
       type: "Feature",
       id: spain?.id,
