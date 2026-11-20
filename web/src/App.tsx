@@ -103,8 +103,7 @@ export function App() {
           isolines={isolines}
           airports={airports}
           advisories={advisories}
-          onCursorMove={(cursor) => mapStatus.set({ cursor })}
-          onZoomChange={(zoom) => mapStatus.set({ zoom })}
+          mapStatus={mapStatus}
           attributionRef={attributionRef}
         />
         <LayersPanel airports={airports} advisories={advisories} />

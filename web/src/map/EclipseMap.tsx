@@ -1,4 +1,4 @@
-import { type RefObject, useEffect, useEffectEvent, useRef, useState } from "react";
+import { type RefObject, useEffect, useRef, useState } from "react";
 import {
   AttributionControl,
   type GeoJSONSource,
@@ -13,7 +13,6 @@ import type { FeatureCollection } from "geojson";
 import type { Advisories } from "../api/advisories.js";
 import type { Airports } from "../api/airports.js";
 import type { Isolines } from "../api/eclipses.js";
-import type { Coordinates } from "../utils.js";
 import {
   ADVISORIES_LAYERS,
   ADVISORIES_SOURCE_ID,
@@ -37,6 +36,7 @@ import {
   isolinesSource,
 } from "./isolines.js";
 import { beforeId } from "./layerOrder.js";
+import type { MapStatusStore } from "./mapStatus.js";
 
 type EclipseMapProps = {
   // The selected eclipse's isolines, null until they arrive
@@ -45,10 +45,9 @@ type EclipseMapProps = {
   airports: Airports | null;
   // Every place's travel advisory, null until they arrive or when they can't be had
   advisories: Advisories | null;
-  // Called with the mouse position as it moves, and null when it leaves the map
-  onCursorMove: (cursor: Coordinates | null) => void;
-  // Called with the zoom once the map has loaded, and again as it changes
-  onZoomChange: (zoom: number) => void;
+  // Where the map writes the mouse position as it moves (null when it leaves the map) and the zoom
+  // once loaded and as it changes
+  mapStatus: MapStatusStore;
   // Where to put the attribution, outside the map
   attributionRef: RefObject<HTMLElement | null>;
 };
@@ -85,17 +84,13 @@ export function EclipseMap({
   isolines,
   airports,
   advisories,
-  onCursorMove,
-  onZoomChange,
+  mapStatus,
   attributionRef,
 }: EclipseMapProps) {
   // Set once the style has loaded and our images are in, since sources and layers can only be
   // added after that
   const [map, setMap] = useState<MapLibreMap | null>(null);
   const mapContainerRef = useRef<HTMLDivElement>(null);
-  // Always calls the latest callback, without recreating the map when it changes
-  const reportCursor = useEffectEvent((cursor: Coordinates | null) => onCursorMove(cursor));
-  const reportZoom = useEffectEvent((zoom: number) => onZoomChange(zoom));
 
   // One map for the component's lifetime, whatever the date
   useEffect(() => {
@@ -110,7 +105,7 @@ export function EclipseMap({
     // Ignore the icon if the map goes away before it loads
     let removed = false;
     map.on("load", () => {
-      reportZoom(map.getZoom());
+      mapStatus.set({ zoom: map.getZoom() });
       // Drawn here, so the advisories' hatches are in before the map counts as ready
       for (const [id, pattern] of hatchImages(devicePixelRatio)) {
         map.addImage(id, pattern, { pixelRatio: devicePixelRatio });
@@ -126,9 +121,9 @@ export function EclipseMap({
         });
     });
     // Wrapped, so panning past the antimeridian still reads -180 to 180
-    map.on("mousemove", (event) => reportCursor(event.lngLat.wrap()));
-    map.on("mouseout", () => reportCursor(null));
-    map.on("zoom", () => reportZoom(map.getZoom()));
+    map.on("mousemove", (event) => mapStatus.set({ cursor: event.lngLat.wrap() }));
+    map.on("mouseout", () => mapStatus.set({ cursor: null }));
+    map.on("zoom", () => mapStatus.set({ zoom: map.getZoom() }));
 
     // MapLibre's own control, so the credits follow the style and sources. Mounted by hand
     // through its public onAdd/onRemove, because it goes outside the map.
@@ -145,8 +140,8 @@ export function EclipseMap({
       map.remove();
       setMap(null);
     };
-    // A ref object stays the same across renders, so the map is still created once
-  }, [attributionRef]);
+    // A ref object and the store stay the same across renders, so the map is still created once
+  }, [attributionRef, mapStatus]);
 
   // The eclipse's isolines, with the map fitted to its whole path; the user is then free to pan
   // and zoom
