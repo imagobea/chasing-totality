@@ -5,6 +5,7 @@ import { join } from "node:path";
 import fp from "fastify-plugin";
 import {
   type AirportsSnapshot,
+  type IsolinesFile,
   loadAdvisories,
   loadAirports,
   loadIsolines,
@@ -17,7 +18,7 @@ type DataPluginOptions = {
 };
 
 type Data = {
-  isolines: Map<string, Buffer>;
+  isolines: Map<string, IsolinesFile>;
   airports: AirportsSnapshot;
   advisories: Buffer;
 };

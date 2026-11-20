@@ -118,8 +118,18 @@ describe("loadIsolines", () => {
     });
     const isolines = await loadIsolines(dataDir);
     expect([...isolines.keys()]).toEqual(["2027-08-02", "2028-07-22"]);
-    expect(isolines.get("2027-08-02")?.toString()).toBe(bytes2027);
-    expect(isolines.get("2028-07-22")?.toString()).toBe(bytes2028);
+    expect(isolines.get("2027-08-02")?.bytes.toString()).toBe(bytes2027);
+    expect(isolines.get("2028-07-22")?.bytes.toString()).toBe(bytes2028);
+  });
+
+  it("keeps each file's own bbox", async () => {
+    const dataDir = await tempDir({
+      "2027-08-02.geojson": JSON.stringify(ISOLINES),
+      "2028-07-22.geojson": JSON.stringify({ ...ISOLINES, bbox: [170, -30, 190, -10] }),
+    });
+    const isolines = await loadIsolines(dataDir);
+    expect(isolines.get("2027-08-02")?.bbox).toEqual([-10, 25, 45, 40]);
+    expect(isolines.get("2028-07-22")?.bbox).toEqual([170, -30, 190, -10]);
   });
 
   // Only 2027 is checked, so adding an eclipse's data doesn't break this test
