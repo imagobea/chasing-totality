@@ -1,4 +1,4 @@
-import { Fragment, type CSSProperties } from "react";
+import type { CSSProperties } from "react";
 import type { Advisories, AdvisorySource, AdvisoryState } from "../api/advisories.js";
 import type { Airports } from "../api/airports.js";
 import { CLASS_SECONDS, DURATION_CLASSES } from "../durationClasses.js";
@@ -38,18 +38,14 @@ const DURATION_ROWS = DURATION_CLASSES.map(({ startSeconds, colorToken }, index,
 // Rows per column, for two columns; the left one takes the odd row out
 const DURATION_COLUMN_ROWS = Math.ceil(DURATION_ROWS.length / 2);
 
+// The group of place fields the travel advice supplies, whose source the panel credits
+const ADVICE_FIELDS = "fcdo";
+
 // One row per hatched advisory state, densest first, as the map draws them
 const ADVISORY_ROWS: { state: Exclude<AdvisoryState, "none">; label: string }[] = [
   { state: "whole", label: "Whole country" },
   { state: "parts", label: "Some areas" },
 ];
-
-// Whether a source's licence asks for a credit, as the advice's does; public domain shapes don't
-function isCredited(
-  source: AdvisorySource,
-): source is AdvisorySource & { licenceUrl: string; attribution: string } {
-  return source.licenceUrl !== undefined && source.attribution !== undefined;
-}
 
 // A layer's source, linked to its dataset, with the day it was retrieved; — until there's one
 function SourceLine({ source, retrieved }: SourceLineProps) {
@@ -69,9 +65,18 @@ function SourceLine({ source, retrieved }: SourceLineProps) {
   );
 }
 
+// A source's credit split around its licence, to link it; null when its licence asks for none
+function creditParts({ licence, licenceUrl, attribution }: AdvisorySource) {
+  if (licenceUrl === undefined || attribution === undefined) return null;
+  // Without its full stop, like the panel's other one-sentence lines
+  const [before, after] = attribution.replace(/\.$/, "").split(licence);
+  return { before, licence, licenceUrl, after };
+}
+
 // The key to the map's layers, over its bottom-left corner
 export function LayersPanel({ airports, advisories }: LayersPanelProps) {
-  const creditedSources = advisories?.sources.filter(isCredited) ?? [];
+  const adviceSource = advisories?.sources.find(({ fields }) => fields === ADVICE_FIELDS) ?? null;
+  const credit = adviceSource && creditParts(adviceSource);
 
   return (
     <aside className="layers-panel" aria-label="Layers">
@@ -120,27 +125,16 @@ export function LayersPanel({ airports, advisories }: LayersPanelProps) {
         <h2 id="layer-advisories" className="layer-name">
           Travel advisories
         </h2>
-        {/* — like the airports' line until there's a source to credit */}
-        {advisories && creditedSources.length > 0 ? (
-          creditedSources.map((source) => {
-            const { url, licence, licenceUrl, attribution } = source;
-            // Without its full stop, like the panel's other one-sentence lines
-            const [before, after] = attribution.replace(/\.$/, "").split(licence);
-            return (
-              <Fragment key={url}>
-                <SourceLine source={source} retrieved={advisories.retrieved} />
-                <p className="layer-source layer-credit">
-                  {before}
-                  <a href={licenceUrl} target="_blank" rel="noreferrer">
-                    {licence}
-                  </a>
-                  {after}
-                </p>
-              </Fragment>
-            );
-          })
-        ) : (
-          <SourceLine source={null} />
+        <SourceLine source={adviceSource} retrieved={advisories?.retrieved} />
+        {/* The licence's credit, when it asks for one, linked to the licence */}
+        {credit && (
+          <p className="layer-source layer-credit">
+            {credit.before}
+            <a href={credit.licenceUrl} target="_blank" rel="noreferrer">
+              {credit.licence}
+            </a>
+            {credit.after}
+          </p>
         )}
         <ul className="layer-key">
           {ADVISORY_ROWS.map(({ state, label }) => (

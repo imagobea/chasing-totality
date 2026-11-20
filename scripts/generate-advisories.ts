@@ -87,8 +87,10 @@ const INDEX_PATH = "/foreign-travel-advice";
 const PAGE_URL = "https://www.gov.uk";
 const NATURAL_EARTH_COMMIT = "f1890d9f152c896d250a77557a5751a93d494776"; // tag v5.1.2
 const NATURAL_EARTH_URL = `https://raw.githubusercontent.com/nvkelso/natural-earth-vector/${NATURAL_EARTH_COMMIT}/geojson/ne_50m_admin_0_map_units.geojson`;
+// The details that each source contributes to the snapshot, for attribution
 const SOURCES: Record<string, string>[] = [
   {
+    fields: "fcdo",
     name: "UK FCDO travel advice",
     url: "https://www.gov.uk/foreign-travel-advice",
     licence: "Open Government Licence v3.0",
@@ -97,6 +99,7 @@ const SOURCES: Record<string, string>[] = [
       "Contains public sector information licensed under the Open Government Licence v3.0.",
   },
   {
+    fields: "naturalEarth",
     name: "Natural Earth",
     url: "https://www.naturalearthdata.com",
     version: "5.1.2",

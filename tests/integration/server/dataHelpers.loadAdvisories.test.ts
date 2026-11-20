@@ -10,8 +10,13 @@ const ADVISORIES_FILE = fileURLToPath(new URL("../../../data/advisories.geojson"
 const SNAPSHOT = {
   type: "FeatureCollection",
   sources: [
-    { name: "Advice", url: "https://example.com/advice", licence: "Open" },
-    { name: "Shapes", url: "https://example.com/shapes", licence: "Public domain" },
+    { fields: "fcdo", name: "Advice", url: "https://example.com/advice", licence: "Open" },
+    {
+      fields: "naturalEarth",
+      name: "Shapes",
+      url: "https://example.com/shapes",
+      licence: "Public domain",
+    },
   ],
   retrieved: "2026-11-16",
   features: [
@@ -88,6 +93,13 @@ describe("loadAdvisories", () => {
   });
 
   it.each([
+    ["missing", [{ ...SOURCE, fields: undefined }, SNAPSHOT.sources[1]]],
+    ["not text", [SOURCE, { ...SNAPSHOT.sources[1], fields: 1 }]],
+  ])("throws when a source's fields are %s", async (_, sources) => {
+    await expectRejected({ ...SNAPSHOT, sources }, "sources need the fields they supply each");
+  });
+
+  it.each([
     ["missing", undefined],
     ["not YYYY-MM-DD", "16/11/2026"],
     ["not text", 20261116],
@@ -138,9 +150,11 @@ describe("loadAdvisories", () => {
 
   it("loads the committed snapshot", async () => {
     const snapshot = JSON.parse((await loadAdvisories(ADVISORIES_FILE)).toString("utf8"));
-    expect(snapshot.sources.map((source: { name: string }) => source.name)).toEqual([
-      "UK FCDO travel advice",
-      "Natural Earth",
+    expect(
+      snapshot.sources.map(({ fields, name }: Record<string, string>) => [fields, name]),
+    ).toEqual([
+      ["fcdo", "UK FCDO travel advice"],
+      ["naturalEarth", "Natural Earth"],
     ]);
     expect(snapshot.features.length).toBeGreaterThan(0);
   });

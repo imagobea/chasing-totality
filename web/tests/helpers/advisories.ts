@@ -8,6 +8,7 @@ export function advisories(...states: AdvisoryState[]): Advisories {
     type: "FeatureCollection",
     sources: [
       {
+        fields: "fcdo",
         name: "UK FCDO travel advice",
         url: "https://www.gov.uk/foreign-travel-advice",
         licence: "Open Government Licence v3.0",
@@ -15,7 +16,12 @@ export function advisories(...states: AdvisoryState[]): Advisories {
         attribution:
           "Contains public sector information licensed under the Open Government Licence v3.0.",
       },
-      { name: "Natural Earth", url: "https://www.naturalearthdata.com", licence: "Public domain" },
+      {
+        fields: "naturalEarth",
+        name: "Natural Earth",
+        url: "https://www.naturalearthdata.com",
+        licence: "Public domain",
+      },
     ],
     retrieved: "2026-11-16",
     features: states.map((state, i) => ({
