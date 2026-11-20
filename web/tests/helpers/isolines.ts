@@ -21,7 +21,6 @@ export function square(half: number): [number, number][][][] {
 export function isolines(...durationsSeconds: number[]): Isolines {
   return {
     type: "FeatureCollection",
-    bbox: [-10, -10, 10, 10],
     features: durationsSeconds.map((durationSeconds, i) => ({
       type: "Feature",
       properties: { durationSeconds, name: `${durationSeconds}s` },

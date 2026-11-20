@@ -1,7 +1,8 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { fetchIsolines, type Isolines } from "../../../src/api/eclipses.js";
+import { isolines } from "../../helpers/isolines.js";
 
-const ISOLINES: Isolines = { type: "FeatureCollection", bbox: [-46, -14, 92, 38], features: [] };
+const ISOLINES: Isolines = isolines(0, 60);
 
 describe("fetchIsolines", () => {
   afterEach(() => vi.unstubAllGlobals());

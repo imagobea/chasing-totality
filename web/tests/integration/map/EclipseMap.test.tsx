@@ -83,17 +83,11 @@ vi.mock("maplibre-gl", () => ({
   setWorkerUrl: vi.fn(),
 }));
 
-// Two eclipses' isolines, as App passes them
-const ISOLINES_2027: Isolines = {
-  type: "FeatureCollection",
-  bbox: [-46, -14, 92, 38],
-  features: [],
-};
-const ISOLINES_2028: Isolines = {
-  type: "FeatureCollection",
-  bbox: [74, -52, 182, -9],
-  features: [],
-};
+// Two eclipses' bboxes and isolines, as App passes them
+const BBOX_2027: Bbox = [-46, -14, 92, 38];
+const BBOX_2028: Bbox = [74, -52, 182, -9];
+const ISOLINES_2027 = isolines(0, 60, 120);
+const ISOLINES_2028 = isolines(0, 60);
 
 // The airports around each eclipse's path, as App passes them
 const AIRPORTS_2027 = airports("AGP", "LXR");
@@ -121,13 +115,12 @@ async function loadStyle() {
   await act(async () => {});
 }
 
-// The props App passes, with a fresh slot for the attribution and, by default, the bbox of the
-// given isolines' eclipse
+// The props App passes, with a fresh slot for the attribution
 function mapProps(
   isolines: Isolines | null,
   airports: Airports | null = null,
   advisories: Advisories | null = null,
-  bbox: Bbox | null = isolines?.bbox ?? null,
+  bbox: Bbox | null = null,
 ) {
   return {
     bbox,
@@ -307,26 +300,23 @@ describe("EclipseMap", () => {
   });
 
   it("fits the map to the whole path of each eclipse picked, before its isolines arrive", async () => {
-    const props = mapProps(null, null, null, ISOLINES_2027.bbox);
+    const props = mapProps(null, null, null, BBOX_2027);
     const { rerender } = render(<EclipseMap {...props} />);
     await loadStyle();
-    rerender(<EclipseMap {...props} bbox={ISOLINES_2028.bbox} />);
-    expect(map.fitBounds.mock.calls.map(([bbox]) => bbox)).toEqual([
-      ISOLINES_2027.bbox,
-      ISOLINES_2028.bbox,
-    ]);
+    rerender(<EclipseMap {...props} bbox={BBOX_2028} />);
+    expect(map.fitBounds.mock.calls.map(([bbox]) => bbox)).toEqual([BBOX_2027, BBOX_2028]);
   });
 
   it("fits the map once the style has loaded when the bbox came first", async () => {
-    render(<EclipseMap {...mapProps(null, null, null, ISOLINES_2027.bbox)} />);
+    render(<EclipseMap {...mapProps(null, null, null, BBOX_2027)} />);
     expect(map.fitBounds).not.toHaveBeenCalled();
     await loadStyle();
-    expect(map.fitBounds).toHaveBeenCalledExactlyOnceWith(ISOLINES_2027.bbox);
+    expect(map.fitBounds).toHaveBeenCalledExactlyOnceWith(BBOX_2027);
   });
 
   // The user may have panned by then
   it("doesn't fit the map again when the isolines arrive", async () => {
-    const props = mapProps(null, null, null, ISOLINES_2027.bbox);
+    const props = mapProps(null, null, null, BBOX_2027);
     const { rerender } = render(<EclipseMap {...props} />);
     await loadStyle();
     rerender(<EclipseMap {...props} isolines={ISOLINES_2027} />);
@@ -380,7 +370,7 @@ describe("EclipseMap", () => {
     await loadStyle();
     map.getSource.mockReturnValue(source);
     rerender(<EclipseMap {...props} isolines={ISOLINES_2028} airports={AIRPORTS_2028} />);
-    expect(source.setData).toHaveBeenCalledWith(ISOLINES_2028);
+    expect(source.setData).toHaveBeenCalledWith(isolinesSource(ISOLINES_2028).data);
     expect(source.setData).toHaveBeenCalledWith(AIRPORTS_2028);
     for (const id of [ISOLINES_SOURCE_ID, AIRPORTS_SOURCE_ID]) {
       expect(map.addSource.mock.calls.filter(([added]) => added === id)).toHaveLength(1);

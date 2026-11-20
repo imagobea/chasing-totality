@@ -6,9 +6,10 @@ import type { Isolines } from "../../src/api/eclipses.js";
 import { App } from "../../src/App.js";
 import { advisories } from "../helpers/advisories.js";
 import { airports } from "../helpers/airports.js";
+import { isolines } from "../helpers/isolines.js";
 
-// The map has its own tests and needs WebGL, so a stand-in shows the bbox it fits, the bbox of the
-// isolines it was given, which tells the eclipses apart, the IATA codes of its airports and its
+// The map has its own tests and needs WebGL, so a stand-in shows the bbox it fits, the names of the
+// isolines it was given, which tell the eclipses apart, the IATA codes of its airports and its
 // advisories' states
 vi.mock("../../src/map/EclipseMap.js", () => ({
   EclipseMap: ({
@@ -24,7 +25,9 @@ vi.mock("../../src/map/EclipseMap.js", () => ({
   }) => (
     <div role="region" aria-label="Map">
       <p aria-label="Fit">{bbox?.join(",")}</p>
-      <p aria-label="Isolines">{isolines?.bbox.join(",")}</p>
+      <p aria-label="Isolines">
+        {isolines?.features.map(({ properties }) => properties.name).join(",")}
+      </p>
       <p aria-label="Airports">{airports?.features.map(({ id }) => id).join(",")}</p>
       <p aria-label="Advisories">
         {advisories?.features.map(({ properties }) => properties.state).join(",")}
@@ -33,14 +36,20 @@ vi.mock("../../src/map/EclipseMap.js", () => ({
   ),
 }));
 
-// What the API serves for each date's isolines
-const ISOLINES: Record<string, Isolines> = {
-  "2027-08-02": { type: "FeatureCollection", bbox: [-46, -14, 92, 38], features: [] },
-  "2028-07-22": { type: "FeatureCollection", bbox: [74, -52, 182, -9], features: [] },
+// The bbox around each date's path, as the eclipse list gives it
+const BBOXES: Record<string, Bbox> = {
+  "2027-08-02": [-46, -14, 92, 38],
+  "2028-07-22": [74, -52, 182, -9],
 };
 
-// A bbox for dates the tests never show isolines for
+// A bbox for the other dates the tests list
 const OTHER_BBOX: Bbox = [0, 0, 10, 10];
+
+// What the API serves for each date's isolines
+const ISOLINES: Record<string, Isolines> = {
+  "2027-08-02": isolines(0, 60, 120),
+  "2028-07-22": isolines(0, 60),
+};
 
 // The airports' bbox around each date's path, as App asks for it: 3° each way, rounded outwards
 const AIRPORTS_BBOX_2027 = "-49,-17,95,41";
@@ -63,9 +72,9 @@ function ok(body: unknown) {
   return { ok: true, json: async () => body };
 }
 
-// The answer to /api/eclipses listing the given dates, each with its isolines' bbox
+// The answer to /api/eclipses listing the given dates, each with its bbox
 function eclipseList(...dates: string[]) {
-  return ok(dates.map((date) => ({ date, bbox: ISOLINES[date]?.bbox ?? OTHER_BBOX })));
+  return ok(dates.map((date) => ({ date, bbox: BBOXES[date] ?? OTHER_BBOX })));
 }
 
 // The given body, or not found when there is none, as the API answers
@@ -103,7 +112,7 @@ function mockApi(
 
 // How the map stand-in shows a date's isolines
 function shownIsolines(date: string) {
-  return ISOLINES[date]!.bbox.join(",");
+  return ISOLINES[date]!.features.map(({ properties }) => properties.name).join(",");
 }
 
 // The bbox the map fits
@@ -207,9 +216,9 @@ describe("App", () => {
       isolines: () => new Promise(() => {}),
     });
     render(<App />);
-    await waitFor(() => expect(mapFit()).toBe(shownIsolines("2027-08-02")));
+    await waitFor(() => expect(mapFit()).toBe(BBOXES["2027-08-02"]!.join(",")));
     fireEvent.change(picker(), { target: { value: "2028-07-22" } });
-    expect(mapFit()).toBe(shownIsolines("2028-07-22"));
+    expect(mapFit()).toBe(BBOXES["2028-07-22"]!.join(","));
     expect(mapIsolines()).toBe("");
   });
 

@@ -13,8 +13,9 @@ export type Isoline = Feature<IsolineGeometry, { durationSeconds: number; name: 
 // An eclipse that has data, as YYYY-MM-DD, with the bbox around its path
 export type Eclipse = { date: string; bbox: Bbox };
 
-// An eclipse's isolines with the bbox that holds them, longitudes carrying on past 180°
-export type Isolines = FeatureCollection<IsolineGeometry, Isoline["properties"]> & { bbox: Bbox };
+// An eclipse's isolines, longitudes carrying on past 180°. Their file's bbox goes unread, since the
+// eclipse list gives it.
+export type Isolines = FeatureCollection<IsolineGeometry, Isoline["properties"]>;
 
 // The eclipses that have data, earliest first
 export function fetchEclipses(): Promise<Eclipse[]> {
