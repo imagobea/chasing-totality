@@ -230,6 +230,13 @@ describe("App", () => {
     await waitFor(() => expect(mapAirports()).toBe("SYD"));
   });
 
+  it("asks for the airports without waiting for the isolines", async () => {
+    mockApi(async () => eclipseList("2027-08-02"), { isolines: () => new Promise(() => {}) });
+    render(<App />);
+    await waitFor(() => expect(mapAirports()).toBe("AGP,LXR"));
+    expect(mapIsolines()).toBe("");
+  });
+
   it("credits the airports' source in the layers panel once they arrive", async () => {
     mockApi(async () => eclipseList("2027-08-02"));
     render(<App />);
@@ -237,20 +244,24 @@ describe("App", () => {
     await waitFor(() => expect(airportsSourceLine()).toBe("OurAirports, 25 OCT 2026"));
   });
 
-  it("clears the previous eclipse's airports while the new ones load", async () => {
+  // The new isolines never arrive either, so the old path is still on the map
+  it("clears the previous eclipse's airports as soon as another is picked", async () => {
     mockApi(async () => eclipseList("2027-08-02", "2028-07-22"), {
+      isolines: (date) =>
+        date === "2027-08-02" ? Promise.resolve(ok(ISOLINES[date])) : new Promise(() => {}),
       airports: (bbox) =>
         bbox === AIRPORTS_BBOX_2027 ? Promise.resolve(ok(AIRPORTS[bbox])) : new Promise(() => {}),
     });
     render(<App />);
     await waitFor(() => expect(mapAirports()).toBe("AGP,LXR"));
+    await waitFor(() => expect(mapIsolines()).toBe(shownIsolines("2027-08-02")));
     fireEvent.change(picker(), { target: { value: "2028-07-22" } });
-    await waitFor(() => expect(mapIsolines()).toBe(shownIsolines("2028-07-22")));
-    expect(mapAirports()).toBe("");
+    await waitFor(() => expect(mapAirports()).toBe(""));
+    expect(mapIsolines()).toBe(shownIsolines("2027-08-02"));
     expect(airportsSourceLine()).toBe("—");
   });
 
-  it("ignores airports that arrive after another eclipse's isolines", async () => {
+  it("ignores airports that arrive after another eclipse was picked", async () => {
     let answer2027: (answer: unknown) => void = () => {};
     mockApi(async () => eclipseList("2027-08-02", "2028-07-22"), {
       airports: (bbox) =>

@@ -24,6 +24,8 @@ export function App() {
   // The cursor and zoom the map reports, one store for the app's lifetime
   const [mapStatus] = useState(createMapStatusStore);
   const attributionRef = useRef<HTMLDivElement>(null);
+  // The selected eclipse's bbox, from the list; null until both the list and a date are in
+  const bbox = eclipses.find((eclipse) => eclipse.date === date)?.bbox ?? null;
 
   useEffect(() => {
     // Ignore the answer if the app goes away before it arrives
@@ -65,10 +67,7 @@ export function App() {
     let active = true;
     fetchIsolines(date)
       .then((result) => {
-        if (!active) return;
-        setIsolines(result);
-        // The previous eclipse's airports go until the new path's arrive
-        setAirports(null);
+        if (active) setIsolines(result);
       })
       // The map keeps whatever it was showing
       .catch((error) => console.warn(`Eclipse ${date} not shown`, error));
@@ -77,12 +76,13 @@ export function App() {
     };
   }, [date]);
 
+  // Requested with the isolines, not after them, since the list already has the path's bbox
   useEffect(() => {
-    if (isolines === null) return;
+    if (bbox === null) return;
 
-    // Ignore the airports if other isolines arrive or the app goes away before they do
+    // Ignore the airports if another eclipse is picked or the app goes away before they arrive
     let active = true;
-    fetchAirports(isolines.bbox)
+    fetchAirports(bbox)
       // The map shows no airports
       .catch((error) => {
         console.warn("Airports not shown", error);
@@ -93,8 +93,10 @@ export function App() {
       });
     return () => {
       active = false;
+      // The previous eclipse's airports go as soon as another is picked
+      setAirports(null);
     };
-  }, [isolines]);
+  }, [bbox]);
 
   const dates = eclipses.map(({ date }) => date);
 
