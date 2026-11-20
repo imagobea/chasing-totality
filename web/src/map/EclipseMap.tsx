@@ -139,6 +139,8 @@ export function EclipseMap({
       attribution.onRemove();
       map.remove();
       setMap(null);
+      // Removing the map fires no mouseout, and the store outlives it
+      mapStatus.set({ cursor: null, zoom: null });
     };
     // A ref object and the store stay the same across renders, so the map is still created once
   }, [attributionRef, mapStatus]);

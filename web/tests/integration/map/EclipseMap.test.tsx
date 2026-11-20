@@ -220,6 +220,15 @@ describe("EclipseMap", () => {
     expect(map.remove).toHaveBeenCalledOnce();
   });
 
+  it("clears the cursor and zoom when unmounted with the mouse still over the map", async () => {
+    const props = mapProps(null);
+    const { unmount } = render(<EclipseMap {...props} />);
+    await loadStyle();
+    fire("mousemove", { lngLat: { wrap: () => ({ lng: -5.6, lat: 36 }) } });
+    unmount();
+    expect(props.mapStatus.get()).toEqual({ cursor: null, zoom: null });
+  });
+
   it("adds the isolines once the style has loaded", async () => {
     render(<EclipseMap {...mapProps(ISOLINES_2027)} />);
     await loadStyle();
