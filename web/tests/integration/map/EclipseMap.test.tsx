@@ -28,6 +28,7 @@ import {
   ISOLINES_SOURCE_ID,
   isolinesSource,
 } from "../../../src/map/isolines.js";
+import { createMapStatusStore } from "../../../src/map/mapStatus.js";
 import { advisories } from "../../helpers/advisories.js";
 import { airports } from "../../helpers/airports.js";
 import { isolines } from "../../helpers/isolines.js";
@@ -130,8 +131,7 @@ function mapProps(
     isolines,
     airports,
     advisories,
-    onCursorMove: vi.fn(),
-    onZoomChange: vi.fn(),
+    mapStatus: createMapStatusStore(),
     attributionRef: { current: document.createElement("div") },
   };
 }
@@ -180,24 +180,24 @@ describe("EclipseMap", () => {
   });
 
   it("reports the wrapped cursor position, and null when it leaves the map", () => {
-    const onCursorMove = vi.fn();
-    render(<EclipseMap {...mapProps(null)} onCursorMove={onCursorMove} />);
+    const props = mapProps(null);
+    render(<EclipseMap {...props} />);
     const wrapped = { lng: -170, lat: 36 };
     fire("mousemove", { lngLat: { wrap: () => wrapped } });
-    expect(onCursorMove).toHaveBeenLastCalledWith(wrapped);
+    expect(props.mapStatus.get().cursor).toEqual(wrapped);
     fire("mouseout");
-    expect(onCursorMove).toHaveBeenLastCalledWith(null);
+    expect(props.mapStatus.get().cursor).toBeNull();
   });
 
   it("reports the zoom once loaded, and again as it changes", async () => {
-    const onZoomChange = vi.fn();
-    render(<EclipseMap {...mapProps(null)} onZoomChange={onZoomChange} />);
-    expect(onZoomChange).not.toHaveBeenCalled();
+    const props = mapProps(null);
+    render(<EclipseMap {...props} />);
+    expect(props.mapStatus.get().zoom).toBeNull();
     await loadStyle();
-    expect(onZoomChange).toHaveBeenLastCalledWith(2);
+    expect(props.mapStatus.get().zoom).toBe(2);
     map.getZoom.mockReturnValueOnce(5.83);
     fire("zoom");
-    expect(onZoomChange).toHaveBeenLastCalledWith(5.83);
+    expect(props.mapStatus.get().zoom).toBe(5.83);
   });
 
   it("puts the attribution in the given slot", () => {
@@ -218,6 +218,15 @@ describe("EclipseMap", () => {
     unmount();
     expect(attribution.onRemove).toHaveBeenCalledOnce();
     expect(map.remove).toHaveBeenCalledOnce();
+  });
+
+  it("clears the cursor and zoom when unmounted with the mouse still over the map", async () => {
+    const props = mapProps(null);
+    const { unmount } = render(<EclipseMap {...props} />);
+    await loadStyle();
+    fire("mousemove", { lngLat: { wrap: () => ({ lng: -5.6, lat: 36 }) } });
+    unmount();
+    expect(props.mapStatus.get()).toEqual({ cursor: null, zoom: null });
   });
 
   it("adds the isolines once the style has loaded", async () => {
