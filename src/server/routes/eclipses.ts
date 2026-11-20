@@ -9,9 +9,10 @@ const DATE_PARAMS = {
 } as const;
 
 export const eclipses: FastifyPluginAsync = async (app) => {
-  // Dates of the eclipses that have data, in order since they were loaded that way
+  // The eclipses that have data, each with the bbox around its path, in date order since they were
+  // loaded that way
   app.get("/eclipses", async () => {
-    return [...app.data.isolines.keys()];
+    return [...app.data.isolines].map(([date, { bbox }]) => ({ date, bbox }));
   });
 
   // The eclipse's isolines, the path of totality included, as generated
