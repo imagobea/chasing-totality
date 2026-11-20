@@ -3,7 +3,7 @@ import type { MapStatusStore } from "../map/mapStatus.js";
 import { formatCoordinates } from "../utils.js";
 
 type StatusBarProps = {
-  // The cursor and zoom the map reports, read here so only the status bar re-renders as they change
+  // The cursor and zoom the map reports
   mapStatus: MapStatusStore;
   // Where the map mounts its attribution control
   attributionRef: RefObject<HTMLDivElement | null>;

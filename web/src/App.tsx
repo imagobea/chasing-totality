@@ -20,8 +20,7 @@ export function App() {
   const [airports, setAirports] = useState<Airports | null>(null);
   // Every place's travel advisory, null until they arrive or when they can't be fetched
   const [advisories, setAdvisories] = useState<Advisories | null>(null);
-  // The cursor and zoom, one store for the app's lifetime: the map writes it and the status bar
-  // reads it, so mouse moves and zoom frames don't re-render the whole app
+  // The cursor and zoom the map reports, one store for the app's lifetime
   const [mapStatus] = useState(createMapStatusStore);
   const attributionRef = useRef<HTMLDivElement>(null);
 
