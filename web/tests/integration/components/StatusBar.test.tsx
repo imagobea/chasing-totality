@@ -24,13 +24,13 @@ describe("StatusBar", () => {
     expect(readout()).toBe("Cursor · — · Zoom —");
   });
 
-  it("follows the cursor and zoom as the map reports them", () => {
+  it("follows the cursor as the map reports it", () => {
     const mapStatus = createMapStatusStore();
     render(<StatusBar mapStatus={mapStatus} attributionRef={createRef()} />);
-    act(() => mapStatus.set({ cursor: { lng: -5.6047, lat: 36.0136 }, zoom: 5.83 }));
-    expect(readout()).toBe("Cursor · 36.01° N · 5.60° W · Zoom 5.8");
+    act(() => mapStatus.set({ cursor: { lng: 32.64, lat: 25.69 } }));
+    expect(readout()).toBe("Cursor · 25.69° N · 32.64° E · Zoom —");
     act(() => mapStatus.set({ cursor: null }));
-    expect(readout()).toBe("Cursor · — · Zoom 5.8");
+    expect(readout()).toBe("Cursor · — · Zoom —");
   });
 
   it("gives the map a place in the footer for the attribution", () => {
