@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { fetchAdvisories, type Advisories } from "./api/advisories.js";
 import { fetchAirports, type Airports } from "./api/airports.js";
-import { fetchEclipseDates, fetchIsolines, type Isolines } from "./api/eclipses.js";
+import { type Eclipse, fetchEclipses, fetchIsolines, type Isolines } from "./api/eclipses.js";
 import { AppHeader } from "./components/AppHeader.js";
 import { LayersPanel } from "./components/LayersPanel.js";
 import { StatusBar } from "./components/StatusBar.js";
@@ -10,7 +10,8 @@ import { createMapStatusStore } from "./map/mapStatus.js";
 import { firstUpcomingEclipse } from "./utils.js";
 
 export function App() {
-  const [dates, setDates] = useState<string[]>([]);
+  // The eclipses that have data, earliest first
+  const [eclipses, setEclipses] = useState<Eclipse[]>([]);
   // The selected eclipse; the first upcoming one with data until the user picks another
   const [date, setDate] = useState<string | null>(null);
   // The selected eclipse's isolines, null until the first ones arrive
@@ -27,12 +28,13 @@ export function App() {
   useEffect(() => {
     // Ignore the answer if the app goes away before it arrives
     let active = true;
-    fetchEclipseDates()
+    fetchEclipses()
       .then((result) => {
         if (!active) return;
-        setDates(result);
+        setEclipses(result);
+        const dates = result.map(({ date }) => date);
         // First upcoming eclipse, or the first one returned if all are past, or null if none
-        setDate(firstUpcomingEclipse(result) ?? result[0] ?? null);
+        setDate(firstUpcomingEclipse(dates) ?? dates[0] ?? null);
       })
       // On failure the picker stays empty and shows —
       .catch(() => {});
@@ -93,6 +95,8 @@ export function App() {
       active = false;
     };
   }, [isolines]);
+
+  const dates = eclipses.map(({ date }) => date);
 
   return (
     <div className="app">

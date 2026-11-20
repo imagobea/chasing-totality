@@ -1,7 +1,7 @@
 import { act, cleanup, fireEvent, render, screen, waitFor, within } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import type { Advisories } from "../../src/api/advisories.js";
-import type { Airports } from "../../src/api/airports.js";
+import type { Airports, Bbox } from "../../src/api/airports.js";
 import type { Isolines } from "../../src/api/eclipses.js";
 import { App } from "../../src/App.js";
 import { advisories } from "../helpers/advisories.js";
@@ -35,6 +35,9 @@ const ISOLINES: Record<string, Isolines> = {
   "2028-07-22": { type: "FeatureCollection", bbox: [74, -52, 182, -9], features: [] },
 };
 
+// A bbox for dates the tests never show isolines for
+const OTHER_BBOX: Bbox = [0, 0, 10, 10];
+
 // The airports' bbox around each date's path, as App asks for it: 3° each way, rounded outwards
 const AIRPORTS_BBOX_2027 = "-49,-17,95,41";
 const AIRPORTS_BBOX_2028 = "71,-55,185,-6";
@@ -54,6 +57,11 @@ const AIRPORTS_URL = /^\/api\/airports\?bbox=(.+)$/;
 // The answer to a fetch that succeeds with the given body
 function ok(body: unknown) {
   return { ok: true, json: async () => body };
+}
+
+// The answer to /api/eclipses listing the given dates, each with its isolines' bbox
+function eclipseList(...dates: string[]) {
+  return ok(dates.map((date) => ({ date, bbox: ISOLINES[date]?.bbox ?? OTHER_BBOX })));
 }
 
 // The given body, or not found when there is none, as the API answers
@@ -141,7 +149,7 @@ describe("App", () => {
   });
 
   it("selects the first upcoming eclipse once the dates arrive", async () => {
-    mockApi(async () => ok(["2026-08-12", "2027-08-02", "2028-07-22"]));
+    mockApi(async () => eclipseList("2026-08-12", "2027-08-02", "2028-07-22"));
     render(<App />);
     expect(picker().disabled).toBe(true);
     await waitFor(() => expect(picker().value).toBe("2027-08-02"));
@@ -152,7 +160,7 @@ describe("App", () => {
     vi.setSystemTime(new Date(2026, 9, 14, 9));
     // There are no isolines for this eclipse
     vi.spyOn(console, "warn").mockImplementation(() => {});
-    mockApi(async () => ok(["2026-10-14", "2027-08-02"]));
+    mockApi(async () => eclipseList("2026-10-14", "2027-08-02"));
     render(<App />);
     await waitFor(() => expect(picker().disabled).toBe(false));
     expect(picker().value).toBe("2026-10-14");
@@ -161,7 +169,7 @@ describe("App", () => {
 
   it("selects the first eclipse once every eclipse is past", async () => {
     vi.setSystemTime(new Date(2028, 7, 1, 9));
-    mockApi(async () => ok(["2027-08-02", "2028-07-22"]));
+    mockApi(async () => eclipseList("2027-08-02", "2028-07-22"));
     render(<App />);
     await waitFor(() => expect(picker().disabled).toBe(false));
     expect(picker().value).toBe("2027-08-02");
@@ -169,7 +177,7 @@ describe("App", () => {
   });
 
   it("selects the eclipse the user picks", async () => {
-    mockApi(async () => ok(["2027-08-02", "2028-07-22"]));
+    mockApi(async () => eclipseList("2027-08-02", "2028-07-22"));
     render(<App />);
     await waitFor(() => expect(picker().disabled).toBe(false));
     fireEvent.change(picker(), { target: { value: "2028-07-22" } });
@@ -178,7 +186,7 @@ describe("App", () => {
   });
 
   it("shows the selected eclipse's isolines on the map", async () => {
-    mockApi(async () => ok(["2027-08-02", "2028-07-22"]));
+    mockApi(async () => eclipseList("2027-08-02", "2028-07-22"));
     render(<App />);
     await waitFor(() => expect(mapIsolines()).toBe(shownIsolines("2027-08-02")));
     fireEvent.change(picker(), { target: { value: "2028-07-22" } });
@@ -187,7 +195,7 @@ describe("App", () => {
 
   it("ignores isolines that arrive after another date was picked", async () => {
     let answer2027: (answer: unknown) => void = () => {};
-    mockApi(async () => ok(["2027-08-02", "2028-07-22"]), {
+    mockApi(async () => eclipseList("2027-08-02", "2028-07-22"), {
       isolines: (date) =>
         date === "2027-08-02"
           ? new Promise((resolve) => (answer2027 = resolve))
@@ -203,7 +211,7 @@ describe("App", () => {
 
   it("warns and leaves the map as it is when the isolines can't be fetched", async () => {
     const warn = vi.spyOn(console, "warn").mockImplementation(() => {});
-    mockApi(async () => ok(["2027-08-02", "2028-07-22"]), {
+    mockApi(async () => eclipseList("2027-08-02", "2028-07-22"), {
       isolines: async (date) =>
         date === "2027-08-02" ? ok(ISOLINES[date]) : { ok: false, status: 500 },
     });
@@ -215,7 +223,7 @@ describe("App", () => {
   });
 
   it("shows the airports around the selected eclipse's path on the map", async () => {
-    mockApi(async () => ok(["2027-08-02", "2028-07-22"]));
+    mockApi(async () => eclipseList("2027-08-02", "2028-07-22"));
     render(<App />);
     await waitFor(() => expect(mapAirports()).toBe("AGP,LXR"));
     fireEvent.change(picker(), { target: { value: "2028-07-22" } });
@@ -223,14 +231,14 @@ describe("App", () => {
   });
 
   it("credits the airports' source in the layers panel once they arrive", async () => {
-    mockApi(async () => ok(["2027-08-02"]));
+    mockApi(async () => eclipseList("2027-08-02"));
     render(<App />);
     expect(airportsSourceLine()).toBe("—");
     await waitFor(() => expect(airportsSourceLine()).toBe("OurAirports, 25 OCT 2026"));
   });
 
   it("clears the previous eclipse's airports while the new ones load", async () => {
-    mockApi(async () => ok(["2027-08-02", "2028-07-22"]), {
+    mockApi(async () => eclipseList("2027-08-02", "2028-07-22"), {
       airports: (bbox) =>
         bbox === AIRPORTS_BBOX_2027 ? Promise.resolve(ok(AIRPORTS[bbox])) : new Promise(() => {}),
     });
@@ -244,7 +252,7 @@ describe("App", () => {
 
   it("ignores airports that arrive after another eclipse's isolines", async () => {
     let answer2027: (answer: unknown) => void = () => {};
-    mockApi(async () => ok(["2027-08-02", "2028-07-22"]), {
+    mockApi(async () => eclipseList("2027-08-02", "2028-07-22"), {
       airports: (bbox) =>
         bbox === AIRPORTS_BBOX_2027
           ? new Promise((resolve) => (answer2027 = resolve))
@@ -260,7 +268,7 @@ describe("App", () => {
 
   it("warns and shows no airports when they can't be fetched", async () => {
     const warn = vi.spyOn(console, "warn").mockImplementation(() => {});
-    mockApi(async () => ok(["2027-08-02", "2028-07-22"]), {
+    mockApi(async () => eclipseList("2027-08-02", "2028-07-22"), {
       airports: async (bbox) =>
         bbox === AIRPORTS_BBOX_2027 ? ok(AIRPORTS[bbox]) : { ok: false, status: 500 },
     });
@@ -273,7 +281,7 @@ describe("App", () => {
   });
 
   it("shows every place's advisory on the map, fetched once whatever the eclipse", async () => {
-    mockApi(async () => ok(["2027-08-02", "2028-07-22"]));
+    mockApi(async () => eclipseList("2027-08-02", "2028-07-22"));
     render(<App />);
     await waitFor(() => expect(mapAdvisories()).toBe("whole,parts,none"));
     fireEvent.change(picker(), { target: { value: "2028-07-22" } });
@@ -285,7 +293,7 @@ describe("App", () => {
   });
 
   it("credits the advisories' source in the layers panel once they arrive", async () => {
-    mockApi(async () => ok(["2027-08-02"]));
+    mockApi(async () => eclipseList("2027-08-02"));
     render(<App />);
     expect(advisoriesSourceLine()).toBe("—");
     await waitFor(() => expect(advisoriesSourceLine()).toBe("UK FCDO travel advice, 16 NOV 2026"));
@@ -293,7 +301,7 @@ describe("App", () => {
 
   it("warns and shows no advisories when they can't be fetched", async () => {
     const warn = vi.spyOn(console, "warn").mockImplementation(() => {});
-    mockApi(async () => ok(["2027-08-02"]), {
+    mockApi(async () => eclipseList("2027-08-02"), {
       advisories: async () => ({ ok: false, status: 500 }),
     });
     render(<App />);
@@ -303,7 +311,7 @@ describe("App", () => {
   });
 
   it("shows the layers panel over the map", () => {
-    mockApi(async () => ok([]));
+    mockApi(async () => eclipseList());
     render(<App />);
     expect(screen.getByRole("complementary", { name: "Layers" })).toBeTruthy();
   });
