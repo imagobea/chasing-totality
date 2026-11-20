@@ -7,19 +7,23 @@ import { App } from "../../src/App.js";
 import { advisories } from "../helpers/advisories.js";
 import { airports } from "../helpers/airports.js";
 
-// The map has its own tests and needs WebGL, so a stand-in shows the bbox of the isolines it was
-// given, which tells the eclipses apart, the IATA codes of its airports and its advisories' states
+// The map has its own tests and needs WebGL, so a stand-in shows the bbox it fits, the bbox of the
+// isolines it was given, which tells the eclipses apart, the IATA codes of its airports and its
+// advisories' states
 vi.mock("../../src/map/EclipseMap.js", () => ({
   EclipseMap: ({
+    bbox,
     isolines,
     airports,
     advisories,
   }: {
+    bbox: Bbox | null;
     isolines: Isolines | null;
     airports: Airports | null;
     advisories: Advisories | null;
   }) => (
     <div role="region" aria-label="Map">
+      <p aria-label="Fit">{bbox?.join(",")}</p>
       <p aria-label="Isolines">{isolines?.bbox.join(",")}</p>
       <p aria-label="Airports">{airports?.features.map(({ id }) => id).join(",")}</p>
       <p aria-label="Advisories">
@@ -100,6 +104,11 @@ function mockApi(
 // How the map stand-in shows a date's isolines
 function shownIsolines(date: string) {
   return ISOLINES[date]!.bbox.join(",");
+}
+
+// The bbox the map fits
+function mapFit() {
+  return within(screen.getByRole("region", { name: "Map" })).getByLabelText("Fit").textContent;
 }
 
 // The bbox of the isolines on the map
@@ -191,6 +200,17 @@ describe("App", () => {
     await waitFor(() => expect(mapIsolines()).toBe(shownIsolines("2027-08-02")));
     fireEvent.change(picker(), { target: { value: "2028-07-22" } });
     await waitFor(() => expect(mapIsolines()).toBe(shownIsolines("2028-07-22")));
+  });
+
+  it("fits the map to each eclipse picked without waiting for its isolines", async () => {
+    mockApi(async () => eclipseList("2027-08-02", "2028-07-22"), {
+      isolines: () => new Promise(() => {}),
+    });
+    render(<App />);
+    await waitFor(() => expect(mapFit()).toBe(shownIsolines("2027-08-02")));
+    fireEvent.change(picker(), { target: { value: "2028-07-22" } });
+    expect(mapFit()).toBe(shownIsolines("2028-07-22"));
+    expect(mapIsolines()).toBe("");
   });
 
   it("ignores isolines that arrive after another date was picked", async () => {

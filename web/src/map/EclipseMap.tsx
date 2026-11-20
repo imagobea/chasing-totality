@@ -11,7 +11,7 @@ import "maplibre-gl/dist/maplibre-gl.css";
 import workerUrl from "maplibre-gl/dist/maplibre-gl-worker.mjs?worker&url";
 import type { FeatureCollection } from "geojson";
 import type { Advisories } from "../api/advisories.js";
-import type { Airports } from "../api/airports.js";
+import type { Airports, Bbox } from "../api/airports.js";
 import type { Isolines } from "../api/eclipses.js";
 import {
   ADVISORIES_LAYERS,
@@ -39,6 +39,8 @@ import { beforeId } from "./layerOrder.js";
 import type { MapStatusStore } from "./mapStatus.js";
 
 type EclipseMapProps = {
+  // The selected eclipse's bbox, from the eclipse list; null until it's known
+  bbox: Bbox | null;
   // The selected eclipse's isolines, null until they arrive
   isolines: Isolines | null;
   // The airports around the eclipse's path, null until they arrive or when they can't be had
@@ -81,6 +83,7 @@ function showSource(
 }
 
 export function EclipseMap({
+  bbox,
   isolines,
   airports,
   advisories,
@@ -145,8 +148,14 @@ export function EclipseMap({
     // A ref object and the store stay the same across renders, so the map is still created once
   }, [attributionRef, mapStatus]);
 
-  // The eclipse's isolines, with the map fitted to its whole path; the user is then free to pan
-  // and zoom
+  // The map fitted to the eclipse's whole path as soon as it's picked, without waiting for its
+  // isolines; the user is then free to pan and zoom
+  useEffect(() => {
+    if (!map || bbox === null) return;
+    map.fitBounds(bbox);
+  }, [map, bbox]);
+
+  // The eclipse's isolines
   useEffect(() => {
     if (!map || isolines === null) return;
 
@@ -163,7 +172,6 @@ export function EclipseMap({
     } catch (error) {
       console.warn("Duration bands not shown", error);
     }
-    map.fitBounds(isolines.bbox);
   }, [map, isolines]);
 
   // The airports, cleared when there are none

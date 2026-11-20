@@ -105,6 +105,7 @@ export function App() {
       <AppHeader dates={dates} date={date} onDateChange={setDate} />
       <main className="map-stage">
         <EclipseMap
+          bbox={bbox}
           isolines={isolines}
           airports={airports}
           advisories={advisories}
