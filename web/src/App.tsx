@@ -6,7 +6,8 @@ import { AppHeader } from "./components/AppHeader.js";
 import { LayersPanel } from "./components/LayersPanel.js";
 import { StatusBar } from "./components/StatusBar.js";
 import { EclipseMap } from "./map/EclipseMap.js";
-import { firstUpcomingEclipse, type Coordinates } from "./utils.js";
+import { createMapStatusStore } from "./map/mapStatus.js";
+import { firstUpcomingEclipse } from "./utils.js";
 
 export function App() {
   const [dates, setDates] = useState<string[]>([]);
@@ -19,12 +20,9 @@ export function App() {
   const [airports, setAirports] = useState<Airports | null>(null);
   // Every place's travel advisory, null until they arrive or when they can't be fetched
   const [advisories, setAdvisories] = useState<Advisories | null>(null);
-  // Where the mouse is on the map, null when it's off the map
-  // TODO: every mouse move and zoom frame re-renders the whole app; move cursor and zoom state out
-  // of App when panels land
-  const [cursor, setCursor] = useState<Coordinates | null>(null);
-  // The map's zoom, null until the map has loaded
-  const [zoom, setZoom] = useState<number | null>(null);
+  // The cursor and zoom, one store for the app's lifetime: the map writes it and the status bar
+  // reads it, so mouse moves and zoom frames don't re-render the whole app
+  const [mapStatus] = useState(createMapStatusStore);
   const attributionRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -105,13 +103,13 @@ export function App() {
           isolines={isolines}
           airports={airports}
           advisories={advisories}
-          onCursorMove={setCursor}
-          onZoomChange={setZoom}
+          onCursorMove={(cursor) => mapStatus.set({ cursor })}
+          onZoomChange={(zoom) => mapStatus.set({ zoom })}
           attributionRef={attributionRef}
         />
         <LayersPanel airports={airports} advisories={advisories} />
       </main>
-      <StatusBar cursor={cursor} zoom={zoom} attributionRef={attributionRef} />
+      <StatusBar mapStatus={mapStatus} attributionRef={attributionRef} />
     </div>
   );
 }
