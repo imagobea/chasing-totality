@@ -34,8 +34,12 @@ export function App() {
       .then((result) => {
         if (!active) return;
         setEclipses(result);
+        // Map dates
+        const dates = result.map(({ date }) => date);
+        // Find the first upcoming eclipse
+        const firstUpcoming = firstUpcomingEclipse(dates);
         // First upcoming eclipse, or the first one returned if all are past, or null if none
-        setDate(firstUpcomingEclipse(result.map(({ date }) => date)) ?? result[0]?.date ?? null);
+        setDate(firstUpcoming ?? result[0]?.date ?? null);
       })
       // On failure the picker stays empty and shows —
       .catch(() => {});
