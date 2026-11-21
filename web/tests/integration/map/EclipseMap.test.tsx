@@ -83,6 +83,9 @@ vi.mock("maplibre-gl", () => ({
   setWorkerUrl: vi.fn(),
 }));
 
+// What a cleared source is given
+const NO_FEATURES = { type: "FeatureCollection", features: [] };
+
 // Two eclipses' bboxes and isolines, as App passes them
 const BBOX_2027: Bbox = [-46, -14, 92, 38];
 const BBOX_2028: Bbox = [74, -52, 182, -9];
@@ -359,8 +362,7 @@ describe("EclipseMap", () => {
     rerender(<EclipseMap {...props} isolines={null} />);
     expect(map.getSource).toHaveBeenCalledWith(ISOLINES_SOURCE_ID);
     expect(map.getSource).toHaveBeenCalledWith(DURATION_BANDS_SOURCE_ID);
-    const empty = { type: "FeatureCollection", features: [] };
-    expect(source.setData.mock.calls).toEqual([[empty], [empty]]);
+    expect(source.setData.mock.calls).toEqual([[NO_FEATURES], [NO_FEATURES]]);
     rerender(<EclipseMap {...props} isolines={ISOLINES_2028} />);
     expect(source.setData).toHaveBeenCalledWith(isolinesSource(ISOLINES_2028).data);
     expect(source.setData).toHaveBeenCalledWith(durationBandsSource(ISOLINES_2028).data);
@@ -372,7 +374,7 @@ describe("EclipseMap", () => {
     await loadStyle();
     map.getSource.mockReturnValue(source);
     rerender(<EclipseMap {...props} airports={null} />);
-    expect(source.setData).toHaveBeenLastCalledWith({ type: "FeatureCollection", features: [] });
+    expect(source.setData).toHaveBeenLastCalledWith(NO_FEATURES);
     rerender(<EclipseMap {...props} airports={AIRPORTS_2028} />);
     expect(source.setData).toHaveBeenLastCalledWith(AIRPORTS_2028);
     expect(layersFrom(AIRPORTS_SOURCE_ID)).toEqual(AIRPORTS_LAYERS);
