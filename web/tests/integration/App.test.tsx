@@ -120,7 +120,7 @@ function mapFit() {
   return within(screen.getByRole("region", { name: "Map" })).getByLabelText("Fit").textContent;
 }
 
-// The bbox of the isolines on the map
+// The names of the isolines on the map
 function mapIsolines() {
   return within(screen.getByRole("region", { name: "Map" })).getByLabelText("Isolines").textContent;
 }
