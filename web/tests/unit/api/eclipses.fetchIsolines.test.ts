@@ -7,6 +7,14 @@ const ISOLINES: Isolines = isolines(0, 60);
 describe("fetchIsolines", () => {
   afterEach(() => vi.unstubAllGlobals());
 
+  it("fails when the API answers with an error", async () => {
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(async () => ({ ok: false, status: 404 })),
+    );
+    await expect(fetchIsolines("2027-08-02")).rejects.toThrow("404");
+  });
+
   it("reads the eclipse's isolines from the API", async () => {
     vi.stubGlobal(
       "fetch",
@@ -14,13 +22,5 @@ describe("fetchIsolines", () => {
     );
     expect(await fetchIsolines("2027-08-02")).toEqual(ISOLINES);
     expect(fetch).toHaveBeenCalledWith("/api/eclipses/2027-08-02/isolines");
-  });
-
-  it("fails when the API answers with an error", async () => {
-    vi.stubGlobal(
-      "fetch",
-      vi.fn(async () => ({ ok: false, status: 404 })),
-    );
-    await expect(fetchIsolines("2027-08-02")).rejects.toThrow("404");
   });
 });
