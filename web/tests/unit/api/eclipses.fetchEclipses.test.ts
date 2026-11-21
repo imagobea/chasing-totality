@@ -6,6 +6,14 @@ const ECLIPSES: Eclipse[] = [{ date: "2027-08-02", bbox: [-46, -14, 92, 38] }];
 describe("fetchEclipses", () => {
   afterEach(() => vi.unstubAllGlobals());
 
+  it("fails when the API answers with an error", async () => {
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(async () => ({ ok: false, status: 500 })),
+    );
+    await expect(fetchEclipses()).rejects.toThrow("500");
+  });
+
   it("reads the eclipses and their bboxes from the API", async () => {
     vi.stubGlobal(
       "fetch",
@@ -13,13 +21,5 @@ describe("fetchEclipses", () => {
     );
     expect(await fetchEclipses()).toEqual(ECLIPSES);
     expect(fetch).toHaveBeenCalledWith("/api/eclipses");
-  });
-
-  it("fails when the API answers with an error", async () => {
-    vi.stubGlobal(
-      "fetch",
-      vi.fn(async () => ({ ok: false, status: 500 })),
-    );
-    await expect(fetchEclipses()).rejects.toThrow("500");
   });
 });
