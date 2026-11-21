@@ -222,6 +222,17 @@ describe("App", () => {
     expect(mapIsolines()).toBe("");
   });
 
+  it("clears the previous eclipse's isolines as soon as another is picked", async () => {
+    mockApi(async () => eclipseList("2027-08-02", "2028-07-22"), {
+      isolines: (date) =>
+        date === "2027-08-02" ? Promise.resolve(ok(ISOLINES[date])) : new Promise(() => {}),
+    });
+    render(<App />);
+    await waitFor(() => expect(mapIsolines()).toBe(shownIsolines("2027-08-02")));
+    fireEvent.change(picker(), { target: { value: "2028-07-22" } });
+    await waitFor(() => expect(mapIsolines()).toBe(""));
+  });
+
   it("ignores isolines that arrive after another date was picked", async () => {
     let answer2027: (answer: unknown) => void = () => {};
     mockApi(async () => eclipseList("2027-08-02", "2028-07-22"), {
@@ -236,17 +247,6 @@ describe("App", () => {
     await waitFor(() => expect(mapIsolines()).toBe(shownIsolines("2028-07-22")));
     await act(async () => answer2027(ok(ISOLINES["2027-08-02"])));
     expect(mapIsolines()).toBe(shownIsolines("2028-07-22"));
-  });
-
-  it("clears the previous eclipse's isolines as soon as another is picked", async () => {
-    mockApi(async () => eclipseList("2027-08-02", "2028-07-22"), {
-      isolines: (date) =>
-        date === "2027-08-02" ? Promise.resolve(ok(ISOLINES[date])) : new Promise(() => {}),
-    });
-    render(<App />);
-    await waitFor(() => expect(mapIsolines()).toBe(shownIsolines("2027-08-02")));
-    fireEvent.change(picker(), { target: { value: "2028-07-22" } });
-    await waitFor(() => expect(mapIsolines()).toBe(""));
   });
 
   it("warns and shows no isolines when they can't be fetched", async () => {
