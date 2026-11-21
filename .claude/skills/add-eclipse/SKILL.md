@@ -87,19 +87,19 @@ pnpm --dir web test
 
 ## Gate 7: smoke
 
-The API lists the date and its isolines carry a bbox:
+The API lists the date with its bbox and serves its isolines:
 
 ```bash
 pnpm exec tsx --input-type=module -e '
 import { buildApp } from "./src/server/app.js";
 const app = buildApp();
-const dates = (await app.inject("/eclipses")).json();
+const eclipses = (await app.inject("/eclipses")).json();
 const res = await app.inject("/eclipses/<date>/isolines");
-console.log(dates, res.statusCode, res.json().bbox);
+console.log(eclipses.find(({ date }) => date === "<date>"), res.statusCode);
 await app.close();'
 ```
 
-Expect the date in the list, 200 and four numbers, with south and north within −90 to 90 (the map can't fit a bbox past a pole). The frontend needs nothing else: its picker lists what the API lists and the map fits that bbox.
+Expect the date with a bbox of four numbers, south and north within −90 to 90 (the map can't fit a bbox past a pole), and 200. The frontend needs nothing else: its picker lists what the API lists and the map fits that bbox.
 
 ## Handover
 

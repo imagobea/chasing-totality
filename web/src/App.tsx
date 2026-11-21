@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { fetchAdvisories, type Advisories } from "./api/advisories.js";
 import { fetchAirports, type Airports } from "./api/airports.js";
-import { fetchEclipseDates, fetchIsolines, type Isolines } from "./api/eclipses.js";
+import { type Eclipse, fetchEclipses, fetchIsolines, type Isolines } from "./api/eclipses.js";
 import { AppHeader } from "./components/AppHeader.js";
 import { LayersPanel } from "./components/LayersPanel.js";
 import { StatusBar } from "./components/StatusBar.js";
@@ -10,10 +10,11 @@ import { createMapStatusStore } from "./map/mapStatus.js";
 import { firstUpcomingEclipse } from "./utils.js";
 
 export function App() {
-  const [dates, setDates] = useState<string[]>([]);
+  // The eclipses that have data, earliest first
+  const [eclipses, setEclipses] = useState<Eclipse[]>([]);
   // The selected eclipse; the first upcoming one with data until the user picks another
   const [date, setDate] = useState<string | null>(null);
-  // The selected eclipse's isolines, null until the first ones arrive
+  // The selected eclipse's isolines, null until they arrive or when they can't be fetched
   const [isolines, setIsolines] = useState<Isolines | null>(null);
   // The airports around the selected eclipse's path, null until they arrive or when they can't
   // be fetched
@@ -23,16 +24,18 @@ export function App() {
   // The cursor and zoom the map reports, one store for the app's lifetime
   const [mapStatus] = useState(createMapStatusStore);
   const attributionRef = useRef<HTMLDivElement>(null);
+  // The selected eclipse's bbox, from the list; null until both the list and a date are in
+  const bbox = eclipses.find((eclipse) => eclipse.date === date)?.bbox ?? null;
 
   useEffect(() => {
     // Ignore the answer if the app goes away before it arrives
     let active = true;
-    fetchEclipseDates()
+    fetchEclipses()
       .then((result) => {
         if (!active) return;
-        setDates(result);
+        setEclipses(result);
         // First upcoming eclipse, or the first one returned if all are past, or null if none
-        setDate(firstUpcomingEclipse(result) ?? result[0] ?? null);
+        setDate(firstUpcomingEclipse(result.map(({ date }) => date)) ?? result[0]?.date ?? null);
       })
       // On failure the picker stays empty and shows —
       .catch(() => {});
@@ -63,24 +66,25 @@ export function App() {
     let active = true;
     fetchIsolines(date)
       .then((result) => {
-        if (!active) return;
-        setIsolines(result);
-        // The previous eclipse's airports go until the new path's arrive
-        setAirports(null);
+        if (active) setIsolines(result);
       })
-      // The map keeps whatever it was showing
+      // The map shows no isolines
       .catch((error) => console.warn(`Eclipse ${date} not shown`, error));
     return () => {
       active = false;
+      // The previous eclipse's isolines go as soon as another is picked, since the map already
+      // fits the new path
+      setIsolines(null);
     };
   }, [date]);
 
+  // Requested with the isolines, not after them, since the list already has the path's bbox
   useEffect(() => {
-    if (isolines === null) return;
+    if (bbox === null) return;
 
-    // Ignore the airports if other isolines arrive or the app goes away before they do
+    // Ignore the airports if another eclipse is picked or the app goes away before they arrive
     let active = true;
-    fetchAirports(isolines.bbox)
+    fetchAirports(bbox)
       // The map shows no airports
       .catch((error) => {
         console.warn("Airports not shown", error);
@@ -91,14 +95,19 @@ export function App() {
       });
     return () => {
       active = false;
+      // The previous eclipse's airports go as soon as another is picked
+      setAirports(null);
     };
-  }, [isolines]);
+  }, [bbox]);
+
+  const dates = eclipses.map(({ date }) => date);
 
   return (
     <div className="app">
       <AppHeader dates={dates} date={date} onDateChange={setDate} />
       <main className="map-stage">
         <EclipseMap
+          bbox={bbox}
           isolines={isolines}
           airports={airports}
           advisories={advisories}
