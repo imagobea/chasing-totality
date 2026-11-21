@@ -120,10 +120,9 @@ function mapProps(
   isolines: Isolines | null,
   airports: Airports | null = null,
   advisories: Advisories | null = null,
-  bbox: Bbox | null = null,
 ) {
   return {
-    bbox,
+    bbox: null,
     isolines,
     airports,
     advisories,
@@ -300,7 +299,7 @@ describe("EclipseMap", () => {
   });
 
   it("fits the map to the whole path of each eclipse picked, before its isolines arrive", async () => {
-    const props = mapProps(null, null, null, BBOX_2027);
+    const props = { ...mapProps(null), bbox: BBOX_2027 };
     const { rerender } = render(<EclipseMap {...props} />);
     await loadStyle();
     rerender(<EclipseMap {...props} bbox={BBOX_2028} />);
@@ -308,7 +307,7 @@ describe("EclipseMap", () => {
   });
 
   it("fits the map once the style has loaded when the bbox came first", async () => {
-    render(<EclipseMap {...mapProps(null, null, null, BBOX_2027)} />);
+    render(<EclipseMap {...mapProps(null)} bbox={BBOX_2027} />);
     expect(map.fitBounds).not.toHaveBeenCalled();
     await loadStyle();
     expect(map.fitBounds).toHaveBeenCalledExactlyOnceWith(BBOX_2027);
@@ -316,7 +315,7 @@ describe("EclipseMap", () => {
 
   // The user may have panned by then
   it("doesn't fit the map again when the isolines arrive", async () => {
-    const props = mapProps(null, null, null, BBOX_2027);
+    const props = { ...mapProps(null), bbox: BBOX_2027 };
     const { rerender } = render(<EclipseMap {...props} />);
     await loadStyle();
     rerender(<EclipseMap {...props} isolines={ISOLINES_2027} />);
