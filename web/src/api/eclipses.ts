@@ -1,8 +1,11 @@
 // The eclipse endpoints
 
 import type { Feature, FeatureCollection, MultiPolygon } from "geojson";
-import type { Bbox } from "./airports.js";
 import { getJson } from "./getJson.js";
+
+// west, south, east and north edges in degrees, as the eclipse list gives them and the airports
+// endpoint expects them
+export type Bbox = [west: number, south: number, east: number, north: number];
 
 // GeoJSON's positions narrowed to the longitude, latitude pairs the engine writes
 type IsolineGeometry = MultiPolygon & { coordinates: [longitude: number, latitude: number][][][] };

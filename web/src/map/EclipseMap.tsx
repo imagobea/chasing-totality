@@ -11,8 +11,8 @@ import "maplibre-gl/dist/maplibre-gl.css";
 import workerUrl from "maplibre-gl/dist/maplibre-gl-worker.mjs?worker&url";
 import type { FeatureCollection } from "geojson";
 import type { Advisories } from "../api/advisories.js";
-import type { Airports, Bbox } from "../api/airports.js";
-import type { Isolines } from "../api/eclipses.js";
+import type { Airports } from "../api/airports.js";
+import type { Bbox, Isolines } from "../api/eclipses.js";
 import {
   ADVISORIES_LAYERS,
   ADVISORIES_SOURCE_ID,

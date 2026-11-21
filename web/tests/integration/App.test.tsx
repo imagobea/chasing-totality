@@ -1,8 +1,8 @@
 import { act, cleanup, fireEvent, render, screen, waitFor, within } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import type { Advisories } from "../../src/api/advisories.js";
-import type { Airports, Bbox } from "../../src/api/airports.js";
-import type { Isolines } from "../../src/api/eclipses.js";
+import type { Airports } from "../../src/api/airports.js";
+import type { Bbox, Isolines } from "../../src/api/eclipses.js";
 import { App } from "../../src/App.js";
 import { advisories } from "../helpers/advisories.js";
 import { airports } from "../helpers/airports.js";

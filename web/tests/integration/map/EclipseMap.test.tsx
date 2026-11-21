@@ -3,8 +3,8 @@ import { AttributionControl, MapLibreMap } from "maplibre-gl";
 import polygonClipping from "polygon-clipping";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import type { Advisories } from "../../../src/api/advisories.js";
-import type { Airports, Bbox } from "../../../src/api/airports.js";
-import type { Isolines } from "../../../src/api/eclipses.js";
+import type { Airports } from "../../../src/api/airports.js";
+import type { Bbox, Isolines } from "../../../src/api/eclipses.js";
 import {
   ADVISORIES_LAYERS,
   ADVISORIES_SOURCE_ID,
