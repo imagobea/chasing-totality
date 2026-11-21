@@ -1,7 +1,6 @@
 // Route for the airports snapshot written by scripts/generate-airports.ts
 
 import type { FastifyPluginAsync } from "fastify";
-
 import type { Bbox } from "../dataHelpers.js";
 
 // A bounding box: the rectangle between the west, south, east and north edges, in degrees and in
