@@ -238,7 +238,18 @@ describe("App", () => {
     expect(mapIsolines()).toBe(shownIsolines("2028-07-22"));
   });
 
-  it("warns and leaves the map as it is when the isolines can't be fetched", async () => {
+  it("clears the previous eclipse's isolines as soon as another is picked", async () => {
+    mockApi(async () => eclipseList("2027-08-02", "2028-07-22"), {
+      isolines: (date) =>
+        date === "2027-08-02" ? Promise.resolve(ok(ISOLINES[date])) : new Promise(() => {}),
+    });
+    render(<App />);
+    await waitFor(() => expect(mapIsolines()).toBe(shownIsolines("2027-08-02")));
+    fireEvent.change(picker(), { target: { value: "2028-07-22" } });
+    await waitFor(() => expect(mapIsolines()).toBe(""));
+  });
+
+  it("warns and shows no isolines when they can't be fetched", async () => {
     const warn = vi.spyOn(console, "warn").mockImplementation(() => {});
     mockApi(async () => eclipseList("2027-08-02", "2028-07-22"), {
       isolines: async (date) =>
@@ -248,7 +259,7 @@ describe("App", () => {
     await waitFor(() => expect(mapIsolines()).toBe(shownIsolines("2027-08-02")));
     fireEvent.change(picker(), { target: { value: "2028-07-22" } });
     await waitFor(() => expect(warn).toHaveBeenCalledWith(expect.any(String), expect.any(Error)));
-    expect(mapIsolines()).toBe(shownIsolines("2027-08-02"));
+    expect(mapIsolines()).toBe("");
   });
 
   it("shows the airports around the selected eclipse's path on the map", async () => {
@@ -273,20 +284,15 @@ describe("App", () => {
     await waitFor(() => expect(airportsSourceLine()).toBe("OurAirports, 25 OCT 2026"));
   });
 
-  // The new isolines never arrive either, so the old path is still on the map
   it("clears the previous eclipse's airports as soon as another is picked", async () => {
     mockApi(async () => eclipseList("2027-08-02", "2028-07-22"), {
-      isolines: (date) =>
-        date === "2027-08-02" ? Promise.resolve(ok(ISOLINES[date])) : new Promise(() => {}),
       airports: (bbox) =>
         bbox === AIRPORTS_BBOX_2027 ? Promise.resolve(ok(AIRPORTS[bbox])) : new Promise(() => {}),
     });
     render(<App />);
     await waitFor(() => expect(mapAirports()).toBe("AGP,LXR"));
-    await waitFor(() => expect(mapIsolines()).toBe(shownIsolines("2027-08-02")));
     fireEvent.change(picker(), { target: { value: "2028-07-22" } });
     await waitFor(() => expect(mapAirports()).toBe(""));
-    expect(mapIsolines()).toBe(shownIsolines("2027-08-02"));
     expect(airportsSourceLine()).toBe("—");
   });
 

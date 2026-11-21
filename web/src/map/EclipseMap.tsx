@@ -41,7 +41,7 @@ import type { MapStatusStore } from "./mapStatus.js";
 type EclipseMapProps = {
   // The selected eclipse's bbox, from the eclipse list; null until it's known
   bbox: Bbox | null;
-  // The selected eclipse's isolines, null until they arrive
+  // The selected eclipse's isolines, null until they arrive or when they can't be had
   isolines: Isolines | null;
   // The airports around the eclipse's path, null until they arrive or when they can't be had
   airports: Airports | null;
@@ -61,8 +61,8 @@ setWorkerUrl(workerUrl);
 // TODO: careful - map style is chosen here, not by the theme!!
 const MAP_STYLE = "https://tiles.openfreemap.org/styles/fiord";
 
-// What the airports source shows when there are no airports
-const NO_AIRPORTS: FeatureCollection = { type: "FeatureCollection", features: [] };
+// What a source shows when it has nothing to show
+const NO_FEATURES: FeatureCollection = { type: "FeatureCollection", features: [] };
 
 // Added the first time with its layers, each in its place in the layer stack; swapped in place
 // afterwards
@@ -155,9 +155,16 @@ export function EclipseMap({
     map.fitBounds(bbox);
   }, [map, bbox]);
 
-  // The eclipse's isolines
+  // The eclipse's isolines and their bands, cleared when there are none
   useEffect(() => {
-    if (!map || isolines === null) return;
+    if (!map) return;
+
+    if (isolines === null) {
+      for (const id of [ISOLINES_SOURCE_ID, DURATION_BANDS_SOURCE_ID]) {
+        map.getSource<GeoJSONSource>(id)?.setData(NO_FEATURES);
+      }
+      return;
+    }
 
     showSource(map, ISOLINES_SOURCE_ID, isolinesSource(isolines), ISOLINES_LAYERS);
     // Cutting the bands can throw on odd geometry, and the isolines are still worth showing
@@ -179,7 +186,7 @@ export function EclipseMap({
     if (!map) return;
 
     if (airports === null) {
-      map.getSource<GeoJSONSource>(AIRPORTS_SOURCE_ID)?.setData(NO_AIRPORTS);
+      map.getSource<GeoJSONSource>(AIRPORTS_SOURCE_ID)?.setData(NO_FEATURES);
       return;
     }
     showSource(map, AIRPORTS_SOURCE_ID, airportsSource(airports), AIRPORTS_LAYERS);

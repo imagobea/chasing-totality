@@ -352,6 +352,21 @@ describe("EclipseMap", () => {
     );
   });
 
+  it("clears the isolines and their bands when there are none, and adds them back when they return", async () => {
+    const props = mapProps(ISOLINES_2027);
+    const { rerender } = render(<EclipseMap {...props} />);
+    await loadStyle();
+    map.getSource.mockReturnValue(source);
+    rerender(<EclipseMap {...props} isolines={null} />);
+    expect(map.getSource).toHaveBeenCalledWith(ISOLINES_SOURCE_ID);
+    expect(map.getSource).toHaveBeenCalledWith(DURATION_BANDS_SOURCE_ID);
+    const empty = { type: "FeatureCollection", features: [] };
+    expect(source.setData.mock.calls).toEqual([[empty], [empty]]);
+    rerender(<EclipseMap {...props} isolines={ISOLINES_2028} />);
+    expect(source.setData).toHaveBeenCalledWith(isolinesSource(ISOLINES_2028).data);
+    expect(source.setData).toHaveBeenCalledWith(durationBandsSource(ISOLINES_2028).data);
+  });
+
   it("clears the airports when there are none, and adds them back when they return", async () => {
     const props = mapProps(ISOLINES_2027, AIRPORTS_2027);
     const { rerender } = render(<EclipseMap {...props} />);

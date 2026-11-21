@@ -14,7 +14,7 @@ export function App() {
   const [eclipses, setEclipses] = useState<Eclipse[]>([]);
   // The selected eclipse; the first upcoming one with data until the user picks another
   const [date, setDate] = useState<string | null>(null);
-  // The selected eclipse's isolines, null until the first ones arrive
+  // The selected eclipse's isolines, null until they arrive or when they can't be fetched
   const [isolines, setIsolines] = useState<Isolines | null>(null);
   // The airports around the selected eclipse's path, null until they arrive or when they can't
   // be fetched
@@ -69,10 +69,13 @@ export function App() {
       .then((result) => {
         if (active) setIsolines(result);
       })
-      // The map keeps whatever it was showing
+      // The map shows no isolines
       .catch((error) => console.warn(`Eclipse ${date} not shown`, error));
     return () => {
       active = false;
+      // The previous eclipse's isolines go as soon as another is picked, since the map already
+      // fits the new path
+      setIsolines(null);
     };
   }, [date]);
 
