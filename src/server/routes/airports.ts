@@ -2,8 +2,7 @@
 
 import type { FastifyPluginAsync } from "fastify";
 
-// A bbox's edges by name, as the route reads them from its query
-type Edges = { west: number; south: number; east: number; north: number };
+import type { Bbox } from "../dataHelpers.js";
 
 // A bounding box: the rectangle between the west, south, east and north edges, in degrees and in
 // that order, as in GeoJSON's bbox. For example -10,25,45,40 covers S Spain to Saudi Arabia.
@@ -16,7 +15,7 @@ const BBOX_QUERY = {
 } as const;
 const FULL_TURN = 360;
 
-function parseBbox(text: string): Edges {
+function parseBbox(text: string): Bbox {
   const [west = 0, south = 0, east = 0, north = 0] = text.split(",").map(Number);
   const longitudes =
     [west, east].every((lon) => lon >= -FULL_TURN && lon <= FULL_TURN) &&
@@ -26,11 +25,11 @@ function parseBbox(text: string): Edges {
   if (!longitudes || !latitudes) {
     throw Object.assign(new Error(`Invalid bbox ${text}`), { statusCode: 422 });
   }
-  return { west, south, east, north };
+  return [west, south, east, north];
 }
 
 // The airport's longitude as it is or a turn either way, so 175°W is found in a box up to 190°
-function contains({ west, south, east, north }: Edges, [lon, lat]: [number, number]): boolean {
+function contains([west, south, east, north]: Bbox, [lon, lat]: [number, number]): boolean {
   const turns = [lon - FULL_TURN, lon, lon + FULL_TURN];
   const inLongitude = turns.some((turn) => turn >= west && turn <= east);
   return inLongitude && lat >= south && lat <= north;
