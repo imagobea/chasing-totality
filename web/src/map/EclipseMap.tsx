@@ -12,7 +12,7 @@ import workerUrl from "maplibre-gl/dist/maplibre-gl-worker.mjs?worker&url";
 import type { FeatureCollection } from "geojson";
 import type { Advisories } from "../api/advisories.js";
 import type { Airports } from "../api/airports.js";
-import type { Isolines } from "../api/eclipses.js";
+import type { Bbox, Isolines } from "../api/eclipses.js";
 import {
   ADVISORIES_LAYERS,
   ADVISORIES_SOURCE_ID,
@@ -39,7 +39,9 @@ import { beforeId } from "./layerOrder.js";
 import type { MapStatusStore } from "./mapStatus.js";
 
 type EclipseMapProps = {
-  // The selected eclipse's isolines, null until they arrive
+  // The selected eclipse's bbox, from the eclipse list; null until it's known
+  bbox: Bbox | null;
+  // The selected eclipse's isolines, null until they arrive or when they can't be had
   isolines: Isolines | null;
   // The airports around the eclipse's path, null until they arrive or when they can't be had
   airports: Airports | null;
@@ -59,8 +61,8 @@ setWorkerUrl(workerUrl);
 // TODO: careful - map style is chosen here, not by the theme!!
 const MAP_STYLE = "https://tiles.openfreemap.org/styles/fiord";
 
-// What the airports source shows when there are no airports
-const NO_AIRPORTS: FeatureCollection = { type: "FeatureCollection", features: [] };
+// What a source shows when it has nothing to show
+const NO_FEATURES: FeatureCollection = { type: "FeatureCollection", features: [] };
 
 // Added the first time with its layers, each in its place in the layer stack; swapped in place
 // afterwards
@@ -81,6 +83,7 @@ function showSource(
 }
 
 export function EclipseMap({
+  bbox,
   isolines,
   airports,
   advisories,
@@ -145,10 +148,23 @@ export function EclipseMap({
     // A ref object and the store stay the same across renders, so the map is still created once
   }, [attributionRef, mapStatus]);
 
-  // The eclipse's isolines, with the map fitted to its whole path; the user is then free to pan
-  // and zoom
+  // The map fitted to the eclipse's whole path as soon as it's picked, without waiting for its
+  // isolines; the user is then free to pan and zoom
   useEffect(() => {
-    if (!map || isolines === null) return;
+    if (!map || bbox === null) return;
+    map.fitBounds(bbox);
+  }, [map, bbox]);
+
+  // The eclipse's isolines and their bands, cleared when there are none
+  useEffect(() => {
+    if (!map) return;
+
+    if (isolines === null) {
+      for (const id of [ISOLINES_SOURCE_ID, DURATION_BANDS_SOURCE_ID]) {
+        map.getSource<GeoJSONSource>(id)?.setData(NO_FEATURES);
+      }
+      return;
+    }
 
     showSource(map, ISOLINES_SOURCE_ID, isolinesSource(isolines), ISOLINES_LAYERS);
     // Cutting the bands can throw on odd geometry, and the isolines are still worth showing
@@ -163,7 +179,6 @@ export function EclipseMap({
     } catch (error) {
       console.warn("Duration bands not shown", error);
     }
-    map.fitBounds(isolines.bbox);
   }, [map, isolines]);
 
   // The airports, cleared when there are none
@@ -171,7 +186,7 @@ export function EclipseMap({
     if (!map) return;
 
     if (airports === null) {
-      map.getSource<GeoJSONSource>(AIRPORTS_SOURCE_ID)?.setData(NO_AIRPORTS);
+      map.getSource<GeoJSONSource>(AIRPORTS_SOURCE_ID)?.setData(NO_FEATURES);
       return;
     }
     showSource(map, AIRPORTS_SOURCE_ID, airportsSource(airports), AIRPORTS_LAYERS);

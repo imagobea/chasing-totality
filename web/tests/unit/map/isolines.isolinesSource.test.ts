@@ -7,7 +7,6 @@ describe("isolinesSource", () => {
     const given = isolines(30, 60, 90);
     const { data } = isolinesSource(given);
     const [limit, ...inner] = data.features;
-    expect(data.bbox).toEqual(given.bbox);
     expect(limit?.properties).toEqual({ durationSeconds: 30, name: "30s", limit: true });
     expect(inner).toEqual(given.features.slice(1));
   });

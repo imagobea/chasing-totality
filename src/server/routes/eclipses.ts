@@ -9,9 +9,10 @@ const DATE_PARAMS = {
 } as const;
 
 export const eclipses: FastifyPluginAsync = async (app) => {
-  // Dates of the eclipses that have data, in order since they were loaded that way
+  // The eclipses that have data, each with the bbox around its path, in date order since they were
+  // loaded that way
   app.get("/eclipses", async () => {
-    return [...app.data.isolines.keys()];
+    return [...app.data.isolines].map(([date, { bbox }]) => ({ date, bbox }));
   });
 
   // The eclipse's isolines, the path of totality included, as generated
@@ -25,7 +26,7 @@ export const eclipses: FastifyPluginAsync = async (app) => {
         // Fastify's default handler writes the error body
         throw Object.assign(new Error(`No isolines for ${date}`), { statusCode: 404 });
       }
-      return reply.type("application/geo+json; charset=utf-8").send(isolines);
+      return reply.type("application/geo+json; charset=utf-8").send(isolines.bytes);
     },
   );
 };

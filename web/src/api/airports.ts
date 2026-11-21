@@ -1,10 +1,8 @@
 // The airports endpoint
 
 import type { FeatureCollection, Point } from "geojson";
+import type { Bbox } from "./eclipses.js";
 import { getJson } from "./getJson.js";
-
-// west, south, east and north edges in degrees, as the endpoint's bbox expects
-export type Bbox = [west: number, south: number, east: number, north: number];
 
 // One airport, as the snapshot writes it
 type Airport = {

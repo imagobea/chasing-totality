@@ -14,6 +14,12 @@ export type AirportsSnapshot = {
   }[];
 };
 
+// The west, south, east and north edges around an eclipse's path, in degrees, as in GeoJSON
+export type Bbox = [west: number, south: number, east: number, north: number];
+
+// An eclipse's isolines file as its bytes, since the route sends it as is, and the bbox it holds
+export type IsolinesFile = { bytes: Buffer; bbox: Bbox };
+
 // A data file named after its eclipse, e.g. 2027-08-02.geojson, capturing the date
 const DATA_FILE = /^(\d{4}-\d{2}-\d{2})\.geojson$/;
 // A snapshot's retrieval date
@@ -79,8 +85,8 @@ async function readJson(file: string): Promise<{ bytes: Buffer; json: unknown }>
   }
 }
 
-// Check that the isolines JSON is valid
-function checkIsolines(json: unknown, file: string): void {
+// Check that the isolines JSON is valid, and return its bbox
+function checkIsolines(json: unknown, file: string): Bbox {
   // The top-level object must be a FeatureCollection with a bbox and features
   if (!isObject(json) || json.type !== "FeatureCollection") {
     throw new DataError(file, "not a FeatureCollection");
@@ -104,6 +110,8 @@ function checkIsolines(json: unknown, file: string): void {
       throw new DataError(file, `feature ${i} missing durationSeconds`);
     }
   }
+
+  return bbox as Bbox;
 }
 
 // Check that the airports JSON is a snapshot of points with its source and retrieval date
@@ -180,9 +188,9 @@ function checkAdvisories(json: unknown, file: string): void {
   }
 }
 
-// The isolines snapshots, keyed by eclipse date, as their bytes, since the route sends them as is
-export async function loadIsolines(dataDir: string): Promise<Map<string, Buffer>> {
-  const isolinesMap = new Map<string, Buffer>();
+// The isolines files, keyed by eclipse date
+export async function loadIsolines(dataDir: string): Promise<Map<string, IsolinesFile>> {
+  const isolinesMap = new Map<string, IsolinesFile>();
 
   // Sorted, so the eclipses are kept in date order whatever order the folder lists them in
   const files = (await listDir(dataDir)).sort();
@@ -201,11 +209,11 @@ export async function loadIsolines(dataDir: string): Promise<Map<string, Buffer>
 
     // The full path, so every error names the file the same way
     const path = join(dataDir, file);
-    const fileContents = await readJson(path);
-    checkIsolines(fileContents.json, path);
+    const { bytes, json } = await readJson(path);
+    const bbox = checkIsolines(json, path);
 
     // Keyed by date, which is what the routes are asked for
-    isolinesMap.set(date, fileContents.bytes);
+    isolinesMap.set(date, { bytes, bbox });
   }
 
   return isolinesMap;

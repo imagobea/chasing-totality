@@ -32,8 +32,8 @@ export function formatCoordinates({ lng, lat }: Coordinates): string {
 }
 
 // Given a list of eclipse dates, return the first one that is today or later in the user's time
-// zone, or null if none. Designed to be used with the list returned by GET /eclipses, which is
-// sorted ascending.
+// zone, or null if none. Designed to be used with the dates of the list returned by GET /eclipses,
+// which is sorted ascending.
 export function firstUpcomingEclipse(dates: string[], now = new Date()): string | null {
   const todayMs = Date.UTC(now.getFullYear(), now.getMonth(), now.getDate());
   for (const date of dates) {

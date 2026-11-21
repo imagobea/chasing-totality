@@ -141,3 +141,21 @@ failed deploy instead of an error for whoever asks for it first.
 If the data grows a lot (all 61 eclipses would be ~150 MB), the
 isolines can be loaded lazily: still checked at boot, but read on
 request.
+
+---
+
+## 008 — The eclipse list gives each path's bbox
+
+Date: 2026-11-20
+
+`/eclipses` returns each eclipse's date with the bbox around its path.
+As soon as an eclipse is picked, the map can fit the path and the
+airports can load, without waiting for the isolines. The server reads
+the bbox from the isolines file at boot. See #72.
+
+### Why
+
+The airports request used to wait for the whole isolines file just to
+read its bbox. An airports endpoint per eclipse would also fix that,
+but a bbox in the frontend helps the map too, and later lets MapLibre
+load the isolines straight from their URL.
