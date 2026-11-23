@@ -329,6 +329,8 @@ describe("EclipseMap", () => {
     const props = { ...mapProps(null), showAdvisories: false };
     const { rerender } = render(<EclipseMap {...props} />);
     await loadStyle();
+    // No layers to hide until the advisories are in
+    expect(map.setLayoutProperty).not.toHaveBeenCalled();
     rerender(<EclipseMap {...props} advisories={ADVISORIES} />);
     expect(layersFrom(ADVISORIES_SOURCE_ID)).toEqual(ADVISORIES_LAYERS);
     expect(advisoriesVisibility()).toEqual(["none", "none"]);
