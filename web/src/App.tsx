@@ -7,7 +7,7 @@ import { LayersPanel } from "./components/LayersPanel.js";
 import { StatusBar } from "./components/StatusBar.js";
 import { EclipseMap } from "./map/EclipseMap.js";
 import { createMapStatusStore } from "./map/mapStatus.js";
-import { firstUpcomingEclipse } from "./utils.js";
+import { firstUpcomingEclipse, isPast } from "./utils.js";
 
 export function App() {
   // The eclipses that have data, earliest first
@@ -26,6 +26,8 @@ export function App() {
   const attributionRef = useRef<HTMLDivElement>(null);
   // The selected eclipse's bbox, from the list; null until both the list and a date are in
   const bbox = eclipses.find((eclipse) => eclipse.date === date)?.bbox ?? null;
+  // Airports and advisories describe today, so they're left out for a past eclipse
+  const past = date !== null && isPast(date);
 
   useEffect(() => {
     // Ignore the answer if the app goes away before it arrives
@@ -84,7 +86,7 @@ export function App() {
 
   // Requested with the isolines, not after them, since the list already has the path's bbox
   useEffect(() => {
-    if (bbox === null) return;
+    if (bbox === null || past) return;
 
     // Ignore the airports if another eclipse is picked or the app goes away before they arrive
     let active = true;
@@ -102,7 +104,7 @@ export function App() {
       // The previous eclipse's airports go as soon as another is picked
       setAirports(null);
     };
-  }, [bbox]);
+  }, [bbox, past]);
 
   const dates = eclipses.map(({ date }) => date);
 
@@ -115,10 +117,11 @@ export function App() {
           isolines={isolines}
           airports={airports}
           advisories={advisories}
+          showAdvisories={!past}
           mapStatus={mapStatus}
           attributionRef={attributionRef}
         />
-        <LayersPanel airports={airports} advisories={advisories} />
+        <LayersPanel airports={airports} advisories={advisories} showTravelLayers={!past} />
       </main>
       <StatusBar mapStatus={mapStatus} attributionRef={attributionRef} />
     </div>

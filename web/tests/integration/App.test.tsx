@@ -10,18 +10,20 @@ import { isolines } from "../helpers/isolines.js";
 
 // The map has its own tests and needs WebGL, so a stand-in shows the bbox it fits, the names of the
 // isolines it was given, which tell the eclipses apart, the IATA codes of its airports and its
-// advisories' states
+// advisories' states while they show
 vi.mock("../../src/map/EclipseMap.js", () => ({
   EclipseMap: ({
     bbox,
     isolines,
     airports,
     advisories,
+    showAdvisories,
   }: {
     bbox: Bbox | null;
     isolines: Isolines | null;
     airports: Airports | null;
     advisories: Advisories | null;
+    showAdvisories: boolean;
   }) => (
     <div role="region" aria-label="Map">
       <p aria-label="Fit">{bbox?.join(",")}</p>
@@ -30,7 +32,7 @@ vi.mock("../../src/map/EclipseMap.js", () => ({
       </p>
       <p aria-label="Airports">{airports?.features.map(({ id }) => id).join(",")}</p>
       <p aria-label="Advisories">
-        {advisories?.features.map(({ properties }) => properties.state).join(",")}
+        {showAdvisories && advisories?.features.map(({ properties }) => properties.state).join(",")}
       </p>
     </div>
   ),
@@ -63,6 +65,9 @@ const AIRPORTS: Record<string, Airports> = {
 
 // What the API serves for every place's advisory
 const ADVISORIES = advisories("whole", "parts", "none");
+
+// What the layers panel says instead of the airports and advisories for a past eclipse
+const PAST_NOTE = "Airports and travel advisories aren’t shown for past eclipses.";
 
 const ISOLINES_URL = /^\/api\/eclipses\/(.+)\/isolines$/;
 const AIRPORTS_URL = /^\/api\/airports\?bbox=(.+)$/;
@@ -262,6 +267,20 @@ describe("App", () => {
     expect(mapIsolines()).toBe("");
   });
 
+  it("asks for no airports while a past eclipse is selected", async () => {
+    mockApi(async () => eclipseList("2026-08-12", "2027-08-02"), {
+      isolines: () => new Promise(() => {}),
+    });
+    render(<App />);
+    await waitFor(() => expect(mapAirports()).toBe("AGP,LXR"));
+    fireEvent.change(picker(), { target: { value: "2026-08-12" } });
+    await waitFor(() => expect(mapAirports()).toBe(""));
+    // Only the upcoming eclipse's airports were asked for
+    expect(vi.mocked(fetch).mock.calls.filter(([url]) => AIRPORTS_URL.test(String(url)))).toEqual([
+      [`/api/airports?bbox=${AIRPORTS_BBOX_2027}`],
+    ]);
+  });
+
   it("shows the airports around the selected eclipse's path on the map", async () => {
     mockApi(async () => eclipseList("2027-08-02", "2028-07-22"));
     render(<App />);
@@ -326,6 +345,21 @@ describe("App", () => {
     expect(airportsSourceLine()).toBe("—");
   });
 
+  it("hides the advisories while a past eclipse is selected, without fetching them again", async () => {
+    mockApi(async () => eclipseList("2026-08-12", "2027-08-02"), {
+      isolines: () => new Promise(() => {}),
+    });
+    render(<App />);
+    await waitFor(() => expect(mapAdvisories()).toBe("whole,parts,none"));
+    fireEvent.change(picker(), { target: { value: "2026-08-12" } });
+    expect(mapAdvisories()).toBe("");
+    fireEvent.change(picker(), { target: { value: "2027-08-02" } });
+    expect(mapAdvisories()).toBe("whole,parts,none");
+    expect(vi.mocked(fetch).mock.calls.filter(([url]) => url === "/api/advisories")).toHaveLength(
+      1,
+    );
+  });
+
   it("shows every place's advisory on the map, fetched once whatever the eclipse", async () => {
     mockApi(async () => eclipseList("2027-08-02", "2028-07-22"));
     render(<App />);
@@ -354,6 +388,17 @@ describe("App", () => {
     await waitFor(() => expect(warn).toHaveBeenCalledWith(expect.any(String), expect.any(Error)));
     expect(mapAdvisories()).toBe("");
     expect(advisoriesSourceLine()).toBe("—");
+  });
+
+  it("notes in the layers panel that a past eclipse shows no airports or advisories", async () => {
+    mockApi(async () => eclipseList("2026-08-12", "2027-08-02"), {
+      isolines: () => new Promise(() => {}),
+    });
+    render(<App />);
+    await waitFor(() => expect(airportsSourceLine()).toBe("OurAirports, 25 OCT 2026"));
+    expect(screen.queryByText(PAST_NOTE)).toBeNull();
+    fireEvent.change(picker(), { target: { value: "2026-08-12" } });
+    expect(screen.getByText(PAST_NOTE)).toBeTruthy();
   });
 
   it("shows the layers panel over the map", () => {

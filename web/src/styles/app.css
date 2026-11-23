@@ -161,11 +161,6 @@ body {
   gap: var(--space-4);
 }
 
-/* Its source is the group's last line, so it needs no space below */
-.layer-heading .layer-source {
-  margin-bottom: 0;
-}
-
 .layer-name {
   margin: 0;
   font-size: var(--text-sm);
@@ -175,6 +170,11 @@ body {
 .layer-source {
   margin: 0 0 var(--space-3);
   color: var(--color-text-muted);
+}
+
+/* A source line that ends its block needs no space below */
+.layer-source:last-child {
+  margin-bottom: 0;
 }
 
 .layer-source a {
@@ -191,7 +191,8 @@ body {
 }
 
 /* Wraps to the panel's width instead of widening it */
-.layer-credit {
+.layer-credit,
+.layer-note {
   width: 0;
   min-width: 100%;
 }

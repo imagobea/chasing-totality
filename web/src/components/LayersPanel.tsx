@@ -11,6 +11,8 @@ type LayersPanelProps = {
   // The advisories on the map, whose sources and date the panel credits; null until they arrive or
   // when they can't be fetched
   advisories: Advisories | null;
+  // Whether the airports and advisories show; false for a past eclipse, with a note in their place
+  showTravelLayers: boolean;
 };
 
 type SourceLineProps = {
@@ -74,7 +76,7 @@ function creditParts({ licence, licenceUrl, attribution }: AdvisorySource) {
 }
 
 // The key to the map's layers, over its bottom-left corner
-export function LayersPanel({ airports, advisories }: LayersPanelProps) {
+export function LayersPanel({ airports, advisories, showTravelLayers }: LayersPanelProps) {
   const adviceSource = advisories?.sources.find(({ fields }) => fields === ADVICE_FIELDS) ?? null;
   const credit = adviceSource && creditParts(adviceSource);
 
@@ -109,51 +111,62 @@ export function LayersPanel({ airports, advisories }: LayersPanelProps) {
           </li>
         </ul>
       </section>
-      <section className="layer-group" aria-labelledby="layer-airports">
-        {/* Name and source to the left, the map's symbol centred beside them */}
-        <div className="layer-heading">
-          <div>
-            <h2 id="layer-airports" className="layer-name">
-              Airports
+      {showTravelLayers ? (
+        <>
+          <section className="layer-group" aria-labelledby="layer-airports">
+            {/* Name and source to the left, the map's symbol centred beside them */}
+            <div className="layer-heading">
+              <div>
+                <h2 id="layer-airports" className="layer-name">
+                  Airports
+                </h2>
+                <SourceLine source={airports?.source ?? null} retrieved={airports?.retrieved} />
+              </div>
+              <span className="airport-icon" aria-hidden="true" />
+            </div>
+          </section>
+          <section className="layer-group" aria-labelledby="layer-advisories">
+            <h2 id="layer-advisories" className="layer-name">
+              Travel advisories
             </h2>
-            <SourceLine source={airports?.source ?? null} retrieved={airports?.retrieved} />
-          </div>
-          <span className="airport-icon" aria-hidden="true" />
-        </div>
-      </section>
-      <section className="layer-group" aria-labelledby="layer-advisories">
-        <h2 id="layer-advisories" className="layer-name">
-          Travel advisories
-        </h2>
-        <SourceLine source={adviceSource} retrieved={advisories?.retrieved} />
-        {/* The licence's credit, when it asks for one, linked to the licence */}
-        {credit && (
-          <p className="layer-source layer-credit">
-            {credit.before}
-            <a href={credit.licenceUrl} target="_blank" rel="noreferrer">
-              {credit.licence}
-            </a>
-            {credit.after}
+            <SourceLine source={adviceSource} retrieved={advisories?.retrieved} />
+            {/* The licence's credit, when it asks for one, linked to the licence */}
+            {credit && (
+              <p className="layer-source layer-credit">
+                {credit.before}
+                <a href={credit.licenceUrl} target="_blank" rel="noreferrer">
+                  {credit.licence}
+                </a>
+                {credit.after}
+              </p>
+            )}
+            <ul className="layer-key">
+              {ADVISORY_ROWS.map(({ state, label }) => (
+                <li key={state}>
+                  <span
+                    className="hatch"
+                    style={
+                      {
+                        "--hatch-width": `var(--advisory-hatch-${state}-width)`,
+                        "--hatch-spacing": `var(--advisory-hatch-${state}-spacing)`,
+                      } as CSSProperties
+                    }
+                    aria-hidden="true"
+                  />
+                  {label}
+                </li>
+              ))}
+            </ul>
+          </section>
+        </>
+      ) : (
+        // Where the airports and advisories would sit, after the same divider
+        <section className="layer-group">
+          <p className="layer-source layer-note">
+            Airports and travel advisories aren’t shown for past eclipses.
           </p>
-        )}
-        <ul className="layer-key">
-          {ADVISORY_ROWS.map(({ state, label }) => (
-            <li key={state}>
-              <span
-                className="hatch"
-                style={
-                  {
-                    "--hatch-width": `var(--advisory-hatch-${state}-width)`,
-                    "--hatch-spacing": `var(--advisory-hatch-${state}-spacing)`,
-                  } as CSSProperties
-                }
-                aria-hidden="true"
-              />
-              {label}
-            </li>
-          ))}
-        </ul>
-      </section>
+        </section>
+      )}
     </aside>
   );
 }

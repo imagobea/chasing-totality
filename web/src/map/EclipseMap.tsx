@@ -47,6 +47,8 @@ type EclipseMapProps = {
   airports: Airports | null;
   // Every place's travel advisory, null until they arrive or when they can't be had
   advisories: Advisories | null;
+  // Whether the advisories show; false for a past eclipse
+  showAdvisories: boolean;
   // Where the map writes the mouse position as it moves (null when it leaves the map) and the zoom
   // once loaded and as it changes
   mapStatus: MapStatusStore;
@@ -87,6 +89,7 @@ export function EclipseMap({
   isolines,
   airports,
   advisories,
+  showAdvisories,
   mapStatus,
   attributionRef,
 }: EclipseMapProps) {
@@ -197,6 +200,13 @@ export function EclipseMap({
     if (!map || advisories === null) return;
     showSource(map, ADVISORIES_SOURCE_ID, advisoriesSource(advisories), ADVISORIES_LAYERS);
   }, [map, advisories]);
+
+  // The advisories hidden rather than cleared, so they show again without sending their data anew
+  useEffect(() => {
+    if (!map || advisories === null) return;
+    const visibility = showAdvisories ? "visible" : "none";
+    for (const { id } of ADVISORIES_LAYERS) map.setLayoutProperty(id, "visibility", visibility);
+  }, [map, advisories, showAdvisories]);
 
   return (
     <div

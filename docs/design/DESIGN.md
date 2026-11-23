@@ -118,6 +118,8 @@ A legend that details map layers separated by dividers, in this order:
 
 Each group has a layer name, then a source line under it in small muted text: `<source>, <date>`. Each source links to the dataset. Dates formatted as `06 NOV 2026`, only for data that was retrieved instead of generated.
 
+For a past eclipse, Airports and Travel advisories are replaced by one line after the divider, in the source line's style: "Airports and travel advisories aren’t shown for past eclipses." Both describe today, so they don't apply.
+
 📦 Travel advisories and airport data need to be integrated.
 
 `SpotPanel` (right overlay)
