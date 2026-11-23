@@ -159,3 +159,22 @@ The airports request used to wait for the whole isolines file just to
 read its bbox. An airports endpoint per eclipse would also fix that,
 but a bbox in the frontend helps the map too, and later lets MapLibre
 load the isolines straight from their URL.
+
+---
+
+## 009 — Past eclipses are decided by the frontend
+
+Date: 2026-11-23
+
+An eclipse is past when its date is before the viewer's local calendar
+day, so it is still upcoming on the day itself. The frontend works this
+out from the date each time, and one check drives the default pick and
+which layers are shown. The API doesn't know what "past" means: it
+still serves airports for any eclipse, and the frontend doesn't ask for
+past ones. See #89.
+
+### Why
+
+"Today" depends on the viewer's time zone, and a server that keeps
+running would see eclipses turn past while it is up. Keeping the rule
+in one place on the frontend avoids both.

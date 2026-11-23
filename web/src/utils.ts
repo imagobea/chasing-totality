@@ -31,13 +31,15 @@ export function formatCoordinates({ lng, lat }: Coordinates): string {
   return `${formatDegrees(lat, "N", "S")} · ${formatDegrees(lng, "E", "W")}`;
 }
 
-// Given a list of eclipse dates, return the first one that is today or later in the user's time
-// zone, or null if none. Designed to be used with the dates of the list returned by GET /eclipses,
-// which is sorted ascending.
-export function firstUpcomingEclipse(dates: string[], now = new Date()): string | null {
+// Whether the eclipse date is before now's local calendar day, so it's still upcoming on the day.
+// Both days are taken as UTC midnights, as in daysUntil.
+export function isPast(date: string, now = new Date()): boolean {
   const todayMs = Date.UTC(now.getFullYear(), now.getMonth(), now.getDate());
-  for (const date of dates) {
-    if (Date.parse(date) >= todayMs) return date;
-  }
-  return null;
+  return Date.parse(date) < todayMs;
+}
+
+// Given a list of eclipse dates, return the first one that isn't past, or null if none. Designed
+// to be used with the dates of the list returned by GET /eclipses, which is sorted ascending.
+export function firstUpcomingEclipse(dates: string[], now = new Date()): string | null {
+  return dates.find((date) => !isPast(date, now)) ?? null;
 }
