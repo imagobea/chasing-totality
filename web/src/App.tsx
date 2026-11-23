@@ -121,7 +121,7 @@ export function App() {
           mapStatus={mapStatus}
           attributionRef={attributionRef}
         />
-        <LayersPanel airports={airports} advisories={advisories} />
+        <LayersPanel airports={airports} advisories={advisories} showTravelLayers={!past} />
       </main>
       <StatusBar mapStatus={mapStatus} attributionRef={attributionRef} />
     </div>
