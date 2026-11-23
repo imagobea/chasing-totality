@@ -16,6 +16,9 @@ export default defineConfig({
     },
   },
   test: {
+    // A zone behind UTC with no DST, so tests at local day boundaries fail if a local day is taken
+    // as UTC's, which a UTC machine like CI can't tell apart
+    env: { TZ: "Pacific/Pago_Pago" },
     // One project per layer: unit tests are pure logic, integration tests render React in jsdom.
     // tests/e2e/ has no project yet, so tests put there don't run until one is added.
     projects: [
