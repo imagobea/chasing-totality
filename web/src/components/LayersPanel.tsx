@@ -162,7 +162,7 @@ export function LayersPanel({ airports, advisories, showTravelLayers }: LayersPa
       ) : (
         // Where the airports and advisories would sit, after the same divider
         <section className="layer-group">
-          <p className="layer-source">
+          <p className="layer-source layer-note">
             Airports and travel advisories aren’t shown for past eclipses.
           </p>
         </section>
