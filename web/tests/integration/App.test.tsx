@@ -262,6 +262,20 @@ describe("App", () => {
     expect(mapIsolines()).toBe("");
   });
 
+  it("asks for no airports while a past eclipse is selected", async () => {
+    mockApi(async () => eclipseList("2026-08-12", "2027-08-02"), {
+      isolines: () => new Promise(() => {}),
+    });
+    render(<App />);
+    await waitFor(() => expect(mapAirports()).toBe("AGP,LXR"));
+    fireEvent.change(picker(), { target: { value: "2026-08-12" } });
+    await waitFor(() => expect(mapAirports()).toBe(""));
+    // Only the upcoming eclipse's airports were asked for
+    expect(vi.mocked(fetch).mock.calls.filter(([url]) => AIRPORTS_URL.test(String(url)))).toEqual([
+      [`/api/airports?bbox=${AIRPORTS_BBOX_2027}`],
+    ]);
+  });
+
   it("shows the airports around the selected eclipse's path on the map", async () => {
     mockApi(async () => eclipseList("2027-08-02", "2028-07-22"));
     render(<App />);
