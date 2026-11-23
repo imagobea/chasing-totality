@@ -48,6 +48,7 @@ const map = vi.hoisted(() => ({
   getZoom: vi.fn(() => 2),
   remove: vi.fn(),
   setProjection: vi.fn(),
+  setLayoutProperty: vi.fn(),
 }));
 
 // A source once it has been added: the duration bands, the isolines or the airports
@@ -106,6 +107,16 @@ function layersFrom(sourceId: string) {
     .filter((layer) => layer.source === sourceId);
 }
 
+// The visibility last set on each advisories layer, in the layers' order
+function advisoriesVisibility() {
+  return ADVISORIES_LAYERS.map(
+    ({ id }) =>
+      map.setLayoutProperty.mock.calls.findLast(
+        ([layer, property]) => layer === id && property === "visibility",
+      )?.[2],
+  );
+}
+
 // Runs the callback the component registered for a map event
 function fire(event: string, payload?: unknown) {
   const [, listener] = map.on.mock.calls.find(([name]) => name === event)!;
@@ -129,6 +140,7 @@ function mapProps(
     isolines,
     airports,
     advisories,
+    showAdvisories: true,
     mapStatus: createMapStatusStore(),
     attributionRef: { current: document.createElement("div") },
   };
@@ -299,6 +311,27 @@ describe("EclipseMap", () => {
     rerender(<EclipseMap {...props} advisories={ADVISORIES} />);
     const added = map.addLayer.mock.calls.slice(-ADVISORIES_LAYERS.length);
     expect(added).toEqual(ADVISORIES_LAYERS.map((layer) => [layer, DURATION_BANDS_LAYERS[0]!.id]));
+  });
+
+  it("hides the advisories for a past eclipse, and shows them again without adding them twice", async () => {
+    const props = mapProps(null, null, ADVISORIES);
+    const { rerender } = render(<EclipseMap {...props} />);
+    await loadStyle();
+    rerender(<EclipseMap {...props} showAdvisories={false} />);
+    expect(advisoriesVisibility()).toEqual(["none", "none"]);
+    rerender(<EclipseMap {...props} showAdvisories={true} />);
+    expect(advisoriesVisibility()).toEqual(["visible", "visible"]);
+    expect(map.addSource.mock.calls.filter(([id]) => id === ADVISORIES_SOURCE_ID)).toHaveLength(1);
+    expect(source.setData).not.toHaveBeenCalled();
+  });
+
+  it("adds the advisories hidden when they arrive for a past eclipse", async () => {
+    const props = { ...mapProps(null), showAdvisories: false };
+    const { rerender } = render(<EclipseMap {...props} />);
+    await loadStyle();
+    rerender(<EclipseMap {...props} advisories={ADVISORIES} />);
+    expect(layersFrom(ADVISORIES_SOURCE_ID)).toEqual(ADVISORIES_LAYERS);
+    expect(advisoriesVisibility()).toEqual(["none", "none"]);
   });
 
   it("fits the map to the whole path of each eclipse picked, before its isolines arrive", async () => {

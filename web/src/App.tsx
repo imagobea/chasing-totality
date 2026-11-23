@@ -117,6 +117,7 @@ export function App() {
           isolines={isolines}
           airports={airports}
           advisories={advisories}
+          showAdvisories={!past}
           mapStatus={mapStatus}
           attributionRef={attributionRef}
         />

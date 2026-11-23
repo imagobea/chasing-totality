@@ -10,18 +10,20 @@ import { isolines } from "../helpers/isolines.js";
 
 // The map has its own tests and needs WebGL, so a stand-in shows the bbox it fits, the names of the
 // isolines it was given, which tell the eclipses apart, the IATA codes of its airports and its
-// advisories' states
+// advisories' states while they show
 vi.mock("../../src/map/EclipseMap.js", () => ({
   EclipseMap: ({
     bbox,
     isolines,
     airports,
     advisories,
+    showAdvisories,
   }: {
     bbox: Bbox | null;
     isolines: Isolines | null;
     airports: Airports | null;
     advisories: Advisories | null;
+    showAdvisories: boolean;
   }) => (
     <div role="region" aria-label="Map">
       <p aria-label="Fit">{bbox?.join(",")}</p>
@@ -30,7 +32,7 @@ vi.mock("../../src/map/EclipseMap.js", () => ({
       </p>
       <p aria-label="Airports">{airports?.features.map(({ id }) => id).join(",")}</p>
       <p aria-label="Advisories">
-        {advisories?.features.map(({ properties }) => properties.state).join(",")}
+        {showAdvisories && advisories?.features.map(({ properties }) => properties.state).join(",")}
       </p>
     </div>
   ),
@@ -338,6 +340,21 @@ describe("App", () => {
     await waitFor(() => expect(warn).toHaveBeenCalledWith(expect.any(String), expect.any(Error)));
     expect(mapAirports()).toBe("");
     expect(airportsSourceLine()).toBe("—");
+  });
+
+  it("hides the advisories while a past eclipse is selected, without fetching them again", async () => {
+    mockApi(async () => eclipseList("2026-08-12", "2027-08-02"), {
+      isolines: () => new Promise(() => {}),
+    });
+    render(<App />);
+    await waitFor(() => expect(mapAdvisories()).toBe("whole,parts,none"));
+    fireEvent.change(picker(), { target: { value: "2026-08-12" } });
+    expect(mapAdvisories()).toBe("");
+    fireEvent.change(picker(), { target: { value: "2027-08-02" } });
+    expect(mapAdvisories()).toBe("whole,parts,none");
+    expect(vi.mocked(fetch).mock.calls.filter(([url]) => url === "/api/advisories")).toHaveLength(
+      1,
+    );
   });
 
   it("shows every place's advisory on the map, fetched once whatever the eclipse", async () => {
