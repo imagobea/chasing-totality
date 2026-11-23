@@ -8,6 +8,6 @@ describe("isPast", () => {
   });
 
   it("is true from the first minute of the next local day", () => {
-    expect(isPast("2027-08-02", new Date(2027, 7, 3, 0, 1))).toBe(true);
+    expect(isPast("2027-08-02", new Date(2027, 7, 3, 0, 0))).toBe(true);
   });
 });
