@@ -25,12 +25,15 @@ const MARGIN_DEGREES = 3;
 // The airports around the eclipse's path. The bbox is rounded outwards to whole degrees, which
 // keeps float noise out of the URL. It stops at the poles, and across 180° it carries on past it
 // like the path's.
-export function fetchAirports([west, south, east, north]: Bbox): Promise<Airports> {
+export function fetchAirports(
+  [west, south, east, north]: Bbox,
+  signal: AbortSignal,
+): Promise<Airports> {
   const bbox: Bbox = [
     Math.floor(west - MARGIN_DEGREES),
     Math.max(-90, Math.floor(south - MARGIN_DEGREES)),
     Math.ceil(east + MARGIN_DEGREES),
     Math.min(90, Math.ceil(north + MARGIN_DEGREES)),
   ];
-  return getJson(`/api/airports?bbox=${bbox.join(",")}`);
+  return getJson(`/api/airports?bbox=${bbox.join(",")}`, signal);
 }

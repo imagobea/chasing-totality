@@ -30,11 +30,12 @@ export function App() {
   const past = date !== null && isPast(date);
 
   useEffect(() => {
-    // Ignore the answer if the app goes away before it arrives
-    let active = true;
-    fetchEclipses()
+    // Cancelled if the app goes away before the answer arrives; an answer already in is ignored
+    const controller = new AbortController();
+    const { signal } = controller;
+    fetchEclipses(signal)
       .then((result) => {
-        if (!active) return;
+        if (signal.aborted) return;
         setEclipses(result);
         // Map dates
         const dates = result.map(({ date }) => date);
@@ -45,39 +46,42 @@ export function App() {
       })
       // On failure the picker stays empty and shows —
       .catch(() => {});
-    return () => {
-      active = false;
-    };
+    return () => controller.abort();
   }, []);
 
   // Once, since the advice doesn't depend on the eclipse
   useEffect(() => {
-    // Ignore the advisories if the app goes away before they arrive
-    let active = true;
-    fetchAdvisories()
+    // Cancelled if the app goes away before they arrive; advisories already in are ignored
+    const controller = new AbortController();
+    const { signal } = controller;
+    fetchAdvisories(signal)
       .then((result) => {
-        if (active) setAdvisories(result);
+        if (!signal.aborted) setAdvisories(result);
       })
-      // The map shows no advisories
-      .catch((error) => console.warn("Advisories not shown", error));
-    return () => {
-      active = false;
-    };
+      // The map shows no advisories; a cancel isn't a failure
+      .catch((error) => {
+        if (!signal.aborted) console.warn("Advisories not shown", error);
+      });
+    return () => controller.abort();
   }, []);
 
   useEffect(() => {
     if (date === null) return;
 
-    // Ignore the isolines if another date is picked or the app goes away before they arrive
-    let active = true;
-    fetchIsolines(date)
+    // Cancelled if another date is picked or the app goes away before they arrive; isolines
+    // already in are ignored
+    const controller = new AbortController();
+    const { signal } = controller;
+    fetchIsolines(date, signal)
       .then((result) => {
-        if (active) setIsolines(result);
+        if (!signal.aborted) setIsolines(result);
       })
-      // The map shows no isolines
-      .catch((error) => console.warn(`Eclipse ${date} not shown`, error));
+      // The map shows no isolines; a cancel isn't a failure
+      .catch((error) => {
+        if (!signal.aborted) console.warn(`Eclipse ${date} not shown`, error);
+      });
     return () => {
-      active = false;
+      controller.abort();
       // The previous eclipse's isolines go as soon as another is picked, since the map already
       // fits the new path
       setIsolines(null);
@@ -88,19 +92,21 @@ export function App() {
   useEffect(() => {
     if (bbox === null || past) return;
 
-    // Ignore the airports if another eclipse is picked or the app goes away before they arrive
-    let active = true;
-    fetchAirports(bbox)
-      // The map shows no airports
+    // Cancelled if another eclipse is picked or the app goes away before they arrive; airports
+    // already in are ignored
+    const controller = new AbortController();
+    const { signal } = controller;
+    fetchAirports(bbox, signal)
+      // The map shows no airports; a cancel isn't a failure
       .catch((error) => {
-        console.warn("Airports not shown", error);
+        if (!signal.aborted) console.warn("Airports not shown", error);
         return null;
       })
       .then((result) => {
-        if (active) setAirports(result);
+        if (!signal.aborted) setAirports(result);
       });
     return () => {
-      active = false;
+      controller.abort();
       // The previous eclipse's airports go as soon as another is picked
       setAirports(null);
     };

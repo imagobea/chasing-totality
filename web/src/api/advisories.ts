@@ -30,6 +30,6 @@ export type Advisories = FeatureCollection<Polygon | MultiPolygon, Advisory> & {
 };
 
 // Every place worldwide, since the advice doesn't depend on the eclipse
-export function fetchAdvisories(): Promise<Advisories> {
-  return getJson("/api/advisories");
+export function fetchAdvisories(signal: AbortSignal): Promise<Advisories> {
+  return getJson("/api/advisories", signal);
 }
