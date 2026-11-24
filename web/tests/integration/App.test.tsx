@@ -210,6 +210,13 @@ describe("App", () => {
     expect(screen.getByText("T−0 D")).toBeTruthy();
   });
 
+  it("cancels the eclipse list download when the app goes away", () => {
+    mockApi(() => new Promise(() => {}));
+    const { unmount } = render(<App />);
+    unmount();
+    expect(signalOf("/api/eclipses")?.aborted).toBe(true);
+  });
+
   it("selects the eclipse the user picks", async () => {
     mockApi(async () => eclipseList("2027-08-02", "2028-07-22"));
     render(<App />);
@@ -432,12 +439,11 @@ describe("App", () => {
     expect(advisoriesSourceLine()).toBe("—");
   });
 
-  it("cancels the eclipse list and advisories downloads, without a warning, when the app goes away", async () => {
+  it("cancels the advisories download, without a warning, when the app goes away", async () => {
     const warn = vi.spyOn(console, "warn").mockImplementation(() => {});
     mockApi(() => new Promise(() => {}), { advisories: pendingUntilAborted });
     const { unmount } = render(<App />);
     unmount();
-    expect(signalOf("/api/eclipses")?.aborted).toBe(true);
     expect(signalOf("/api/advisories")?.aborted).toBe(true);
     // Lets the cancelled request fail
     await act(async () => {});
