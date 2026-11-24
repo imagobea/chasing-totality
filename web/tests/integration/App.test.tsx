@@ -87,9 +87,14 @@ function okOrNotFound(body: unknown) {
   return body === undefined ? { ok: false, status: 404 } : ok(body);
 }
 
+// An answer that never comes, failing as fetch does once the request is cancelled
+function pendingUntilAborted(signal: AbortSignal) {
+  return new Promise((_, reject) => signal.addEventListener("abort", () => reject(signal.reason)));
+}
+
 // Answers /api/eclipses with the given handler, each date's isolines, each bbox's airports and
 // the advisories with the given handlers or ISOLINES, AIRPORTS and ADVISORIES, and the health
-// check with ok
+// check with ok. Every handler but the eclipses' also gets the request's signal.
 function mockApi(
   eclipses: () => Promise<unknown>,
   {
@@ -97,22 +102,28 @@ function mockApi(
     airports = async (bbox) => okOrNotFound(AIRPORTS[bbox]),
     advisories = async () => ok(ADVISORIES),
   }: {
-    isolines?: (date: string) => Promise<unknown>;
-    airports?: (bbox: string) => Promise<unknown>;
-    advisories?: () => Promise<unknown>;
+    isolines?: (date: string, signal: AbortSignal) => Promise<unknown>;
+    airports?: (bbox: string, signal: AbortSignal) => Promise<unknown>;
+    advisories?: (signal: AbortSignal) => Promise<unknown>;
   } = {},
 ) {
   vi.stubGlobal(
     "fetch",
-    vi.fn(async (url: string) => {
+    vi.fn(async (url: string, init?: RequestInit) => {
       if (url === "/api/eclipses") return eclipses();
-      if (url === "/api/advisories") return advisories();
+      if (url === "/api/advisories") return advisories(init!.signal!);
       const date = ISOLINES_URL.exec(url)?.[1];
-      if (date) return isolines(date);
+      if (date) return isolines(date, init!.signal!);
       const bbox = AIRPORTS_URL.exec(url)?.[1];
-      return bbox ? airports(bbox) : ok({ status: "ok" });
+      return bbox ? airports(bbox, init!.signal!) : ok({ status: "ok" });
     }),
   );
+}
+
+// The signal App gave the request to the URL
+function signalOf(url: string) {
+  const call = vi.mocked(fetch).mock.calls.find(([called]) => called === url);
+  return call?.[1]?.signal;
 }
 
 // How the map stand-in shows a date's isolines
@@ -254,6 +265,20 @@ describe("App", () => {
     expect(mapIsolines()).toBe(shownIsolines("2028-07-22"));
   });
 
+  it("cancels the previous eclipse's isolines download, without a warning, when another is picked", async () => {
+    const warn = vi.spyOn(console, "warn").mockImplementation(() => {});
+    mockApi(async () => eclipseList("2027-08-02", "2028-07-22"), {
+      isolines: (date, signal) =>
+        date === "2027-08-02" ? pendingUntilAborted(signal) : Promise.resolve(ok(ISOLINES[date])),
+    });
+    render(<App />);
+    await waitFor(() => expect(picker().disabled).toBe(false));
+    fireEvent.change(picker(), { target: { value: "2028-07-22" } });
+    await waitFor(() => expect(mapIsolines()).toBe(shownIsolines("2028-07-22")));
+    expect(signalOf("/api/eclipses/2027-08-02/isolines")?.aborted).toBe(true);
+    expect(warn).not.toHaveBeenCalled();
+  });
+
   it("warns and shows no isolines when they can't be fetched", async () => {
     const warn = vi.spyOn(console, "warn").mockImplementation(() => {});
     mockApi(async () => eclipseList("2027-08-02", "2028-07-22"), {
@@ -276,8 +301,9 @@ describe("App", () => {
     fireEvent.change(picker(), { target: { value: "2026-08-12" } });
     await waitFor(() => expect(mapAirports()).toBe(""));
     // Only the upcoming eclipse's airports were asked for
-    expect(vi.mocked(fetch).mock.calls.filter(([url]) => AIRPORTS_URL.test(String(url)))).toEqual([
-      [`/api/airports?bbox=${AIRPORTS_BBOX_2027}`],
+    const urls = vi.mocked(fetch).mock.calls.map(([url]) => String(url));
+    expect(urls.filter((url) => AIRPORTS_URL.test(url))).toEqual([
+      `/api/airports?bbox=${AIRPORTS_BBOX_2027}`,
     ]);
   });
 
@@ -329,6 +355,22 @@ describe("App", () => {
     await waitFor(() => expect(mapAirports()).toBe("SYD"));
     await act(async () => answer2027(ok(AIRPORTS[AIRPORTS_BBOX_2027])));
     expect(mapAirports()).toBe("SYD");
+  });
+
+  it("cancels the previous eclipse's airports download, without a warning, when another is picked", async () => {
+    const warn = vi.spyOn(console, "warn").mockImplementation(() => {});
+    mockApi(async () => eclipseList("2027-08-02", "2028-07-22"), {
+      airports: (bbox, signal) =>
+        bbox === AIRPORTS_BBOX_2027
+          ? pendingUntilAborted(signal)
+          : Promise.resolve(ok(AIRPORTS[bbox])),
+    });
+    render(<App />);
+    await waitFor(() => expect(picker().disabled).toBe(false));
+    fireEvent.change(picker(), { target: { value: "2028-07-22" } });
+    await waitFor(() => expect(mapAirports()).toBe("SYD"));
+    expect(signalOf(`/api/airports?bbox=${AIRPORTS_BBOX_2027}`)?.aborted).toBe(true);
+    expect(warn).not.toHaveBeenCalled();
   });
 
   it("warns and shows no airports when they can't be fetched", async () => {
@@ -390,6 +432,18 @@ describe("App", () => {
     expect(advisoriesSourceLine()).toBe("—");
   });
 
+  it("cancels the eclipse list and advisories downloads, without a warning, when the app goes away", async () => {
+    const warn = vi.spyOn(console, "warn").mockImplementation(() => {});
+    mockApi(() => new Promise(() => {}), { advisories: pendingUntilAborted });
+    const { unmount } = render(<App />);
+    unmount();
+    expect(signalOf("/api/eclipses")?.aborted).toBe(true);
+    expect(signalOf("/api/advisories")?.aborted).toBe(true);
+    // Lets the cancelled request fail
+    await act(async () => {});
+    expect(warn).not.toHaveBeenCalled();
+  });
+
   it("notes in the layers panel that a past eclipse shows no airports or advisories", async () => {
     mockApi(async () => eclipseList("2026-08-12", "2027-08-02"), {
       isolines: () => new Promise(() => {}),
@@ -410,13 +464,13 @@ describe("App", () => {
   it("leaves the picker and countdown empty when the dates can't be fetched", async () => {
     mockApi(async () => ({ ok: false, json: async () => ({}) }));
     render(<App />);
-    await waitFor(() => expect(fetch).toHaveBeenCalledWith("/api/eclipses"));
+    await waitFor(() => expect(fetch).toHaveBeenCalledWith("/api/eclipses", expect.anything()));
     // Lets the failed request settle; an uncaught rejection would also fail the run
     await act(async () => {});
     expect(picker().disabled).toBe(true);
     expect(screen.getByRole("option", { name: "—" })).toBeTruthy();
     expect(screen.getByText("T−— D")).toBeTruthy();
-    expect(fetch).not.toHaveBeenCalledWith(expect.stringMatching(ISOLINES_URL));
-    expect(fetch).not.toHaveBeenCalledWith(expect.stringMatching(AIRPORTS_URL));
+    const urls = vi.mocked(fetch).mock.calls.map(([url]) => String(url));
+    expect(urls.filter((url) => ISOLINES_URL.test(url) || AIRPORTS_URL.test(url))).toEqual([]);
   });
 });

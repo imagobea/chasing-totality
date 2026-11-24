@@ -21,11 +21,11 @@ export type Isoline = Feature<IsolineGeometry, { durationSeconds: number; name: 
 export type Isolines = FeatureCollection<IsolineGeometry, Isoline["properties"]>;
 
 // The eclipses that have data, earliest first
-export function fetchEclipses(): Promise<Eclipse[]> {
-  return getJson("/api/eclipses");
+export function fetchEclipses(signal: AbortSignal): Promise<Eclipse[]> {
+  return getJson("/api/eclipses", signal);
 }
 
 // One eclipse's isolines as GeoJSON
-export function fetchIsolines(date: string): Promise<Isolines> {
-  return getJson(`/api/eclipses/${date}/isolines`);
+export function fetchIsolines(date: string, signal: AbortSignal): Promise<Isolines> {
+  return getJson(`/api/eclipses/${date}/isolines`, signal);
 }

@@ -2,6 +2,9 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 import { fetchAirports } from "../../../src/api/airports.js";
 import { airports } from "../../helpers/airports.js";
 
+// The signal the caller cancels the request with
+const SIGNAL = new AbortController().signal;
+
 const AIRPORTS = airports("AGP", "LXR");
 
 // Answers every request with the airports
@@ -20,31 +23,31 @@ describe("fetchAirports", () => {
       "fetch",
       vi.fn(async () => ({ ok: false, status: 500 })),
     );
-    await expect(fetchAirports([-46, -14, 92, 38])).rejects.toThrow("500");
+    await expect(fetchAirports([-46, -14, 92, 38], SIGNAL)).rejects.toThrow("500");
   });
 
   it("reads the airports within 3° of the eclipse's path from the API", async () => {
     mockApi();
-    expect(await fetchAirports([-46, -14, 92, 38])).toEqual(AIRPORTS);
-    expect(fetch).toHaveBeenCalledWith("/api/airports?bbox=-49,-17,95,41");
+    expect(await fetchAirports([-46, -14, 92, 38], SIGNAL)).toEqual(AIRPORTS);
+    expect(fetch).toHaveBeenCalledWith("/api/airports?bbox=-49,-17,95,41", { signal: SIGNAL });
   });
 
   // Whole degrees keep float noise out of the URL: 3.0000000000000004 - 3 would read 4.4e-16
   it("rounds the box outwards to whole degrees", async () => {
     mockApi();
-    await fetchAirports([3.0000000000000004, -14.36, 91.83, 37.84]);
-    expect(fetch).toHaveBeenCalledWith("/api/airports?bbox=0,-18,95,41");
+    await fetchAirports([3.0000000000000004, -14.36, 91.83, 37.84], SIGNAL);
+    expect(fetch).toHaveBeenCalledWith("/api/airports?bbox=0,-18,95,41", { signal: SIGNAL });
   });
 
   it("carries on past 180° like the path", async () => {
     mockApi();
-    await fetchAirports([74, -52, 182, -9]);
-    expect(fetch).toHaveBeenCalledWith("/api/airports?bbox=71,-55,185,-6");
+    await fetchAirports([74, -52, 182, -9], SIGNAL);
+    expect(fetch).toHaveBeenCalledWith("/api/airports?bbox=71,-55,185,-6", { signal: SIGNAL });
   });
 
   it("stops at the poles", async () => {
     mockApi();
-    await fetchAirports([0, -89, 10, 89]);
-    expect(fetch).toHaveBeenCalledWith("/api/airports?bbox=-3,-90,13,90");
+    await fetchAirports([0, -89, 10, 89], SIGNAL);
+    expect(fetch).toHaveBeenCalledWith("/api/airports?bbox=-3,-90,13,90", { signal: SIGNAL });
   });
 });

@@ -2,6 +2,9 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 import { fetchAdvisories } from "../../../src/api/advisories.js";
 import { advisories } from "../../helpers/advisories.js";
 
+// The signal the caller cancels the request with
+const SIGNAL = new AbortController().signal;
+
 const ADVISORIES = advisories("whole", "parts", "none");
 
 describe("fetchAdvisories", () => {
@@ -12,7 +15,7 @@ describe("fetchAdvisories", () => {
       "fetch",
       vi.fn(async () => ({ ok: false, status: 500 })),
     );
-    await expect(fetchAdvisories()).rejects.toThrow("500");
+    await expect(fetchAdvisories(SIGNAL)).rejects.toThrow("500");
   });
 
   it("reads every place's advisory from the API", async () => {
@@ -20,7 +23,7 @@ describe("fetchAdvisories", () => {
       "fetch",
       vi.fn(async () => ({ ok: true, json: async () => ADVISORIES })),
     );
-    expect(await fetchAdvisories()).toEqual(ADVISORIES);
-    expect(fetch).toHaveBeenCalledWith("/api/advisories");
+    expect(await fetchAdvisories(SIGNAL)).toEqual(ADVISORIES);
+    expect(fetch).toHaveBeenCalledWith("/api/advisories", { signal: SIGNAL });
   });
 });
