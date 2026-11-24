@@ -3,6 +3,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import type { Advisories } from "../../src/api/advisories.js";
 import type { Airports } from "../../src/api/airports.js";
 import type { Bbox, Isolines } from "../../src/api/eclipses.js";
+import { StrictMode } from "react";
 import { App } from "../../src/App.js";
 import { advisories } from "../helpers/advisories.js";
 import { airports } from "../helpers/airports.js";
@@ -215,6 +216,25 @@ describe("App", () => {
     const { unmount } = render(<App />);
     unmount();
     expect(signalOf("/api/eclipses")?.aborted).toBe(true);
+  });
+
+  // StrictMode mounts twice in dev, cancelling the first mount's download
+  it("ignores an eclipse list that arrives after a remount cancelled it", async () => {
+    let answerFirst: (answer: unknown) => void = () => {};
+    let calls = 0;
+    mockApi(() =>
+      ++calls === 1
+        ? new Promise((resolve) => (answerFirst = resolve))
+        : Promise.resolve(eclipseList("2028-07-22")),
+    );
+    render(
+      <StrictMode>
+        <App />
+      </StrictMode>,
+    );
+    await waitFor(() => expect(picker().value).toBe("2028-07-22"));
+    await act(async () => answerFirst(eclipseList("2027-08-02")));
+    expect(picker().value).toBe("2028-07-22");
   });
 
   it("selects the eclipse the user picks", async () => {
@@ -448,6 +468,26 @@ describe("App", () => {
     // Lets the cancelled request fail
     await act(async () => {});
     expect(warn).not.toHaveBeenCalled();
+  });
+
+  // StrictMode mounts twice in dev, cancelling the first mount's download
+  it("ignores advisories that arrive after a remount cancelled them", async () => {
+    let answerFirst: (answer: unknown) => void = () => {};
+    let calls = 0;
+    mockApi(async () => eclipseList("2027-08-02"), {
+      advisories: () =>
+        ++calls === 1
+          ? new Promise((resolve) => (answerFirst = resolve))
+          : Promise.resolve(ok(ADVISORIES)),
+    });
+    render(
+      <StrictMode>
+        <App />
+      </StrictMode>,
+    );
+    await waitFor(() => expect(mapAdvisories()).toBe("whole,parts,none"));
+    await act(async () => answerFirst(ok(advisories("none"))));
+    expect(mapAdvisories()).toBe("whole,parts,none");
   });
 
   it("notes in the layers panel that a past eclipse shows no airports or advisories", async () => {
