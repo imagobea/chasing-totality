@@ -2,13 +2,15 @@
   "name": "chasing-totality",
   "version": "1.0.0",
   "private": true,
-  "description": "Totality duration isolines and map for total solar eclipses, starting with 2 August 2027",
+  "description": "Pick a spot to watch a total solar eclipse: totality duration, airports and travel advisories on a map",
   "keywords": [
-    "eclipse",
-    "totality",
+    "astronomy",
     "besselian-elements",
+    "eclipse",
+    "geojson",
     "isolines",
-    "geojson"
+    "maplibre",
+    "totality"
   ],
   "homepage": "https://github.com/imagobea/chasing-totality#readme",
   "bugs": {
