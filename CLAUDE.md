@@ -1,7 +1,8 @@
 # Chasing totality
 
-Isolines tool for the 2027-08-02 total solar eclipse: Besselian elements → totality duration at a
-lat/lon → grid isolines → GeoJSON, served by a Fastify API and drawn on a MapLibre map.
+Tool for picking where to watch a total solar eclipse (1901–2100): Besselian elements → totality
+duration isolines, plus airports and UK travel advisories, served by a Fastify API and drawn on a
+MapLibre globe.
 See README.md for the overview and docs/DECISIONS.md for past decisions.
 
 ## Commands
@@ -9,7 +10,8 @@ See README.md for the overview and docs/DECISIONS.md for past decisions.
 Node 24 (`.nvmrc`), pnpm via corepack. Run from the repo root.
 
 - `pnpm lint`, `pnpm format:check`, `pnpm typecheck`, `pnpm test`: the same checks CI runs (CI runs
-  `pnpm test:coverage` instead, which adds coverage)
+  `pnpm test:coverage` instead, which adds coverage), plus `pnpm build`, and `pnpm --dir web test`,
+  `typecheck`, `build`
 - `pnpm dev`: API with watch. `pnpm build` / `pnpm start`: compiled API.
 - Frontend lives in `web/` (pnpm workspace) with its own package.json: `pnpm --dir web dev`
 
@@ -18,7 +20,11 @@ Node 24 (`.nvmrc`), pnpm via corepack. Run from the repo root.
 - `src/engine/`: pure eclipse maths, no I/O (see its README)
 - `src/server/`: Fastify app (`app.ts` builds it, `routes/` holds endpoints)
 - `web/`: React + Vite + MapLibre
-- `docs/plans/`: plans for features with real decisions only. `scripts/`: spikes and fixture generators.
+- `data/`: committed snapshots the API loads at boot, plus NASA's path tables; regenerate the
+  snapshots with the `data:*` scripts, never edit them by hand
+- `docs/plans/`: plans for features with real decisions only
+- `scripts/`: data generators (`data:*`) and the JSEX fixture generator
+- `.claude/skills/add-eclipse`: adding an eclipse, user-run only
 
 ## Gotchas
 
