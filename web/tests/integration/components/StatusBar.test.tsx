@@ -24,6 +24,27 @@ describe("StatusBar", () => {
     expect(readout()).toBe("Cursor · — · Zoom —");
   });
 
+  it("adds the edge accuracy note from zoom 10", () => {
+    const mapStatus = createMapStatusStore();
+    mapStatus.set({ zoom: 10 });
+    render(<StatusBar mapStatus={mapStatus} attributionRef={createRef()} />);
+    expect(readout()).toBe("Cursor · — · Zoom 10.0 · Edges ±2 km");
+  });
+
+  it("hides the edge accuracy note just below zoom 10", () => {
+    const mapStatus = createMapStatusStore();
+    mapStatus.set({ zoom: 9.94 });
+    render(<StatusBar mapStatus={mapStatus} attributionRef={createRef()} />);
+    expect(readout()).toBe("Cursor · — · Zoom 9.9");
+  });
+
+  it("adds the edge accuracy note when the zoom rounds up to 10.0", () => {
+    const mapStatus = createMapStatusStore();
+    mapStatus.set({ zoom: 9.96 });
+    render(<StatusBar mapStatus={mapStatus} attributionRef={createRef()} />);
+    expect(readout()).toBe("Cursor · — · Zoom 10.0 · Edges ±2 km");
+  });
+
   it("follows the cursor as the map reports it", () => {
     const mapStatus = createMapStatusStore();
     render(<StatusBar mapStatus={mapStatus} attributionRef={createRef()} />);
