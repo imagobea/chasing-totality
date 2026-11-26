@@ -5,6 +5,7 @@ import {
   type GeoJSONSourceSpecification,
   type LayerSpecification,
   MapLibreMap,
+  ScaleControl,
   setWorkerUrl,
 } from "maplibre-gl";
 import "maplibre-gl/dist/maplibre-gl.css";
@@ -27,6 +28,7 @@ import {
   airportsSource,
   loadAirportIcon,
 } from "./airports.js";
+import { TRAVEL_MINZOOM } from "./constants.js";
 import {
   DURATION_BANDS_LAYERS,
   DURATION_BANDS_SOURCE_ID,
@@ -108,10 +110,21 @@ export function EclipseMap({
     // A globe, so paths far from the equator keep their true shape and size. Set on every style
     // load, since the projection belongs to the style.
     map.on("style.load", () => map.setProjection({ type: "globe" }));
+    // MapLibre controls have no minzoom, so the scale bar comes and goes as the zoom changes
+    const scale = new ScaleControl({ unit: "metric" });
+    let scaleShown = false;
+    const onZoom = () => {
+      const zoom = map.getZoom();
+      mapStatus.set({ zoom });
+      const showScale = zoom >= TRAVEL_MINZOOM;
+      if (showScale && !scaleShown) map.addControl(scale, "bottom-right");
+      if (!showScale && scaleShown) map.removeControl(scale);
+      scaleShown = showScale;
+    };
     // Ignore the icon if the map goes away before it loads
     let removed = false;
     map.on("load", () => {
-      mapStatus.set({ zoom: map.getZoom() });
+      onZoom();
       // Drawn here, so the advisories' hatches are in before the map counts as ready
       for (const [id, pattern] of hatchImages(devicePixelRatio)) {
         map.addImage(id, pattern, { pixelRatio: devicePixelRatio });
@@ -129,7 +142,7 @@ export function EclipseMap({
     // Wrapped, so panning past the antimeridian still reads -180 to 180
     map.on("mousemove", (event) => mapStatus.set({ cursor: event.lngLat.wrap() }));
     map.on("mouseout", () => mapStatus.set({ cursor: null }));
-    map.on("zoom", () => mapStatus.set({ zoom: map.getZoom() }));
+    map.on("zoom", onZoom);
 
     // MapLibre's own control, so the credits follow the style and sources. Mounted by hand
     // through its public onAdd/onRemove, because it goes outside the map.

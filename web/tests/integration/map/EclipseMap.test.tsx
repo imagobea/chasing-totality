@@ -1,5 +1,5 @@
 import { act, cleanup, render } from "@testing-library/react";
-import { AttributionControl, MapLibreMap } from "maplibre-gl";
+import { AttributionControl, MapLibreMap, ScaleControl } from "maplibre-gl";
 import polygonClipping from "polygon-clipping";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import type { Advisories } from "../../../src/api/advisories.js";
@@ -11,6 +11,7 @@ import {
   advisoriesSource,
   hatchImageId,
 } from "../../../src/map/advisories.js";
+import { TRAVEL_MINZOOM } from "../../../src/map/constants.js";
 import {
   AIRPORT_ICON_ID,
   AIRPORT_ICON_OPTIONS,
@@ -36,6 +37,8 @@ import { isolines } from "../../helpers/isolines.js";
 // jsdom has no WebGL, so MapLibre is replaced by a map that only records calls
 const map = vi.hoisted(() => ({
   on: vi.fn(),
+  addControl: vi.fn(),
+  removeControl: vi.fn(),
   addSource: vi.fn(),
   addLayer: vi.fn(),
   addImage: vi.fn(),
@@ -60,6 +63,9 @@ const attribution = vi.hoisted(() => {
   return { element, onAdd: vi.fn(() => element), onRemove: vi.fn() };
 });
 
+// The scale control, which only needs to be told apart from other controls
+const scale = vi.hoisted(() => ({ stands: "for the scale bar" }));
+
 // jsdom can't draw images, so the airport icon is a stand-in that loads at once
 const icon = vi.hoisted(() => ({ stands: "for the airport icon" }));
 vi.mock("../../../src/map/airports.js", async (importOriginal) => ({
@@ -80,6 +86,9 @@ vi.mock("maplibre-gl", () => ({
   }),
   AttributionControl: vi.fn(function () {
     return attribution;
+  }),
+  ScaleControl: vi.fn(function () {
+    return scale;
   }),
   setWorkerUrl: vi.fn(),
 }));
@@ -208,6 +217,52 @@ describe("EclipseMap", () => {
     map.getZoom.mockReturnValueOnce(5.83);
     fire("zoom");
     expect(props.mapStatus.get().zoom).toBe(5.83);
+  });
+
+  it("shows no scale bar below the travel zoom", async () => {
+    render(<EclipseMap {...mapProps(null)} />);
+    await loadStyle();
+    map.getZoom.mockReturnValueOnce(TRAVEL_MINZOOM - 0.1);
+    fire("zoom");
+    expect(map.addControl).not.toHaveBeenCalled();
+  });
+
+  it("shows a scale bar in km, bottom-right, once zoomed in to the travel zoom", async () => {
+    render(<EclipseMap {...mapProps(null)} />);
+    await loadStyle();
+    map.getZoom.mockReturnValueOnce(TRAVEL_MINZOOM);
+    fire("zoom");
+    expect(ScaleControl).toHaveBeenCalledWith({ unit: "metric" });
+    expect(map.addControl).toHaveBeenCalledExactlyOnceWith(scale, "bottom-right");
+  });
+
+  it("shows the scale bar at load when the map starts zoomed in", async () => {
+    map.getZoom.mockReturnValueOnce(TRAVEL_MINZOOM);
+    render(<EclipseMap {...mapProps(null)} />);
+    await loadStyle();
+    expect(map.addControl).toHaveBeenCalledExactlyOnceWith(scale, "bottom-right");
+  });
+
+  it("adds the scale bar once while zooming in further", async () => {
+    render(<EclipseMap {...mapProps(null)} />);
+    await loadStyle();
+    map.getZoom.mockReturnValueOnce(TRAVEL_MINZOOM).mockReturnValueOnce(TRAVEL_MINZOOM + 1);
+    fire("zoom");
+    fire("zoom");
+    expect(map.addControl).toHaveBeenCalledOnce();
+  });
+
+  it("removes the scale bar once when zoomed back out below the travel zoom", async () => {
+    render(<EclipseMap {...mapProps(null)} />);
+    await loadStyle();
+    map.getZoom
+      .mockReturnValueOnce(TRAVEL_MINZOOM)
+      .mockReturnValueOnce(TRAVEL_MINZOOM - 0.1)
+      .mockReturnValueOnce(TRAVEL_MINZOOM - 1);
+    fire("zoom");
+    fire("zoom");
+    fire("zoom");
+    expect(map.removeControl).toHaveBeenCalledExactlyOnceWith(scale);
   });
 
   it("puts the attribution in the given slot", () => {
