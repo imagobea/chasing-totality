@@ -12,9 +12,9 @@ type StatusBarProps = {
 
 export function StatusBar({ mapStatus, attributionRef }: StatusBarProps) {
   const { cursor, zoom } = useSyncExternalStore(mapStatus.subscribe, mapStatus.get);
-  const shownZoom = zoom === null ? null : zoom.toFixed(1);
+  const shownZoom = zoom?.toFixed(1);
   // Going by the zoom as shown, so "Zoom 10.0" always comes with the note
-  const showEdgeNote = shownZoom !== null && Number(shownZoom) >= EDGE_NOTE_MINZOOM;
+  const showEdgeNote = shownZoom !== undefined && Number(shownZoom) >= EDGE_NOTE_MINZOOM;
 
   return (
     <footer className="status-bar">
