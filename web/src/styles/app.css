@@ -36,6 +36,8 @@ body {
 }
 
 .logo {
+  /* The width and height attributes reserve space before the image loads; CSS sets the size */
+  width: auto;
   height: var(--text-lg);
 }
 

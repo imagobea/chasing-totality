@@ -12,7 +12,7 @@ type AppHeaderProps = {
 export function AppHeader({ dates, date, onDateChange }: AppHeaderProps) {
   return (
     <header className="app-header">
-      <img className="logo" src={logoUrl} alt="" />
+      <img className="logo" src={logoUrl} alt="" width={32} height={32} />
       <h1 className="wordmark">Chasing totality</h1>
       <EclipsePicker dates={dates} date={date} onChange={onDateChange} />
       <div className="header-end">
