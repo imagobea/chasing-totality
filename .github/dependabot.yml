@@ -1,0 +1,52 @@
+# Weekly dependency updates. Minor and patch bumps come grouped into one PR per ecosystem, so the
+# queue stays short; majors come one PR each, since they may need code changes. A cooldown holds
+# back brand-new releases; security updates skip it.
+version: 2
+
+updates:
+  # Root and web/ share one pnpm workspace and lockfile
+  - package-ecosystem: npm
+    directory: /
+    schedule:
+      interval: weekly
+    cooldown:
+      default-days: 3
+      semver-major-days: 7
+    commit-message:
+      prefix: chore
+      include: scope
+    groups:
+      npm-minor-patch:
+        update-types: [minor, patch]
+
+  # node and nginx base images in both Dockerfiles
+  - package-ecosystem: docker
+    directories: [/, /web]
+    schedule:
+      interval: weekly
+    cooldown:
+      default-days: 3
+      semver-major-days: 7
+    commit-message:
+      prefix: chore
+      include: scope
+    groups:
+      docker-minor-patch:
+        update-types: [minor, patch]
+    ignore:
+      # The project pins Node 24 (.nvmrc, engines), so a new major is a deliberate move
+      - dependency-name: node
+        update-types: [version-update:semver-major]
+
+  # Actions used by the CI and PR title workflows. They're pinned to majors, so there's no
+  # minor/patch group.
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: weekly
+    cooldown:
+      default-days: 3
+      semver-major-days: 7
+    commit-message:
+      prefix: chore
+      include: scope

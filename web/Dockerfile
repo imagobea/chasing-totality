@@ -29,7 +29,7 @@ RUN pnpm --filter web build
 
 
 # Production: static files served by nginx, which also forwards /api to the API
-FROM nginx:alpine AS runtime
+FROM nginx:1.31-alpine AS runtime
 COPY web/nginx.conf /etc/nginx/conf.d/default.conf
 COPY --from=build /app/web/dist /usr/share/nginx/html
 EXPOSE 80
