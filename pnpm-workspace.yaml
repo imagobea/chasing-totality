@@ -1,2 +1,6 @@
 packages:
   - web
+
+# In minutes (1440 = 24 h): pnpm won't pick a version until it's a day old, giving time for a
+# compromised release to be caught. Installs from the lockfile aren't affected.
+minimumReleaseAge: 1440
